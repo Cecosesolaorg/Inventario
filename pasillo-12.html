@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta Activa</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Definición de la animación de pulso (respiración) */
+        @keyframes pulse-neon {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 10px 25px rgba(255, 95, 109, 0.4), 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            50% {
+                transform: scale(1.03); /* Se agranda un poquito */
+                box-shadow: 0 15px 35px rgba(255, 95, 109, 0.8), 0 6px 10px rgba(0, 0, 0, 0.3); /* Brillo más fuerte */
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 10px 25px rgba(255, 95, 109, 0.4), 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        /* Estilos base (Tema oscuro) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0d0d;
+            color: #e5e7eb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Estilo del botón replicando la imagen */
+        .neon-button {
+            /* Fondo (similar al naranja/rojo de la imagen) */
+            background: linear-gradient(90deg, #ff5f6d 0%, #ffc371 100%);
+            color: white;
+            font-size: 1.8rem; /* Tamaño de fuente grande */
+            font-weight: 700;
+            padding: 1.2rem 4rem; /* Padding generoso */
+            border-radius: 9999px; /* Bordes super redondeados */
+            border: none;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 90vw;
+            text-align: center;
+            
+            /* Aplicación de la animación */
+            animation: pulse-neon 2s infinite ease-in-out; 
+        }
+
+        /* Icono M simulado */
+        .icon-m {
+            font-size: 2.5rem;
+            line-height: 1;
+            margin-right: 15px;
+            color: white; 
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Aseguramos la responsividad para que se vea bien en el teléfono */
+        @media (max-width: 640px) {
+            .neon-button {
+                font-size: 1.2rem;
+                padding: 1rem 2rem;
+            }
+            .icon-m {
+                font-size: 2rem;
+                margin-right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- El botón ahora pulsa gracias a la animación 'pulse-neon' -->
+    <button class="neon-button">
+        <span class="icon-m">🛠️</span>
+        <span>Hola estamos trabajando</span>
+    </button>
+
+</body>
+</html>
