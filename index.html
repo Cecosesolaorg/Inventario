@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cecosesola | Inventario | Feria del Este</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Fondo GitHub Dark */
+            color: #c9d1d9; /* Texto claro */
+            overflow-x: hidden; /* Prevenir cualquier desbordamiento horizontal */
+        }
+        .gradient-text {
+            /* Gradiente de azul a morado para el branding */
+            background-image: linear-gradient(90deg, #58a6ff 0%, #bc8cff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+
+        /* Clase base para los nodos (Pasillos y Depósitos) */
+        .aisle-node {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(188, 140, 255, 0.1);
+            border: 1px solid #30363d;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center; /* Asegura el texto centrado */
+            height: 120px; /* Altura predeterminada de escritorio */
+            width: 100%; /* Asegura que ocupe todo el espacio del grid */
+            position: relative; /* Necesario para los pseudo-elementos */
+            overflow: hidden; /* Oculta el desbordamiento del borde giratorio */
+            background-color: #0d1117; /* Fondo oscuro base para el botón */
+            border-radius: 0.75rem; /* Tailwind rounded-xl */
+        }
+
+        .aisle-node:hover {
+            transform: scale(1.03); /* Escala ligeramente menor para mantener el efecto de neón */
+            border-color: transparent; 
+            box-shadow: none; /* Quitamos la sombra estática para dejar solo el neón animado */
+            background-color: #161b22; 
+        }
+        
+        /* Contenido del nodo debe estar por encima del pseudo-elemento */
+        .aisle-node > div {
+            position: relative;
+            z-index: 12; /* Más alto que el pseudo-elemento */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Animación para el borde giratorio */
+        @keyframes rotate-border {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animación para el resplandor de neón */
+        @keyframes neon-glow {
+            0% { 
+                box-shadow: 0 0 5px #58a6ff, 0 0 10px #58a6ff, 0 0 20px #bc8cff, 0 0 30px #bc8cff;
+                opacity: 0.9;
+            }
+            100% { 
+                box-shadow: 0 0 10px #bc8cff, 0 0 20px #bc8cff, 0 0 40px #58a6ff, 0 0 60px #58a6ff; 
+                opacity: 1;
+            }
+        }
+
+        .aisle-node::before {
+            content: '';
+            position: absolute;
+            /* Hacemos el pseudo-elemento muy grande para que el gradiente siempre cubra */
+            width: 200%; 
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            
+            /* Degradado cónico más brillante y con más contraste */
+            background: conic-gradient(from 0deg at 50% 50%, 
+                        #FF00D4 0%, /* Magenta Brillante */
+                        #00CCFF 25%, /* Cyan Brillante */
+                        #FF00D4 50%, 
+                        #00CCFF 75%, 
+                        #FF00D4 100% 
+                    );
+            background-size: 200% 200%; 
+            animation: rotate-border 4s linear infinite; /* Animación más rápida */
+            z-index: 11; 
+            border-radius: inherit; /* Hereda el redondeo del padre */
+        }
+
+        /* Máscara para simular el borde (Ajustamos a 3px para mayor visibilidad) */
+        .aisle-node::after {
+            content: '';
+            position: absolute;
+            top: 3px; /* Aumentado a 3px */
+            left: 3px; /* Aumentado a 3px */
+            right: 3px; /* Aumentado a 3px */
+            bottom: 3px; /* Aumentado a 3px */
+            background-color: #0d1117; /* Mismo color que el fondo del body */
+            border-radius: 0.75rem; 
+            z-index: 11; 
+        }
+
+        .aisle-node:hover::after {
+            background-color: #161b22; /* Se ajusta al hover del nodo */
+        }
+        
+        /* Aplicamos la animación de neón al :hover */
+        .aisle-node:hover {
+            animation: neon-glow 1.5s ease-in-out infinite alternate;
+        }
+
+
+        /* Estilo para el nodo central */
+        #central-node {
+            background-color: #161b22;
+            height: 150px;
+            padding: 1rem;
+            position: relative; 
+            overflow: hidden; 
+        }
+
+        /* El nodo central siempre tiene el efecto de neón */
+        #central-node {
+             animation: neon-glow 2s ease-in-out infinite alternate; /* Animación de neón constante */
+        }
+
+        /* APLICAR ANIMACIÓN DE NEON AL NODO CENTRAL TAMBIÉN */
+        #central-node::before {
+            /* Mismos estilos de borde giratorio, pero animado un poco más lento */
+            animation: rotate-border 8s linear infinite reverse; 
+        }
+
+        /* Máscara para simular el borde del nodo central */
+        #central-node::after {
+            top: 3px;
+            left: 3px;
+            right: 3px;
+            bottom: 3px;
+            background-color: #161b22; /* Fondo del nodo central */
+        }
+
+
+        /* Ajuste CLAVE: Tamaño de fuente del nodo central para diferentes pantallas */
+        #central-node h3 {
+            font-size: 1.25rem; 
+            line-height: 1.25;
+            overflow-wrap: break-word;
+            word-break: break-all;
+            position: relative; 
+            z-index: 12;
+        }
+        
+        @media (min-width: 768px) {
+             #central-node h3 {
+                font-size: 2.25rem; 
+            }
+        }
+
+
+        /* Contenedor del mapa y SVG (Desktop/Tablet Layout: 4 columnas) */
+        .map-container {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: auto 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto; 
+            gap: 20px;
+            padding: 3rem 1rem;
+        }
+
+        /* Posicionamiento de los nodos en la cuadrícula (Desktop/Tablet) */
+        #central-node-container { grid-area: 1 / 1 / 2 / 5; margin-bottom: 2rem;}
+        
+        /* Filas 2 a 5 (Pasillos 1-8) */
+        #aisle-1-container { grid-area: 2 / 1 / 3 / 3; }
+        #aisle-2-container { grid-area: 2 / 3 / 3 / 5; }
+        
+        #aisle-3-container { grid-area: 3 / 1 / 4 / 3; }
+        #aisle-4-container { grid-area: 3 / 3 / 4 / 5; }
+        
+        #aisle-5-container { grid-area: 4 / 1 / 5 / 3; }
+        #aisle-6-container { grid-area: 4 / 3 / 5 / 5; }
+
+        #aisle-7-container { grid-area: 5 / 1 / 6 / 3; }
+        #aisle-8-container { grid-area: 5 / 3 / 6 / 5; }
+        
+        /* NUEVAS FILAS 6 y 7 (Pasillos 9-12) */
+        #aisle-9-container { grid-area: 6 / 1 / 7 / 3; }
+        #aisle-10-container { grid-area: 6 / 3 / 7 / 5; }
+        
+        #aisle-11-container { grid-area: 7 / 1 / 8 / 3; }
+        #aisle-12-container { grid-area: 7 / 3 / 8 / 5; }
+
+
+        /* Filas 8 y 9 (Depósitos movidos hacia abajo) */
+        #deposito-abajo-container { grid-area: 9 / 1 / 10 / 3; margin-top: 2rem; }
+        #deposito-arriba-container { grid-area: 9 / 3 / 10 / 5; margin-top: 2rem; }
+
+
+        /* Estilos para el SVG de las líneas de conexión */
+        .svg-connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Ignorar clics en el SVG */
+            z-index: 5;
+        }
+        
+        /* Animación de los paths */
+        .flow-line {
+            stroke: rgba(88, 166, 255, 0.7); /* Líneas un poco más visibles */
+            stroke-width: 3; /* Más gruesas */
+            fill: none;
+            transition: stroke 0.3s ease;
+        }
+        
+        /* Media Queries para diseño móvil (MAX WIDTH 768px) */
+        @media (max-width: 768px) {
+            .map-container {
+                /* 2 columnas en móvil */
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto;
+                gap: 15px;
+                padding: 1rem;
+            }
+            
+            /* Nodo central: Más pequeño */
+            #central-node-container { 
+                grid-area: auto / 1 / auto / 3; /* Ocupa las dos columnas */
+                margin-bottom: 1rem;
+            }
+
+            #central-node {
+                 height: 120px; 
+                 padding: 0.5rem;
+            }
+            #central-node h3 {
+                 font-size: 1rem; 
+            }
+
+            /* Nodos de Pasillo/Depósito: Más pequeños */
+            #aisle-1-container, #aisle-2-container, 
+            #aisle-3-container, #aisle-4-container,
+            #aisle-5-container, #aisle-6-container, #aisle-7-container, #aisle-8-container,
+            #aisle-9-container, #aisle-10-container, #aisle-11-container, #aisle-12-container,
+            #deposito-abajo-container, #deposito-arriba-container { 
+                grid-area: auto; 
+                width: 100%;
+                margin-top: 0;
+            }
+            
+            .aisle-node { 
+                height: 90px; 
+                margin-top: 0;
+                padding: 0.5rem; 
+            }
+            
+            /* Texto dentro de los nodos: Más pequeño */
+            /* Target the ID number */
+            .aisle-node .gradient-text { 
+                font-size: 1.5rem; 
+            }
+            
+            /* Target the Main Name/Title */
+            .aisle-node h3 {
+                font-size: 0.9rem; 
+                line-height: 1; 
+            }
+
+            /* Target the Description and 'Acceder' link */
+            .aisle-node p.text-sm {
+                font-size: 0.75rem; 
+            }
+             .aisle-node p.text-xs {
+                font-size: 0.625rem; 
+                line-height: 1;
+            }
+
+            /* Asegurar que el título de la sección ocupe ambas columnas */
+            .map-container h2 {
+                grid-column: 1 / 3;
+            }
+        }
+
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <!-- Encabezado Fijo y Branding --><header class="text-center mb-8 md:mb-12">
+        <h1 class="4xl md:text-5xl font-extrabold tracking-tight">
+            <span class="gradient-text">Cecosesola</span>
+        </h1>
+        <p class="text-xl text-gray-400 mt-2">Inventario | Feria del Este</p>
+    </header>
+
+    <!-- Contenedor Principal de la Aplicación --><main id="app-container" class="max-w-7xl mx-auto">
+        
+        <!-- VISTA: Mapa Mental (Inicial) --><section id="map-view" class="map-container">
+            <!-- Título actualizado para coincidir con el estilo del nodo central --><h2 class="text-3xl font-bold mb-4 text-center col-span-4 gradient-text">Cecosesola Inventario</h2>
+
+            <!-- SVG para las líneas de conexión (será generado por JS al cargar) --><svg id="connection-lines" class="svg-connections" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg>
+
+            <!-- Nodos del Mapa --><div id="central-node-container">
+                <div id="central-node" class="aisle-node rounded-xl cursor-default">
+                    <!-- Contenedor de contenido para asegurar el z-index 12 -->
+                    <div>
+                        <h3 class="font-bold text-white">CECOSESOLA INVENTARIO</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pasillo 1 (Alimentos Secos) --><div id="aisle-1-container"></div>
+            <!-- Pasillo 2 (Refrigerados) --><div id="aisle-2-container"></div>
+            
+            <!-- Pasillo 3 (Vegetales) --><div id="aisle-3-container"></div>
+            <!-- Pasillo 4 (Limpieza) --><div id="aisle-4-container"></div>
+
+            <!-- Pasillo 5 (Cuidado Personal) --><div id="aisle-5-container"></div>
+            <!-- Pasillo 6 (Electrónica) --><div id="aisle-6-container"></div>
+
+            <!-- Pasillo 7 (Textiles) --><div id="aisle-7-container"></div>
+            <!-- Pasillo 8 (Oficina) --><div id="aisle-8-container"></div>
+
+            <!-- NUEVOS PASILLOS 9-12 --><div id="aisle-9-container"></div>
+            <div id="aisle-10-container"></div>
+            <div id="aisle-11-container"></div>
+            <div id="aisle-12-container"></div>
+
+
+            <!-- Nuevos nodos de "deposito de abajo" y "deposito de arriba" con estilo de pasillo --><div id="deposito-abajo-container">
+                <div 
+                    id="deposito-abajo-node"
+                    class="aisle-node p-4 rounded-xl cursor-pointer"
+                    onclick="navigateToDepot('abajo')"
+                >
+                    <!-- Contenedor de contenido para asegurar el z-index 12 -->
+                    <div class="flex items-center justify-center flex-col">
+                        <div class="flex items-center justify-center">
+                            <span class="text-3xl font-extrabold gradient-text mr-2">👇</span>
+                            <h3 class="text-lg font-semibold text-white">Depósito Abajo</h3>
+                        </div>
+                        <p class="text-xs text-indigo-400 mt-1">Acceder »</p>
+                    </div>
+                </div>
+            </div>
+            <div id="deposito-arriba-container">
+                <div 
+                    id="deposito-arriba-node"
+                    class="aisle-node p-4 rounded-xl cursor-pointer"
+                    onclick="navigateToDepot('arriba')"
+                >
+                    <!-- Contenedor de contenido para asegurar el z-index 12 -->
+                    <div class="flex items-center justify-center flex-col">
+                        <div class="flex items-center justify-center">
+                            <span class="text-3xl font-extrabold gradient-text mr-2">👆</span>
+                            <h3 class="text-lg font-semibold text-white">Depósito Arriba</h3>
+                        </div>
+                        <p class="text-xs text-indigo-400 mt-1">Acceder »</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Se ha eliminado la VISTA DE DETALLE ya que ahora se usará la navegación externa --></main>
+
+    <script>
+        // Definición de los datos de los pasillos. Se ha limpiado el array.
+        const aisles = [
+            { id: 1, name: 'PASILLO 1' },
+            { id: 2, name: 'PASILLO 2' },
+            { id: 3, name: 'PASILLO 3' },
+            { id: 4, name: 'PASILLO 4' },
+            { id: 5, name: 'PASILLO 5' },
+            { id: 6, name: 'PASILLO 6' },
+            { id: 7, name: 'PASILLO 7' },
+            { id: 8, name: 'PASILLO 8' },
+            { id: 9, name: 'PASILLO GRANOS' },
+            { id: 10, name: 'CAVA CUARTO' },
+            { id: 11, name: 'Pasillo Arriba 1-3' },
+            { id: 12, name: 'Pasillo Arriba 4-6' },
+        ];
+
+        const mapContainer = document.getElementById('map-view');
+        const svgElement = document.getElementById('connection-lines');
+
+        /**
+         * Renders the aisle cards into their specific containers in the map view.
+         */
+        function renderAisles() {
+            aisles.forEach(aisle => {
+                const container = document.getElementById(`aisle-${aisle.id}-container`);
+                if (container) {
+                    container.innerHTML = `
+                        <div 
+                            id="aisle-${aisle.id}-node"
+                            class="aisle-node p-4 rounded-xl cursor-pointer"
+                            onclick="navigateToAisle(${aisle.id})"
+                        >
+                            <!-- Contenedor flex para centrar el contenido vertical y horizontalmente -->
+                            <div class="flex flex-col items-center justify-center text-center">
+                                <div class="flex items-center justify-center">
+                                    <!-- ID del pasillo en el círculo colorido -->
+                                    <span class="text-3xl font-extrabold gradient-text mr-2">${aisle.id}</span>
+                                    <!-- Nombre descriptivo del pasillo (ej: Pasillo de los Granos) -->
+                                    <h3 class="text-lg font-semibold text-white">${aisle.name}</h3>
+                                </div>
+                                <!-- La descripción ha sido eliminada -->
+                                <p class="text-xs text-indigo-400 mt-1">Acceder »</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        /**
+         * Calculates the center coordinates of a given element relative to the map container.
+         * @param {string} id - The ID of the element (e.g., 'central-node').
+         * @returns {{x: number, y: number}} Normalized coordinates (0-1000).
+         */
+        function getCenter(id) {
+            const element = document.getElementById(id);
+            if (!element) return null;
+
+            const mapRect = mapContainer.getBoundingClientRect();
+            const rect = element.getBoundingClientRect();
+
+            // Calculate center relative to map container
+            const centerX = rect.left + rect.width / 2 - mapRect.left;
+            const centerY = rect.top + rect.height / 2 - mapRect.top;
+
+            // Normalize coordinates to 0-1000 range (since SVG viewBox is 1000x1000)
+            const normalizedX = (centerX / mapRect.width) * 1000;
+            const normalizedY = (centerY / mapRect.height) * 1000;
+            
+            return { x: normalizedX, y: normalizedY };
+        }
+
+        /**
+         * Draws the lines connecting the nodes using SVG paths.
+         * Ahora visible en todos los tamaños de pantalla.
+         */
+        function drawConnections() {
+            const central = getCenter('central-node');
+            
+            if (!central) return;
+
+            let paths = '';
+
+            // Conexiones Central -> Pasillos 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+            for (let i = 1; i <= 12; i++) {
+                const node = getCenter(`aisle-${i}-node`);
+                if (node) {
+                    // Línea curva desde el central a cada pasillo
+                    const midY = (central.y + node.y) / 2;
+                    // Se usa una curva Bézier cúbica para un efecto de flujo más orgánico
+                    const pathD = `M ${central.x} ${central.y} C ${central.x}, ${midY}, ${node.x}, ${midY}, ${node.x}, ${node.y}`;
+                    paths += `<path class="flow-line" d="${pathD}" id="line-${i}"/>`;
+                }
+            }
+            
+            // Conexiones del nodo central a "deposito de abajo" y "deposito de arriba"
+            const depositoAbajo = getCenter('deposito-abajo-node');
+            const depositoArriba = getCenter('deposito-arriba-node');
+
+            if (depositoAbajo) {
+                const midX = (central.x + depositoAbajo.x) / 2;
+                const pathD = `M ${central.x} ${central.y} C ${midX}, ${central.y}, ${midX}, ${depositoAbajo.y}, ${depositoAbajo.x}, ${depositoAbajo.y}`;
+                paths += `<path class="flow-line" d="${pathD}" id="line-deposito-abajo"/>`;
+            }
+            if (depositoArriba) {
+                const midX = (central.x + depositoArriba.x) / 2;
+                const pathD = `M ${central.x} ${central.y} C ${midX}, ${central.y}, ${midX}, ${depositoArriba.y}, ${depositoArriba.x}, ${depositoArriba.y}`;
+                paths += `<path class="flow-line" d="${pathD}" id="line-deposito-arriba"/>`;
+            }
+
+
+            svgElement.innerHTML = paths;
+        }
+
+        /**
+         * Permite la navegación al archivo HTML del pasillo correspondiente.
+         * @param {number} aisleId - El ID del pasillo al que se desea navegar.
+         */
+        function navigateToAisle(aisleId) {
+            const fileName = `pasillo-${aisleId}.html`;
+            // Redirección solicitada por el usuario.
+            window.location.href = fileName; 
+            console.log(`[ACCEDIENDO] Navegando a: ${fileName}`);
+        }
+
+        /**
+         * Permite la navegación al archivo HTML del depósito correspondiente.
+         * @param {string} name - 'abajo' o 'arriba'.
+         */
+        function navigateToDepot(name) {
+            const fileName = `deposito-${name}.html`;
+            // Redirección solicitada por el usuario.
+            window.location.href = fileName;
+            console.log(`[ACCEDIENDO] Navegando a: ${fileName}`);
+        }
+
+        /**
+         * Handles initial load and sets up event listeners.
+         * Se ha añadido un setTimeout para forzar un redibujo, asegurando la posición correcta en móvil.
+         */
+        function handleInitialLoad() {
+            renderAisles(); 
+            // Dibuja las líneas inmediatamente al cargar (para desktop)
+            drawConnections(); 
+            
+            // Dibuja las líneas de nuevo con un pequeño retraso (para asegurar la posición correcta en el layout móvil)
+            setTimeout(drawConnections, 100); 
+        }
+        
+        // Redibujar las líneas cuando la ventana cambie de tamaño
+        window.addEventListener('resize', drawConnections);
+
+        // Initializer
+        window.onload = handleInitialLoad;
+    </script>
+</body>
+</html>
