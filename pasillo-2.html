@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVENTARIO DE VIVERES PASILLO 2</title>
-    <!-- Carga de Tailwind CSS para estilos --><script src="https://cdn.tailwindcss.com"></script>
+    <title>INVENTARIO DE VIVERES PASILLO 2 CAFE </title>
+    <!-- Carga de Tailwind CSS para estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Definición de variables y CONFIGURACIÓN DEL TEMA OSCURO (POR DEFECTO) */
         :root {
@@ -86,43 +87,44 @@
             color: #10b981; /* Verde esmeralda para cantidad */
             background-color: #ecfdf5; /* Fondo verde claro */
         }
-        
-        /* Estilo para el mensaje de información temporal */
-        #temp-info-message {
-            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-            max-width: 90%; /* Asegurar que se vea en móviles */
-        }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen">
 
     <div class="max-w-4xl mx-auto bg-gray-900 p-6 md:p-10 rounded-2xl shadow-2xl border border-cyan-700 main-container">
         <header class="mb-4">
-            <!-- Sección de Cabecera tipo Reporte (Simulación de 3 filas superiores de Excel) --><div class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800 light-theme:bg-white light-theme:border-blue-300">
-                <!-- Fila 1: ORGANISMO Y FECHA --><div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-2 light-theme:border-gray-200">
+            <!-- Sección de Cabecera tipo Reporte (Simulación de 3 filas superiores de Excel) -->
+            <div class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800 light-theme:bg-white light-theme:border-blue-300">
+                <!-- Fila 1: ORGANISMO Y FECHA -->
+                <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-2 light-theme:border-gray-200">
                     <p class="text-xs font-bold text-cyan-400 light-theme:text-blue-600">ORGANISMO DE INTEGRACIÓN COOPERATIVA CECOSESOLA, R.L. J085030140</p>
                     <p class="text-xs text-gray-400">FECHA: <span id="report-date" class="font-semibold"></span></p>
                 </div>
                 
-                <!-- Fila 2: PASILLO Y RESPONSABLES --><div class="flex justify-between items-start">
+                <!-- Fila 2: PASILLO Y RESPONSABLES -->
+                <div class="flex justify-between items-start">
                     <div>
-                        <h2 class="text-2xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700">PASILLO 2</h2>
+                        <h2 class="text-2xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700"> PASILLO CAFE 
+</h2>
                         <h3 class="text-xl font-bold text-gray-300 light-theme:text-gray-700">FERIA DEL ESTE</h3>
                     </div>
                     
                     <div class="text-sm">
+                        <!-- Los inputs de responsables ahora viven en el footer, pero mostramos aquí su estructura -->
                         <p class="text-gray-400 mb-1">RESPONSABLE 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800"></span></p>
                         <p class="text-gray-400">RESPONSABLE 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800"></span></p>
                     </div>
                 </div>
                 
-                <!-- Fila 3: CANTIDAD DE PRODUCTO (Título del contador) --><div class="mt-4 p-2 bg-gray-700 rounded light-theme:bg-gray-200">
+                <!-- Fila 3: CANTIDAD DE PRODUCTO (Título del contador) -->
+                <div class="mt-4 p-2 bg-gray-700 rounded light-theme:bg-gray-200">
                      <p class="text-xs font-bold text-white light-theme:text-gray-800">CANTIDAD DE PRODUCTO</p>
                 </div>
             </div>
 
-            <!-- Botones de Acción: Tema, Descarga y Enviar --><div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 items-center">
-                <!-- Botón de Tema --><button 
+            <!-- Botones de Acción -->
+            <div class="flex justify-end space-x-4 items-center">
+                <button 
                     id="toggle-theme-btn"
                     onclick="toggleTheme()"
                     class="p-3 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200"
@@ -136,33 +138,21 @@
                     </svg>
                 </button>
                 
-                <!-- Grupo de Descarga y Envío --><div class="flex space-x-3 w-full sm:w-auto justify-end">
-                    <button 
-                        id="download-excel-btn"
-                        onclick="downloadExcel()"
-                        class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-5 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        Descargar CSV
-                    </button>
-
-                    <!-- Botón ENVIAR POR GMAIL (Actualizado) --><button 
-                        id="send-gmail-btn"
-                        onclick="sendGmail()"
-                        class="bg-red-500 hover:bg-red-400 text-white font-bold py-2 px-5 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm"
-                    >
-                        <!-- Icono de Gmail (SVG simple) --><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 2L12 11 4 6h16zm0 12H4V8l8 5 8-5v10z"/>
-                        </svg>
-                        Enviar por Gmail
-                    </button>
-                </div>
+                <button 
+                    id="download-excel-btn"
+                    onclick="downloadExcel()"
+                    class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-5 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Descargar CSV
+                </button>
             </div>
         </header>
 
-        <!-- Contenedor del Inventario como Tabla --><div class="mt-4">
+        <!-- Contenedor del Inventario como Tabla -->
+        <div class="mt-4">
             <table id="inventory-table" class="shadow-xl rounded-xl overflow-hidden">
                 <thead>
                     <tr>
@@ -171,14 +161,17 @@
                     </tr>
                 </thead>
                 <tbody id="inventory-list">
-                    <!-- Filas de productos se insertarán aquí con JavaScript --></tbody>
+                    <!-- Filas de productos se insertarán aquí con JavaScript -->
+                </tbody>
             </table>
         </div>
 
-        <!-- Resumen del Inventario: CON CONTADOR Y RESPONSABLES --><footer class="mt-8 pt-6 border-t-4 border-cyan-600 bg-gray-800 rounded-lg p-4 shadow-xl footer-container">
+        <!-- Resumen del Inventario: CON CONTADOR Y RESPONSABLES -->
+        <footer class="mt-8 pt-6 border-t-4 border-cyan-600 bg-gray-800 rounded-lg p-4 shadow-xl footer-container">
             <div class="flex flex-col sm:flex-row items-start sm:items-stretch justify-between">
                 
-                <!-- Columna 1: Contador de SKUs --><div id="stocked-products-container" class="mb-4 sm:mb-0 sm:w-1/2 sm:pr-4 min-h-full flex flex-col"> 
+                <!-- Columna 1: Contador de SKUs -->
+                <div id="stocked-products-container" class="mb-4 sm:mb-0 sm:w-1/2 sm:pr-4 min-h-full flex flex-col"> 
                     <p class="text-xl font-bold text-cyan-400 mb-2 accent-text">Productos Contados (SKUs):</p>
                     <div 
                         id="stocked-products-count-box"
@@ -189,7 +182,8 @@
                     <p class="text-sm text-gray-400 mt-2 text-center">Cantidad de ítems diferentes contados.</p>
                 </div>
                 
-                <!-- Columna 2: Responsables (Campos de Texto) --><div class="flex flex-col space-y-3 sm:space-y-2 sm:pl-4 sm:border-l border-cyan-800 w-full sm:w-1/2">
+                <!-- Columna 2: Responsables (Campos de Texto) -->
+                <div class="flex flex-col space-y-3 sm:space-y-2 sm:pl-4 sm:border-l border-cyan-800 w-full sm:w-1/2">
                     <label for="responsable-1" class="text-lg font-semibold text-cyan-400 accent-text">Responsable 1:</label>
                     <input
                         type="text"
@@ -216,38 +210,47 @@
         </footer>
     </div>
 
-    <!-- Modal de Calculadora --><div id="calculator-modal" class="modal-overlay">
+    <!-- Modal de Calculadora -->
+    <div id="calculator-modal" class="modal-overlay">
         <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-sm transform transition-all duration-300 border border-cyan-700 calculator-content">
             <h2 class="text-2xl font-extrabold text-cyan-400 mb-2 truncate accent-text" id="calc-product-name">Calculadora</h2>
             <p class="text-sm text-gray-400 mb-4">Introduce la cantidad total.</p>
 
-            <!-- Pantalla de la Calculadora --><div class="bg-gray-900 p-4 mb-4 rounded-lg text-right overflow-hidden border border-cyan-700 calc-display-container">
-                <!-- Historial de Operación (Expresión Completa) --><div class="text-gray-500 text-sm h-4 mb-1 truncate" id="calc-history">0</div>
+            <!-- Pantalla de la Calculadora -->
+            <div class="bg-gray-900 p-4 mb-4 rounded-lg text-right overflow-hidden border border-cyan-700 calc-display-container">
+                <!-- Historial de Operación (Expresión Completa) -->
+                <div class="text-gray-500 text-sm h-4 mb-1 truncate" id="calc-history">0</div>
                 <div id="calc-display" class="text-cyan-400 text-5xl font-mono truncate neon-title">0</div>
             </div>
 
-            <!-- Botones de la Calculadora --><div class="grid grid-cols-4 gap-3">
-                <!-- Fila 1 --><button onclick="clearCalculator()" class="calc-btn bg-red-600 text-white hover:bg-red-500">C</button>
+            <!-- Botones de la Calculadora -->
+            <div class="grid grid-cols-4 gap-3">
+                <!-- Fila 1 -->
+                <button onclick="clearCalculator()" class="calc-btn bg-red-600 text-white hover:bg-red-500">C</button>
                 <button onclick="backspaceCalculator()" class="calc-btn bg-red-500 text-white hover:bg-red-400">←</button>
                 <button onclick="handleOperator('/')" class="calc-btn bg-gray-700 text-cyan-400 hover:bg-gray-600">/</button>
                 <button onclick="handleOperator('*')" class="calc-btn bg-gray-700 text-cyan-400 hover:bg-gray-600">*</button>
                 
-                <!-- Fila 2 --><button onclick="inputDigit('7')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">7</button>
+                <!-- Fila 2 -->
+                <button onclick="inputDigit('7')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">7</button>
                 <button onclick="inputDigit('8')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">8</button>
                 <button onclick="inputDigit('9')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">9</button>
                 <button onclick="handleOperator('-')" class="calc-btn bg-gray-700 text-cyan-400 hover:bg-gray-600">-</button>
                 
-                <!-- Fila 3 --><button onclick="inputDigit('4')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">4</button>
+                <!-- Fila 3 -->
+                <button onclick="inputDigit('4')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">4</button>
                 <button onclick="inputDigit('5')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">5</button>
                 <button onclick="inputDigit('6')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">6</button>
                 <button onclick="handleOperator('+')" class="calc-btn bg-gray-700 text-cyan-400 hover:bg-gray-600">+</button>
                 
-                <!-- Fila 4 --><button onclick="inputDigit('1')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">1</button>
+                <!-- Fila 4 -->
+                <button onclick="inputDigit('1')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">1</button>
                 <button onclick="inputDigit('2')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">2</button>
                 <button onclick="inputDigit('3')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">3</button>
                 <button onclick="handleOperator('=')" class="calc-btn bg-cyan-500 text-gray-900 hover:bg-cyan-400">=</button>
                 
-                <!-- Fila 5 --><button onclick="inputDigit('0')" class="calc-btn col-span-2 bg-gray-900 text-white hover:bg-gray-700">0</button>
+                <!-- Fila 5 -->
+                <button onclick="inputDigit('0')" class="calc-btn col-span-2 bg-gray-900 text-white hover:bg-gray-700">0</button>
                 <button onclick="inputDigit('.')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">.</button>
                 <button onclick="saveAndClose()" class="calc-btn bg-lime-500 text-gray-900 hover:bg-lime-400">Guardar</button>
             </div>
@@ -259,20 +262,12 @@
     <script>
         // Array original con solo nombres
         const productNames = [
-            "ACEITE DE SOYA 1 LITRO", "ACEITE DE SOYA LA LUCHA 828ML", "ACEITE MAZEITE 1 LITRO", "ACEITE NATUROL 850ML", 
-            "ACEITE SANTA LUCÍA 828ML", "ACEITE SANTA LUCÍA 900ML", "ACEITE VATEL 1 LITRO", "ACEITE VATEL 500ML", 
-            "AFRECHO", "ALIÑOS CÚRCUMA", "ALIÑOS SAN MIGUEL GRANDE", "ALIÑOS SAN MIGUEL PEQUEÑO", 
-            "ATÚN AMANTINA 170 GRS", "ATÚN PEÑERO VERDE 170 GRS", "ATÚN SOLIDO DIFIORE 170G", "AVENA DON JORGE 400 GRS", 
-            "AVENA QUAKER", "AVENA VICONÉ 400GR", "CAFÉ ALUMINIO BARINAS", "CAFÉ CORDILLERA 200 GRS", 
-            "CAFÉ CORDILLERA 500 GRS", "CAFÉ EN GRANO DULCE AMARGO 250 GRS", "CAFÉ EN GRANO DULCE AMARGO 400GR", 
-            "CAFÉ LO NUESTRO", "CAFÉ MATILDE 200 GR", "CARNE DE SOYA SOY TEX 200GRS", "FORORO VALLE HONDO", 
-            "HARINA DE AVENA QUAKER 400GRS", "HARINA DE TRIGO DULCE MAR LEUDANTE 1 KG", "HARINA DE TRIGO DULCE MAR TODO USO 1 KG", 
-            "HARINA DE TRIGO MARY 1 KG", "LECHE DO BOON 400GR", "LECHE PURELAC 200GR", "LECHE PURELAC 400GR", 
-            "LECHE VALLE HONDO 400 GRS", "PASTA DE 8 DE MARZO CORTA 500GR", "PASTA DE 8 DE MARZO LARGA 500GR", 
-            "SARDINA INCOSA EN ACEITE 170 GR", "SARDINA INCOSA DE TOMATE 170 GR", "SARDINA MARGARITA DE TOMATE 170 GR", 
-            "SARDINA MARGARITA EN ACEITE 170 GR", "SARDINA MARGARITA PICANTE 170 GR", "TAMARINDO EL ESFUERZO 400 GR", 
-            "TAMARINDO ETNA 400 GR", "VAINILLA"
+            "CACHITOS ", "CATALINAS /NEGRAS* 10", "COCADAS", "GALLETA ARTESANAL ", 
+            "PAN ARABE", "PAN CORTADITOS", "PAN DE GUAYABA", "PAN DE HAMBURGUESA X 08", 
+            "PAN DE SANDWICHE  GRD", "PAN DE SANDWICHE  INTEGRAL ", "PAN DE SANDWICHE  PQ", "PAN DE SANDWIS NACIONAL 500GR", 
+            "PAN DE TUNJA PEQ", "PANELA DULCE", "SOPA SOBRE MAGGY", 
         ];
+        
 
         // Creamos un array de objetos para manejar el estado del inventario completo, incluyendo el historial.
         const inventoryData = productNames.map(name => ({
@@ -296,32 +291,6 @@
 
         const calcDisplay = document.getElementById('calc-display');
         const calcHistory = document.getElementById('calc-history');
-
-        /**
-         * Muestra un mensaje temporal en la parte superior de la pantalla.
-         * @param {string} message Mensaje a mostrar (puede contener HTML simple).
-         * @param {number} duration Duración en milisegundos.
-         */
-        function displayInfoMessage(message, duration) {
-            let container = document.getElementById('temp-info-message');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'temp-info-message';
-                document.body.appendChild(container);
-            }
-            
-            container.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-cyan-700 text-white p-4 rounded-lg shadow-2xl z-[1001] transition-opacity duration-300 opacity-0 text-sm font-semibold max-w-[90%] text-center';
-            container.innerHTML = message;
-
-            // Mostrar
-            setTimeout(() => { container.style.opacity = '1'; }, 10);
-
-            // Ocultar
-            setTimeout(() => {
-                container.style.opacity = '0';
-                setTimeout(() => container.remove(), 300); // Eliminar después de la transición
-            }, duration);
-        }
 
         /**
          * Alterna entre el tema oscuro y el tema claro.
@@ -477,13 +446,12 @@
          * Realiza el cálculo de la operación pendiente.
          */
         function performCalculation(firstOperand, secondOperand, operator) {
-            // Se utiliza Number() para manejar correctamente la precisión
-            if (operator === '+') { return Number(firstOperand) + Number(secondOperand); }
-            if (operator === '-') { return Number(firstOperand) - Number(secondOperand); }
-            if (operator === '*') { return Number(firstOperand) * Number(secondOperand); }
+            if (operator === '+') { return firstOperand + secondOperand; }
+            if (operator === '-') { return firstOperand - secondOperand; }
+            if (operator === '*') { return firstOperand * secondOperand; }
             if (operator === '/') {
                 if (secondOperand === 0) return 'Error';
-                return Number(firstOperand) / Number(secondOperand);
+                return firstOperand / secondOperand;
             }
             return secondOperand;
         }
@@ -515,7 +483,6 @@
                 const fullExpr = calculator.fullExpression.trim();
                 const lastOpIndex = fullExpr.lastIndexOf(operator);
                 if (lastOpIndex !== -1) {
-                    // Reemplazar el último operador en la expresión completa
                     calculator.fullExpression = fullExpr.substring(0, lastOpIndex) + nextOperator;
                 }
                 updateDisplay();
@@ -536,7 +503,6 @@
                     return;
                 }
 
-                // Limitar la precisión para evitar problemas de coma flotante
                 const resultFixed = parseFloat(result.toFixed(6));
                 calculator.displayValue = `${resultFixed}`; 
                 calculator.firstOperand = resultFixed; 
@@ -547,18 +513,14 @@
             if (nextOperator === '=') {
                 if (calculator.displayValue !== 'Error') {
                     const lastNumber = calculator.displayValue;
-                    const parts = calculator.fullExpression.trim().split(' ');
+                    const parts = calculator.fullExpression.split(' ');
                     const lastPart = parts[parts.length - 1];
 
-                    // Si la expresión termina en un operador, asumimos el último número como operando
                     if (['+', '-', '*', '/'].includes(lastPart)) {
                          calculator.fullExpression += ` ${lastNumber}`;
                     }
                     
-                    // Solo si el resultado no es 'Error', mostrar el resultado final en el historial
-                    if (calculator.displayValue !== 'Error') {
-                         calculator.fullExpression += ` = ${calculator.displayValue}`;
-                    }
+                    calculator.fullExpression += ` = ${calculator.displayValue}`;
                 }
                 calculator.waitingForSecondOperand = true;
                 calculator.operator = null;
@@ -594,242 +556,246 @@
         }
 
         /**
-         * Cierra el modal de la calculadora.
+         * Abre el modal de la calculadora.
+         */
+        function openCalculator(index, productName) {
+            calculator.currentProductIndex = index;
+            document.getElementById('calc-product-name').textContent = productName;
+            
+            const product = inventoryData[index];
+            const currentQuantity = product.quantity.toString();
+            const currentHistory = product.history;
+
+            clearCalculator();
+            
+            calculator.displayValue = currentQuantity;
+            calculator.fullExpression = currentHistory;
+            calculator.firstOperand = parseFloat(currentQuantity); 
+            calculator.isResultCalculated = true; 
+            
+            updateDisplay();
+            document.getElementById('calculator-modal').style.display = 'flex';
+        }
+        
+        /**
+         * Cierra el modal de la calculadora sin guardar.
          */
         function closeCalculator() {
+            calculator.currentProductIndex = null; 
             document.getElementById('calculator-modal').style.display = 'none';
-            clearCalculator();
         }
 
         /**
-         * Guarda el resultado de la calculadora en el inventario y cierra el modal.
+         * Guarda el resultado de la calculadora en el producto y cierra el modal.
          */
         function saveAndClose() {
             const index = calculator.currentProductIndex;
-            if (index === null) return;
-            
-            // Forzar el cálculo si hay una operación pendiente (ej: '10 + 5')
-            if (calculator.operator && !calculator.waitingForSecondOperand) {
-                 handleOperator('=');
-            } else if (!calculator.operator && calculator.firstOperand === null && calculator.displayValue !== '0' ) {
-                 // Si solo se ingresó un número y no se presionó '=', lo establecemos
-                 calculator.firstOperand = parseFloat(calculator.displayValue);
+
+            // FIX: Verificar si el índice es válido antes de acceder al array
+            if (index === null || typeof inventoryData[index] === 'undefined') {
+                console.error("Error: Producto no seleccionado o índice inválido para guardar.");
+                closeCalculator();
+                return; 
             }
-
-            const finalValue = parseFloat(calculator.displayValue);
-
-            if (isNaN(finalValue) || finalValue < 0 || calculator.displayValue === 'Error') {
-                displayInfoMessage('¡Error, pana! La cantidad debe ser un número positivo.', 3000);
+            
+            if (calculator.operator) {
+                 handleOperator('=');
+            }
+            
+            if (calculator.displayValue === 'Error') {
+                closeCalculator();
                 return;
             }
             
+            const finalValue = Math.max(0, Math.floor(parseFloat(calculator.displayValue) || 0)); 
+            
+            let finalHistory = calculator.fullExpression.replace(/=\s*[\d\.]*/, '').trim(); 
+            if (finalHistory === '' || finalHistory === '0') finalHistory = finalValue.toString();
+
+            // 1. Actualizar el array de estado
             inventoryData[index].quantity = finalValue;
-            inventoryData[index].history = calculator.fullExpression;
-            
-            // Actualizar la celda y el contador
-            const qtyCell = document.querySelector(`#inventory-list tr[data-index="${index}"] .qty-cell`);
-            if (qtyCell) {
-                qtyCell.textContent = finalValue.toLocaleString('es-VE');
-                qtyCell.title = `Operación: ${calculator.fullExpression}`;
-            }
+            inventoryData[index].history = finalHistory;
 
-            updateInventoryCount();
+            // 2. Actualizar el display visual y los atributos de datos del DOM
+            const displayEl = document.getElementById(`qty-display-${index}`);
+            
+            displayEl.textContent = finalValue.toLocaleString('es-ES');
+            displayEl.setAttribute('data-quantity', finalValue);
+            displayEl.setAttribute('data-history', finalHistory); 
+            
+            // 3. Recalcular el total de SKUs
+            calculateTotal();
+            
+            // 4. Reiniciar el índice del producto al cerrar
+            calculator.currentProductIndex = null;
             closeCalculator();
-            displayInfoMessage(`¡Listo! Cantidad de <strong>${inventoryData[index].name}</strong> actualizada a ${finalValue.toLocaleString('es-VE')}.`, 2500);
         }
-
+        
         /**
-         * Abre el modal de la calculadora para un producto específico.
-         * @param {number} index Índice del producto en inventoryData.
+         * Recalcula y actualiza el contador de SKUs con stock.
          */
-        function openCalculator(index) {
-            calculator.currentProductIndex = index;
-            const product = inventoryData[index];
-            
-            document.getElementById('calc-product-name').textContent = product.name;
-            document.getElementById('calculator-modal').style.display = 'flex';
-            
-            // Inicializar la calculadora con el valor actual o el historial
-            if (product.history && product.history !== '0') {
-                calculator.displayValue = product.quantity.toString();
-                calculator.fullExpression = product.history;
-                calculator.firstOperand = product.quantity;
-                calculator.waitingForSecondOperand = false;
-                calculator.operator = null;
-                calculator.isResultCalculated = true; // Para que el próximo número reemplace
-            } else {
-                clearCalculator();
-            }
-            updateDisplay();
-        }
-
-        /**
-         * Cuenta cuántos productos tienen cantidad > 0.
-         */
-        function updateInventoryCount() {
+        function calculateTotal() {
             let count = 0;
-            let totalSKUs = inventoryData.length;
-            
-            inventoryData.forEach(item => {
-                if (item.quantity > 0) {
+            const productDisplays = document.querySelectorAll('[id^="qty-display-"]');
+            productDisplays.forEach(display => {
+                const quantity = parseInt(display.getAttribute('data-quantity') || '0');
+                if (quantity > 0) {
                     count++;
                 }
             });
-            
-            document.getElementById('stocked-products-count').textContent = `${count} / ${totalSKUs}`;
+            document.getElementById('stocked-products-count').textContent = count;
         }
 
         /**
-         * Renderiza la lista de inventario en la tabla.
-         */
-        function renderInventory() {
-            inventoryListEl.innerHTML = '';
-            inventoryData.forEach((product, index) => {
-                const row = document.createElement('tr');
-                row.className = 'table-row cursor-pointer transition duration-150 transform hover:bg-gray-800/50';
-                row.setAttribute('data-index', index);
-                row.onclick = () => openCalculator(index);
-                
-                // Celda de Producto
-                const nameCell = document.createElement('td');
-                nameCell.className = 'table-data product-cell';
-                nameCell.textContent = product.name;
-                row.appendChild(nameCell);
-                
-                // Celda de Cantidad
-                const qtyCell = document.createElement('td');
-                qtyCell.className = 'table-data qty-cell';
-                qtyCell.textContent = product.quantity.toLocaleString('es-VE');
-                qtyCell.title = `Operación: ${product.history}`;
-                row.appendChild(qtyCell);
-                
-                inventoryListEl.appendChild(row);
-            });
-            updateInventoryCount();
-            updateInventoryDisplayClasses(); 
-        }
-
-        /**
-         * Ajusta las clases de tema a las filas de la tabla generadas dinámicamente.
-         */
-        function updateInventoryDisplayClasses() {
-            const isLightTheme = document.body.classList.contains('light-theme');
-            const tableRows = document.querySelectorAll('#inventory-list .table-row');
-            
-            tableRows.forEach(row => {
-                const nameCell = row.querySelector('.product-cell');
-                const qtyCell = row.querySelector('.qty-cell');
-
-                // Asegurar que las clases base estén
-                nameCell.classList.add('table-data', 'product-cell');
-                qtyCell.classList.add('table-data', 'qty-cell');
-                
-                // Alternar clases de tema para la celda de nombre
-                if (isLightTheme) {
-                    nameCell.classList.remove('text-e5e7eb');
-                    nameCell.classList.add('text-1f2937', 'bg-white');
-                    row.classList.remove('hover:bg-gray-800/50');
-                    row.classList.add('hover:bg-gray-100');
-                } else {
-                    nameCell.classList.remove('text-1f2937', 'bg-white');
-                    nameCell.classList.add('text-e5e7eb');
-                    row.classList.remove('hover:bg-gray-100');
-                    row.classList.add('hover:bg-gray-800/50');
-                }
-                
-                // Alternar clases de tema para la celda de cantidad
-                if (isLightTheme) {
-                    qtyCell.classList.remove('text-a3e635', 'bg-111827');
-                    qtyCell.classList.add('text-10b981', 'bg-ecfdf5');
-                } else {
-                    qtyCell.classList.remove('text-10b981', 'bg-ecfdf5');
-                    qtyCell.classList.add('text-a3e635', 'bg-111827');
-                }
-            });
-        }
-        
-        /**
-         * Descarga el inventario como un archivo CSV (simulando Excel).
+         * Genera y descarga un archivo CSV compatible con Excel de Windows (usando delimitador ; y UTF-8 BOM).
          */
         function downloadExcel() {
-            const resp1 = document.getElementById('responsable-1').value;
-            const resp2 = document.getElementById('responsable-2').value;
-            const date = document.getElementById('report-date').textContent;
+            const date = document.getElementById('report-date').textContent || 'N/A';
+            const resp1 = document.getElementById('responsable-1').value || 'N/A';
+            const resp2 = document.getElementById('responsable-2').value || 'N/A';
             
-            // Encabezado del CSV (simulando reporte)
-            let csvContent = `ORGANISMO,"CECOSESOLA, R.L."\n`;
-            csvContent += `PASILLO,"PASILLO 2"\n`;
-            csvContent += `RESPONSABLE 1,"${resp1}"\n`;
-            csvContent += `RESPONSABLE 2,"${resp2}"\n`;
-            csvContent += `FECHA,${date}\n\n`;
+            // BOM (Byte Order Mark) y Delimitador (Punto y Coma) para compatibilidad con Excel en Windows/español.
+            const BOM = "\ufeff"; 
+            const DELIMITER = ";";
             
-            // Datos de la tabla
-            csvContent += "PRODUCTO,CANTIDAD,OPERACIÓN\n";
-            
-            inventoryData.forEach(item => {
-                // Usar punto como separador decimal para CSV estándar, o coma si el entorno local lo requiere
-                const quantityStr = item.quantity.toFixed(2).replace('.', ','); 
-                const historyStr = item.history.replace(/"/g, '""'); // Escapar comillas dobles
-                csvContent += `"${item.name}",${quantityStr},"${historyStr}"\n`;
-            });
+            let csvContent = ""; // Empezamos sin el data URI
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            // Metadatos
+            csvContent += `ORGANISMO DE INTEGRACIÓN COOPERATIVA CECOSESOLA, R.L. J085030140${DELIMITER}\n`;
+            csvContent += `PASILLO 2 ${DELIMITER}FERIA DEL ESTE\n`;
+            csvContent += `Fecha:${DELIMITER}${date}\n`;
+            csvContent += `Responsable 1:${DELIMITER}${resp1}\n`;
+            csvContent += `Responsable 2:${DELIMITER}${resp2}\n`;
+            csvContent += `SKUs Contados:${DELIMITER}${document.getElementById('stocked-products-count').textContent}\n\n`;
+
+            // Encabezados de la tabla
+            csvContent += `Producto${DELIMITER}Historial de Operación${DELIMITER}Cantidad Contada\n`; 
+
+            // Datos de los productos
+            inventoryData.forEach((product) => {
+                const quantity = product.quantity;
+                const history = product.history;
+                
+                // Escapar comillas en campos de texto, si existen
+                const safeProduct = product.name.replace(/"/g, '""'); 
+                const safeHistory = history.replace(/"/g, '""');
+
+                // Usando el delimitador ; para mayor compatibilidad con Excel en español
+                csvContent += `"${safeProduct}"${DELIMITER}"${safeHistory}"${DELIMITER}${quantity}\n`;
+            });
+            
+            // 1. Prepend BOM to content
+            const finalContent = BOM + csvContent;
+            
+            // 2. Create Blob with explicit UTF-8 encoding
+            const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+
+            // 3. Create and click link
             const link = document.createElement("a");
-            if (link.download !== undefined) { 
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", `Inventario_Pasillo_2_${date.replace(/\//g, '-')}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                displayInfoMessage('¡Inventario descargado como CSV, mi gente! ¡Revisa tus descargas!', 2500);
-            } else {
-                 displayInfoMessage('Tu navegador no soporta la descarga automática. Copia los datos manualmente.', 3500);
-            }
+            link.setAttribute("href", url);
+            link.setAttribute("download", `inventario_pasillo2_${date.replace(/\//g, '-')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // 4. Clean up
+            URL.revokeObjectURL(url);
         }
 
         /**
-         * Genera un resumen y lo abre en una nueva ventana de Gmail.
+         * Inicializa la interfaz de inventario.
          */
-        function sendGmail() {
-            const resp1 = document.getElementById('responsable-1').value;
-            const date = document.getElementById('report-date').textContent;
-            
-            const countedItems = inventoryData.filter(item => item.quantity > 0);
-            let summary = `*REPORTE INVENTARIO PASILLO 2 - FERIA DEL ESTE*\n`;
-            summary += `*Fecha:* ${date}\n`;
-            summary += `*Responsable 1:* ${resp1}\n`;
-            summary += `*Items Contados:* ${countedItems.length} de ${inventoryData.length}\n\n`;
-            summary += `*Detalle de Cantidades (Solo contados):*\n`;
+        function initializeInventory() {
+            // Generar la estructura de la lista de productos usando inventoryData
+            inventoryListEl.innerHTML = inventoryData.map((product, index) => {
+                const safeName = product.name.replace(/'/g, "\\'");
+                
+                return `
+                <tr id="product-row-${index}" class="table-row cursor-pointer" onclick="openCalculator(${index}, '${safeName}')">
+                    <td class="table-data product-cell">${product.name}</td>
+                    <td 
+                        id="qty-display-${index}"
+                        data-quantity="${product.quantity}"
+                        data-history="${product.history}"
+                        class="table-data qty-cell"
+                    >
+                        ${product.quantity.toLocaleString('es-ES')}
+                    </td>
+                </tr>
+                `;
+            }).join('');
 
-            countedItems.forEach(item => {
-                summary += `• ${item.name}: ${item.quantity.toLocaleString('es-VE')} uds\n`;
-            });
+            // Inicializar las cabeceras del reporte con la fecha y responsables iniciales
+            updateReportHeaders();
             
-            if (countedItems.length === 0) {
-                summary += "¡Aún no hay productos contados, mi pana! ¡A darle!\n";
-            }
+            // Calcular el total inicial
+            calculateTotal();
             
-            summary += "\n(Revisar el archivo CSV para el detalle de las operaciones.)";
-
-            const subject = encodeURIComponent(`Reporte Inventario Pasillo 2 - ${date}`);
-            const body = encodeURIComponent(summary);
-
-            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`;
-            window.open(gmailUrl, '_blank');
-            displayInfoMessage('Abriendo Gmail con el resumen del conteo...', 3000);
+            // Inicializar la calculadora con el estado de inicio
+            clearCalculator(); 
         }
         
-        // Inicialización
-        window.onload = function() {
-            // Asegura que la fecha y los responsables se carguen al inicio
-            updateReportHeaders(); 
-            // Carga la lista de productos
-            renderInventory(); 
-            // Cierra el modal si estaba abierto por error (aunque el CSS lo mantiene oculto)
-            document.getElementById('calculator-modal').style.display = 'none';
-        };
+        /**
+         * Actualiza las clases de tema claro/oscuro en los elementos de la lista.
+         */
+        function updateInventoryDisplayClasses() {
+             const isLightTheme = document.body.classList.contains('light-theme');
+             
+             // Actualizar clases de acentos
+             document.querySelectorAll('.accent-text').forEach(el => {
+                 el.classList.toggle('text-cyan-400', !isLightTheme);
+                 el.classList.toggle('text-blue-600', isLightTheme);
+             });
+             
+             // Actualizar clases de tabla (headers, data, cells)
+             document.querySelectorAll('.table-header').forEach(el => {
+                 el.classList.toggle('bg-[#1f2937]', !isLightTheme);
+                 el.classList.toggle('text-[#22d3ee]', !isLightTheme);
+                 el.classList.toggle('bg-blue-300', isLightTheme);
+                 el.classList.toggle('text-blue-900', isLightTheme);
+                 el.classList.toggle('border-gray-900', !isLightTheme);
+                 el.classList.toggle('border-gray-400', isLightTheme);
+             });
+             
+             document.querySelectorAll('.table-data').forEach(el => {
+                 el.classList.toggle('border-[#1f2937]', !isLightTheme);
+                 el.classList.toggle('border-[#e5e7eb]', isLightTheme);
+                 el.classList.toggle('bg-white', isLightTheme);
+                 el.classList.toggle('bg-gray-800', !isLightTheme);
+                 el.classList.toggle('text-gray-900', isLightTheme);
+                 el.classList.toggle('text-white', !isLightTheme);
+             });
+             
+             document.querySelectorAll('.qty-cell').forEach(el => {
+                 el.classList.toggle('text-lime-400', !isLightTheme);
+                 el.classList.toggle('bg-gray-900', !isLightTheme);
+                 el.classList.toggle('text-emerald-600', isLightTheme);
+                 el.classList.toggle('bg-emerald-50', isLightTheme);
+             });
+             
+             // Ajuste de colores de inputs y contenedores principales
+             [document.querySelector('.main-container'), document.querySelector('.calculator-content')].forEach(container => {
+                 if (container) {
+                    container.classList.toggle('bg-gray-900', !isLightTheme);
+                    container.classList.toggle('border-cyan-700', !isLightTheme);
+                    container.classList.toggle('bg-gray-100', isLightTheme);
+                    container.classList.toggle('border-blue-300', isLightTheme);
+                 }
+             });
+
+             [document.querySelector('.footer-container')].forEach(container => {
+                 if (container) {
+                    container.classList.toggle('bg-gray-800', !isLightTheme);
+                    container.classList.toggle('border-cyan-600', !isLightTheme);
+                    container.classList.toggle('bg-gray-100', isLightTheme);
+                    container.classList.toggle('border-blue-500', isLightTheme);
+                 }
+             });
+        }
+        
+        // Inicializar la interfaz cuando el DOM esté listo
+        window.onload = initializeInventory;
     </script>
 </body>
 </html>
