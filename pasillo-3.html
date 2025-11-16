@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVENTARIO DE VIVERES PASILLO 2</title>
+    <title>INVENTARIO DE VIVERES PASILLO 3 PANES</title>
     <!-- Carga de Tailwind CSS para estilos -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -104,7 +104,8 @@
                 <!-- Fila 2: PASILLO Y RESPONSABLES -->
                 <div class="flex justify-between items-start">
                     <div>
-                        <h2 class="text-2xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700">PASILLO 2</h2>
+                        <h2 class="text-2xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700">🍞 PASILLO PANES 🍞
+</h2>
                         <h3 class="text-xl font-bold text-gray-300 light-theme:text-gray-700">FERIA DEL ESTE</h3>
                     </div>
                     
@@ -261,20 +262,12 @@
     <script>
         // Array original con solo nombres
         const productNames = [
-            "ACEITE DE SOYA 1 LITRO", "ACEITE DE SOYA LA LUCHA 828ML", "ACEITE MAZEITE 1 LITRO", "ACEITE NATUROL 850ML", 
-            "ACEITE SANTA LUCÍA 828ML", "ACEITE SANTA LUCÍA 900ML", "ACEITE VATEL 1 LITRO", "ACEITE VATEL 500ML", 
-            "AFRECHO", "ALIÑOS CÚRCUMA", "ALIÑOS SAN MIGUEL GRANDE", "ALIÑOS SAN MIGUEL PEQUEÑO", 
-            "ATÚN AMANTINA 170 GRS", "ATÚN PEÑERO VERDE 170 GRS", "ATÚN SOLIDO DIFIORE 170G", "AVENA DON JORGE 400 GRS", 
-            "AVENA QUAKER", "AVENA VICONÉ 400GR", "CAFÉ ALUMINIO BARINAS", "CAFÉ CORDILLERA 200 GRS", 
-            "CAFÉ CORDILLERA 500 GRS", "CAFÉ EN GRANO DULCE AMARGO 250 GRS", "CAFÉ EN GRANO DULCE AMARGO 400GR", 
-            "CAFÉ LO NUESTRO", "CAFÉ MATILDE 200 GR", "CARNE DE SOYA SOY TEX 200GRS", "FORORO VALLE HONDO", 
-            "HARINA DE AVENA QUAKER 400GRS", "HARINA DE TRIGO DULCE MAR LEUDANTE 1 KG", "HARINA DE TRIGO DULCE MAR TODO USO 1 KG", 
-            "HARINA DE TRIGO MARY 1 KG", "LECHE DO BOON 400GR", "LECHE PURELAC 200GR", "LECHE PURELAC 400GR", 
-            "LECHE VALLE HONDO 400 GRS", "PASTA DE 8 DE MARZO CORTA 500GR", "PASTA DE 8 DE MARZO LARGA 500GR", 
-            "SARDINA INCOSA EN ACEITE 170 GR", "SARDINA INCOSA DE TOMATE 170 GR", "SARDINA MARGARITA DE TOMATE 170 GR", 
-            "SARDINA MARGARITA EN ACEITE 170 GR", "SARDINA MARGARITA PICANTE 170 GR", "TAMARINDO EL ESFUERZO 400 GR", 
-            "TAMARINDO ETNA 400 GR", "VAINILLA"
+            "CACHITOS ", "CATALINAS /NEGRAS* 10", "COCADAS", "GALLETA ARTESANAL ", 
+            "PAN ARABE", "PAN CORTADITOS", "PAN DE GUAYABA", "PAN DE HAMBURGUESA X 08", 
+            "PAN DE SANDWICHE  GRD", "PAN DE SANDWICHE  INTEGRAL ", "PAN DE SANDWICHE  PQ", "PAN DE SANDWIS NACIONAL 500GR", 
+            "PAN DE TUNJA PEQ", "PANELA DULCE", "SOPA SOBRE MAGGY", 
         ];
+        
 
         // Creamos un array de objetos para manejar el estado del inventario completo, incluyendo el historial.
         const inventoryData = productNames.map(name => ({
@@ -352,6 +345,11 @@
          */
         function inputDigit(digit) {
             const { displayValue, waitingForSecondOperand, isResultCalculated, operator } = calculator;
+
+            if (displayValue === 'Error') {
+                 clearCalculator();
+                 return;
+            }
 
             if (isResultCalculated || waitingForSecondOperand) {
                 calculator.displayValue = digit === '.' ? '0.' : digit;
@@ -649,44 +647,60 @@
         }
 
         /**
-         * Genera y descarga un archivo CSV con el reporte del inventario.
+         * Genera y descarga un archivo CSV compatible con Excel de Windows (usando delimitador ; y UTF-8 BOM).
          */
         function downloadExcel() {
             const date = document.getElementById('report-date').textContent || 'N/A';
             const resp1 = document.getElementById('responsable-1').value || 'N/A';
             const resp2 = document.getElementById('responsable-2').value || 'N/A';
             
-            let csvContent = "data:text/csv;charset=utf-8,";
+            // BOM (Byte Order Mark) y Delimitador (Punto y Coma) para compatibilidad con Excel en Windows/español.
+            const BOM = "\ufeff"; 
+            const DELIMITER = ";";
             
+            let csvContent = ""; // Empezamos sin el data URI
+
             // Metadatos
-            csvContent += "ORGANISMO DE INTEGRACIÓN COOPERATIVA CECOSESOLA, R.L. J085030140\n";
-            csvContent += `PASILLO 2,FERIA DEL ESTE\n`;
-            csvContent += `Fecha:,${date}\n`;
-            csvContent += `Responsable 1:,${resp1}\n`;
-            csvContent += `Responsable 2:,${resp2}\n`;
-            csvContent += `SKUs Contados:,${document.getElementById('stocked-products-count').textContent}\n\n`;
+            csvContent += `ORGANISMO DE INTEGRACIÓN COOPERATIVA CECOSESOLA, R.L. J085030140${DELIMITER}\n`;
+            csvContent += `PASILLO 3${DELIMITER}FERIA DEL ESTE\n`;
+            csvContent += `Fecha:${DELIMITER}${date}\n`;
+            csvContent += `Responsable 1:${DELIMITER}${resp1}\n`;
+            csvContent += `Responsable 2:${DELIMITER}${resp2}\n`;
+            csvContent += `SKUs Contados:${DELIMITER}${document.getElementById('stocked-products-count').textContent}\n\n`;
 
             // Encabezados de la tabla
-            csvContent += "SKU,Producto,Historial de Operación,Cantidad Contada\n"; 
+            csvContent += `Producto${DELIMITER}Historial de Operación${DELIMITER}Cantidad Contada\n`; 
 
             // Datos de los productos
-            inventoryData.forEach((product, index) => {
+            inventoryData.forEach((product) => {
                 const quantity = product.quantity;
                 const history = product.history;
                 
+                // Escapar comillas en campos de texto, si existen
                 const safeProduct = product.name.replace(/"/g, '""'); 
                 const safeHistory = history.replace(/"/g, '""');
 
-                csvContent += `${index + 1},"${safeProduct}","${safeHistory}",${quantity}\n`;
+                // Usando el delimitador ; para mayor compatibilidad con Excel en español
+                csvContent += `"${safeProduct}"${DELIMITER}"${safeHistory}"${DELIMITER}${quantity}\n`;
             });
+            
+            // 1. Prepend BOM to content
+            const finalContent = BOM + csvContent;
+            
+            // 2. Create Blob with explicit UTF-8 encoding
+            const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
 
-            const encodedUri = encodeURI(csvContent);
+            // 3. Create and click link
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
+            link.setAttribute("href", url);
             link.setAttribute("download", `inventario_pasillo2_${date.replace(/\//g, '-')}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            
+            // 4. Clean up
+            URL.revokeObjectURL(url);
         }
 
         /**
