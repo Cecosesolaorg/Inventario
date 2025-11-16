@@ -172,7 +172,7 @@
                 
                 <!-- Columna 1: Contador de SKUs -->
                 <div id="stocked-products-container" class="mb-4 sm:mb-0 sm:w-1/2 sm:pr-4 min-h-full flex flex-col"> 
-                    <p class="text-xl font-bold text-cyan-400 mb-2 accent-text">Productos Contados (SKUs):</p>
+                    <p class="text-xl font-bold text-cyan-400 mb-2 accent-text">Productos Contados PRODUCTOS CONTADOS:</p>
                     <div 
                         id="stocked-products-count-box"
                         class="px-3 py-2 bg-cyan-600 text-gray-900 rounded-xl shadow-lg text-4xl font-extrabold text-center flex items-center justify-center flex-grow h-full" 
@@ -675,10 +675,10 @@
             csvContent += `Fecha:${DELIMITER}${date}\n`;
             csvContent += `Responsable 1:${DELIMITER}${resp1}\n`;
             csvContent += `Responsable 2:${DELIMITER}${resp2}\n`;
-            csvContent += `SKUs Contados:${DELIMITER}${document.getElementById('stocked-products-count').textContent}\n\n`;
+            csvContent += `PRODUCTOS Contados:${DELIMITER}${document.getElementById('stocked-products-count').textContent}\n\n`;
 
             // Encabezados de la tabla
-            csvContent += `Producto${DELIMITER}Historial de Operación${DELIMITER}Cantidad Contada\n`; 
+            csvContent += `Producto${DELIMITER}Historial ${DELIMITER}Cantidad Contada\n`; 
 
             // Datos de los productos
             inventoryData.forEach((product) => {
