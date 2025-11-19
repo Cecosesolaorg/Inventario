@@ -86,31 +86,6 @@
             text-decoration: underline;
         }
 
-        /* Notificación de Guardado (Toast) */
-        #save-toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px); /* Oculto abajo */
-            background-color: #10b981; /* Verde */
-            color: #064e3b;
-            padding: 10px 24px;
-            border-radius: 50px;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
-            opacity: 0;
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            pointer-events: none;
-        }
-        #save-toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
         /* --- TEMA CLARO --- */
         .light-theme body { background-color: #f3f4f6; color: #1f2937; }
         .light-theme .main-container { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
@@ -132,14 +107,6 @@
     </style>
 </head>
 <body class="p-2 md:p-6 min-h-screen">
-
-    <!-- Notificación Flotante de Guardado -->
-    <div id="save-toast">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-        </svg>
-        <span>Guardado</span>
-    </div>
 
     <div class="max-w-4xl mx-auto bg-gray-900 p-4 md:p-8 rounded-2xl shadow-2xl border border-cyan-900 main-container">
         <header class="mb-4">
@@ -305,8 +272,14 @@
             "PAN DE TUNJA PEQ", "PANELA DULCE", "SOPA SOBRE MAGGY", 
         ];
 
+        // CONFIGURACIÓN DE CLAVES DE ALMACENAMIENTO
+        // Usamos 'Panes' para diferenciar de la app de 'Cafe'
+        const STORAGE_KEY_DATA = 'inventoryData_Panes';
+        const STORAGE_KEY_RESP1 = 'resp1_Panes';
+        const STORAGE_KEY_RESP2 = 'resp2_Panes';
+
         // CARGAR DATOS GUARDADOS
-        let savedData = localStorage.getItem('inventoryData_Cafe');
+        let savedData = localStorage.getItem(STORAGE_KEY_DATA);
         let inventoryData = savedData ? JSON.parse(savedData) : productNames.map(name => ({
             name: name,
             quantity: 0,
@@ -316,8 +289,8 @@
         // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
             // Restaurar Responsables
-            const savedResp1 = localStorage.getItem('resp1_Cafe');
-            const savedResp2 = localStorage.getItem('resp2_Cafe');
+            const savedResp1 = localStorage.getItem(STORAGE_KEY_RESP1);
+            const savedResp2 = localStorage.getItem(STORAGE_KEY_RESP2);
             
             if(savedResp1) document.getElementById('responsable-1').value = savedResp1;
             if(savedResp2) document.getElementById('responsable-2').value = savedResp2;
@@ -329,31 +302,19 @@
             document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
         });
 
-        // TOAST DE GUARDADO
-        let toastTimeout;
-        function showSaveToast() {
-            const toast = document.getElementById('save-toast');
-            toast.classList.add('show');
-            
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2000); // 2 segundos visible
-        }
-
         // Función para guardar todo en LocalStorage
         function saveDataToLocal() {
-            localStorage.setItem('inventoryData_Cafe', JSON.stringify(inventoryData));
-            localStorage.setItem('resp1_Cafe', document.getElementById('responsable-1').value);
-            localStorage.setItem('resp2_Cafe', document.getElementById('responsable-2').value);
-            showSaveToast(); // Mostrar confirmación visual
+            localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(inventoryData));
+            localStorage.setItem(STORAGE_KEY_RESP1, document.getElementById('responsable-1').value);
+            localStorage.setItem(STORAGE_KEY_RESP2, document.getElementById('responsable-2').value);
+            // Guardado silencioso
         }
 
         function resetAllData() {
-            if(confirm("⚠️ ¿Estás seguro de que quieres BORRAR TODOS LOS DATOS?\n\nEsta acción no se puede deshacer. Úsala solo cuando vayas a comenzar un inventario nuevo.")) {
-                localStorage.removeItem('inventoryData_Cafe');
-                localStorage.removeItem('resp1_Cafe');
-                localStorage.removeItem('resp2_Cafe');
+            if(confirm("⚠️ ¿Estás seguro de que quieres BORRAR TODOS LOS DATOS DEL INVENTARIO DE PANES?\n\nEsta acción no se puede deshacer.")) {
+                localStorage.removeItem(STORAGE_KEY_DATA);
+                localStorage.removeItem(STORAGE_KEY_RESP1);
+                localStorage.removeItem(STORAGE_KEY_RESP2);
                 location.reload();
             }
         }
@@ -527,7 +488,7 @@
             inventoryData[calculator.currentProductIndex].quantity = finalVal;
             inventoryData[calculator.currentProductIndex].history = String(finalVal); 
             
-            saveDataToLocal(); // GUARDAR + TOAST
+            saveDataToLocal(); // GUARDAR 
 
             const displayEl = document.getElementById(`qty-display-${calculator.currentProductIndex}`);
             displayEl.textContent = finalVal;
@@ -558,7 +519,8 @@
 
             let csvContent = "\uFEFF"; 
             
-            csvContent += `REPORTE DE INVENTARIO - PASILLO CAFE\n`;
+            // CORREGIDO: Título interno del reporte
+            csvContent += `REPORTE DE INVENTARIO - PASILLO PANES\n`;
             csvContent += `ORGANISMO: CECOSESOLA R.L.\n`;
             csvContent += `FECHA:;${fecha}\n`;
             csvContent += `RESPONSABLE 1:;${resp1}\n`;
@@ -575,8 +537,10 @@
             const link = document.createElement("a");
             
             const cleanDate = fecha.replace(/\//g, '-');
+            
+            // CORREGIDO: Nombre del archivo
             link.setAttribute("href", url);
-            link.setAttribute("download", `Inventario_Cafe_${cleanDate}.csv`);
+            link.setAttribute("download", `Inventario_Panes_${cleanDate}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -606,9 +570,8 @@
             document.getElementById('resp1-display').textContent = r1 || "SIN NOMBRE";
             document.getElementById('resp2-display').textContent = r2 || "SIN NOMBRE";
             
-            saveDataToLocal(); // GUARDAR + TOAST
+            saveDataToLocal(); // GUARDAR 
         }
     </script>
 </body>
 </html>
-
