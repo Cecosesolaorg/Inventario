@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INVENTARIO DE VIVERES PASILLO 2 CAFE ☕ </title>
-    <!-- Carga de Tailwind CSS para estilos -->
+    <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Definición de variables y CONFIGURACIÓN DEL TEMA OSCURO (POR DEFECTO) */
+        /* --- CONFIGURACIÓN DE VARIABLES Y TEMA --- */
         :root {
             --neon-cyan: #22d3ee;
             --neon-lime: #a3e635;
@@ -20,128 +20,183 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
+        /* Utilidades */
         input[type="number"] { -moz-appearance: textfield; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
+        
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.85); display: none;
             justify-content: center; align-items: center; z-index: 1000;
+            backdrop-filter: blur(4px);
         }
 
         .neon-title { text-shadow: 0 0 5px rgba(34, 211, 238, 0.8); }
-        .calc-btn { @apply p-4 text-2xl font-bold rounded-xl shadow-md transition duration-150 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none; }
+        
+        .calc-btn { 
+            @apply p-4 text-2xl font-bold rounded-xl shadow-md transition duration-150 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none; 
+        }
 
-        /* Estilos de Tabla de Inventario (Simulando Celdas de Excel) */
+        /* --- ESTILOS DE TABLA (Simulación Excel) --- */
         #inventory-table {
-            border-collapse: collapse;
+            border-collapse: separate; 
+            border-spacing: 0;
             width: 100%;
+            border: 1px solid #374151;
+            border-radius: 0.75rem; /* rounded-xl */
+            overflow: hidden;
         }
+        
         .table-header, .table-data {
-            border: 1px solid #1f2937; /* Borde oscuro para el modo oscuro */
-            padding: 8px 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #374151;
         }
+
         .table-header {
-            background-color: #1f2937; /* Encabezados más oscuros */
-            color: #22d3ee; /* Texto de encabezado neón */
-            font-weight: bold;
+            background-color: #1f2937;
+            color: #22d3ee;
+            font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.05em;
             text-align: center;
         }
-        .table-row:hover .table-data {
-            background-color: #1f2937; /* Hover sutil en filas */
+
+        .table-row { transition: background-color 0.2s; }
+        .table-row:last-child .table-data { border-bottom: none; }
+        
+        /* Modo Oscuro (Default) */
+        .table-row:hover { background-color: #1f2937; }
+        
+        .product-cell {
+            font-size: 0.95rem;
+            color: #e5e7eb;
+            border-right: 1px solid #374151;
         }
+
         .qty-cell {
             text-align: center;
             font-weight: bold;
-            color: #a3e635; /* Color lima para la cantidad */
-            background-color: #111827; /* Fondo para la cantidad */
+            color: #a3e635;
+            background-color: rgba(17, 24, 39, 0.5);
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
-        .product-cell {
-            font-size: 0.9rem;
-            color: #e5e7eb;
+        .qty-cell:hover {
+            background-color: #374151;
+            text-decoration: underline;
         }
 
-        /* TEMA CLARO */
-        .light-theme .main-container { background-color: #f3f4f6; border-color: #93c5fd; }
-        .light-theme .header-border { border-color: #bfdbfe; }
-        .light-theme .neon-title, .light-theme .accent-text { color: #2563eb; text-shadow: none; }
-        .light-theme #download-excel-btn { background-color: #10b981; color: #ffffff; }
-        .light-theme .qty-display { background-color: #dbeafe; border-color: #60a5fa; color: #1e3a8a; }
-        .light-theme .footer-container { background-color: #e5e7eb; border-color: #60a5fa; }
+        /* Notificación de Guardado (Toast) */
+        #save-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px); /* Oculto abajo */
+            background-color: #10b981; /* Verde */
+            color: #064e3b;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            opacity: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+        #save-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* --- TEMA CLARO --- */
+        .light-theme body { background-color: #f3f4f6; color: #1f2937; }
+        .light-theme .main-container { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .light-theme .neon-title { color: #2563eb; text-shadow: none; }
+        .light-theme .accent-text { color: #2563eb; }
         
-        .light-theme .table-header {
-            background-color: #bfdbfe; /* Azul claro para encabezado */
-            color: #1e3a8a; /* Azul oscuro para texto de encabezado */
-            border-color: #93c5fd;
-        }
-        .light-theme .table-data {
-            background-color: #ffffff;
-            color: #1f2937;
-            border-color: #e5e7eb;
-        }
-        .light-theme .table-row:hover .table-data {
-            background-color: #f3f4f6;
-        }
-        .light-theme .qty-cell {
-            color: #10b981; /* Verde esmeralda para cantidad */
-            background-color: #ecfdf5; /* Fondo verde claro */
-        }
+        /* Tabla Claro */
+        .light-theme #inventory-table { border-color: #e5e7eb; }
+        .light-theme .table-header { background-color: #bfdbfe; color: #1e40af; border-bottom: 1px solid #93c5fd; }
+        .light-theme .table-data { border-bottom: 1px solid #e5e7eb; }
+        .light-theme .product-cell { color: #1f2937; border-right: 1px solid #e5e7eb; }
+        .light-theme .table-row:hover { background-color: #f0f9ff; }
+        .light-theme .qty-cell { background-color: #ecfdf5; color: #059669; }
+        .light-theme .qty-cell:hover { background-color: #d1fae5; }
+
+        /* Inputs y Footer Claro */
+        .light-theme input[type="text"] { background-color: #ffffff; border-color: #94a3b8; color: #0f172a; }
+        .light-theme .footer-container { background-color: #e2e8f0; border-color: #94a3b8; }
     </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen">
+<body class="p-2 md:p-6 min-h-screen">
 
-    <div class="max-w-4xl mx-auto bg-gray-900 p-6 md:p-10 rounded-2xl shadow-2xl border border-cyan-700 main-container">
+    <!-- Notificación Flotante de Guardado -->
+    <div id="save-toast">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <span>Guardado</span>
+    </div>
+
+    <div class="max-w-4xl mx-auto bg-gray-900 p-4 md:p-8 rounded-2xl shadow-2xl border border-cyan-900 main-container">
         <header class="mb-4">
-            <!-- Sección de Cabecera tipo Reporte (Simulación de 3 filas superiores de Excel) -->
-            <div class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800 light-theme:bg-white light-theme:border-blue-300">
+            <!-- Cabecera tipo Reporte -->
+            <div class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800/50 light-theme:bg-white light-theme:border-blue-200 transition-colors">
                 <!-- Fila 1: ORGANISMO Y FECHA -->
-                <div class="flex justify-between items-center border-b border-gray-700 pb-2 mb-2 light-theme:border-gray-200">
-                    <p class="text-xs font-bold text-cyan-400 light-theme:text-blue-600">ORGANISMO DE INTEGRACIÓN COOPERATIVA CECOSESOLA, R.L. J085030140</p>
-                    <p class="text-xs text-gray-400">FECHA: <span id="report-date" class="font-semibold"></span></p>
+                <div class="flex flex-col md:flex-row justify-between md:items-center border-b border-gray-700 pb-2 mb-2 light-theme:border-gray-200">
+                    <p class="text-xs font-bold text-cyan-400 light-theme:text-blue-600 tracking-wide mb-1 md:mb-0">ORGANISMO DE INTEGRACIÓN COOPERATIVA CECOSESOLA, R.L. J085030140</p>
+                    <p class="text-xs text-gray-400 light-theme:text-gray-500">FECHA: <span id="report-date" class="font-semibold text-gray-200 light-theme:text-gray-800"></span></p>
                 </div>
                 
                 <!-- Fila 2: PASILLO Y RESPONSABLES -->
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700"> PASILLO CAFE 
-</h2>
-                        <h3 class="text-xl font-bold text-gray-300 light-theme:text-gray-700">FERIA DEL ESTE</h3>
+                <div class="flex flex-col md:flex-row justify-between items-start">
+                    <div class="mb-2 md:mb-0">
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase">Pasillo Café ☕</h2>
+                        <h3 class="text-lg font-bold text-gray-300 light-theme:text-gray-600">FERIA DEL ESTE</h3>
                     </div>
                     
-                    <div class="text-sm">
-                        <!-- Los inputs de responsables ahora viven en el footer, pero mostramos aquí su estructura -->
-                        <p class="text-gray-400 mb-1">RESPONSABLE 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800"></span></p>
-                        <p class="text-gray-400">RESPONSABLE 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800"></span></p>
+                    <div class="text-sm w-full md:w-auto bg-gray-900/50 p-2 rounded light-theme:bg-gray-100">
+                        <p class="text-gray-400 light-theme:text-gray-500 mb-1">RESPONSABLE 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">Sin Nombre</span></p>
+                        <p class="text-gray-400 light-theme:text-gray-500">RESPONSABLE 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">Sin Nombre</span></p>
                     </div>
-                </div>
-                
-                <!-- Fila 3: CANTIDAD DE PRODUCTO (Título del contador) -->
-                <div class="mt-4 p-2 bg-gray-700 rounded light-theme:bg-gray-200">
-                     <p class="text-xs font-bold text-white light-theme:text-gray-800">CANTIDAD DE PRODUCTO</p>
                 </div>
             </div>
 
             <!-- Botones de Acción -->
-            <div class="flex justify-end space-x-4 items-center">
+            <div class="flex justify-end space-x-3 items-center sticky top-2 z-10 bg-gray-900/90 p-2 rounded-xl backdrop-blur-sm light-theme:bg-white/90">
                 <button 
                     id="toggle-theme-btn"
                     onclick="toggleTheme()"
-                    class="p-3 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200"
-                    aria-label="Cambiar tema de color"
+                    class="p-2 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200 border border-transparent hover:border-gray-600"
+                    aria-label="Cambiar tema"
                 >
+                    <!-- Luna -->
                     <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12.001 12.001 0 0012 21a12.001 12.001 0 008.354-5.646z" />
                     </svg>
+                    <!-- Sol -->
                     <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                 </button>
+
+                <!-- Botón Reset (Borrar Todo) -->
+                <button 
+                    onclick="resetAllData()"
+                    class="bg-red-600/80 hover:bg-red-500 text-white p-2 rounded-xl shadow-lg transition duration-200"
+                    title="Borrar todos los datos y empezar de nuevo"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
                 
                 <button 
-                    id="download-excel-btn"
                     onclick="downloadExcel()"
-                    class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-5 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm"
+                    class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm md:text-base"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -151,116 +206,98 @@
             </div>
         </header>
 
-        <!-- Contenedor del Inventario como Tabla -->
+        <!-- Tabla de Inventario -->
         <div class="mt-4">
-            <table id="inventory-table" class="shadow-xl rounded-xl overflow-hidden">
+            <table id="inventory-table">
                 <thead>
                     <tr>
-                        <th class="table-header text-left w-[70%]">PRODUCTO</th>
-                        <th class="table-header w-[30%]">CANTIDAD</th>
+                        <th class="table-header text-left w-[75%] md:w-[80%] pl-4">PRODUCTO</th>
+                        <th class="table-header w-[25%] md:w-[20%]">CANTIDAD</th>
                     </tr>
                 </thead>
                 <tbody id="inventory-list">
-                    <!-- Filas de productos se insertarán aquí con JavaScript -->
+                    <!-- Filas generadas por JS -->
                 </tbody>
             </table>
         </div>
 
-        <!-- Resumen del Inventario: CON CONTADOR Y RESPONSABLES -->
-        <footer class="mt-8 pt-6 border-t-4 border-cyan-600 bg-gray-800 rounded-lg p-4 shadow-xl footer-container">
-            <div class="flex flex-col sm:flex-row items-start sm:items-stretch justify-between">
+        <!-- Footer / Resumen -->
+        <footer class="mt-8 pt-6 border-t-4 border-cyan-600 bg-gray-800 rounded-lg p-4 shadow-xl footer-container transition-colors">
+            <div class="flex flex-col sm:flex-row items-start sm:items-stretch justify-between gap-6">
                 
-                <!-- Columna 1: Contador de SKUs -->
-                <div id="stocked-products-container" class="mb-4 sm:mb-0 sm:w-1/2 sm:pr-4 min-h-full flex flex-col"> 
-                    <p class="text-xl font-bold text-cyan-400 mb-2 accent-text">PRODUCTOS CONTADOS PRODUCTOS CONTADOS:</p>
-                    <div 
-                        id="stocked-products-count-box"
-                        class="px-3 py-2 bg-cyan-600 text-gray-900 rounded-xl shadow-lg text-4xl font-extrabold text-center flex items-center justify-center flex-grow h-full" 
-                    >
-                        <span id="stocked-products-count">0</span>
+                <!-- Contador -->
+                <div class="w-full sm:w-1/2 flex flex-col"> 
+                    <p class="text-lg font-bold text-cyan-400 mb-2 accent-text uppercase">Items con Existencia:</p>
+                    <div class="flex-grow bg-cyan-600/20 border border-cyan-600/50 rounded-xl p-4 flex items-center justify-center">
+                        <span id="stocked-products-count" class="text-5xl font-extrabold text-cyan-400 light-theme:text-blue-600">0</span>
                     </div>
-                    <p class="text-sm text-gray-400 mt-2 text-center">Cantidad de ítems diferentes contados.</p>
                 </div>
                 
-                <!-- Columna 2: Responsables (Campos de Texto) -->
-                <div class="flex flex-col space-y-3 sm:space-y-2 sm:pl-4 sm:border-l border-cyan-800 w-full sm:w-1/2">
-                    <label for="responsable-1" class="text-lg font-semibold text-cyan-400 accent-text">Responsable 1:</label>
-                    <input
-                        type="text"
-                        id="responsable-1"
-                        placeholder="Nombre del primer responsable"
-                        class="p-3 text-lg border border-cyan-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400 transition duration-150 bg-gray-900 text-white"
-                        oninput="updateReportHeaders()"
-                        value="Sin Nombre"
-                    />
-
-                    <label for="responsable-2" class="text-lg font-semibold text-cyan-400 accent-text mt-3">Responsable 2:</label>
-                    <input
-                        type="text"
-                        id="responsable-2"
-                        placeholder="Nombre del segundo responsable"
-                        class="p-3 text-lg border border-cyan-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-400 transition duration-150 bg-gray-900 text-white"
-                        oninput="updateReportHeaders()"
-                        value="Sin Nombre"
-                    />
+                <!-- Inputs Responsables -->
+                <div class="w-full sm:w-1/2 flex flex-col space-y-3 sm:pl-4 sm:border-l border-gray-600 light-theme:border-gray-300">
+                    <div>
+                        <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 1</label>
+                        <input type="text" id="responsable-1" placeholder="Nombre y Apellido" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors" oninput="updateReportHeaders()">
+                    </div>
+                    <div>
+                        <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2</label>
+                        <input type="text" id="responsable-2" placeholder="Nombre y Apellido" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors" oninput="updateReportHeaders()">
+                    </div>
                 </div>
             </div>
-            
-            <p class="text-xs text-gray-600 mt-4 text-center">El conteo se actualiza en tiempo real.</p>
         </footer>
     </div>
 
-    <!-- Modal de Calculadora -->
-    <div id="calculator-modal" class="modal-overlay">
-        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-sm transform transition-all duration-300 border border-cyan-700 calculator-content">
-            <h2 class="text-2xl font-extrabold text-cyan-400 mb-2 truncate accent-text" id="calc-product-name">Calculadora</h2>
-            <p class="text-sm text-gray-400 mb-4">Introduce la cantidad total.</p>
-
-            <!-- Pantalla de la Calculadora -->
-            <div class="bg-gray-900 p-4 mb-4 rounded-lg text-right overflow-hidden border border-cyan-700 calc-display-container">
-                <!-- Historial de Operación (Expresión Completa) -->
-                <div class="text-gray-500 text-sm h-4 mb-1 truncate" id="calc-history">0</div>
-                <div id="calc-display" class="text-cyan-400 text-5xl font-mono truncate neon-title">0</div>
+    <!-- Modal Calculadora -->
+    <div id="calculator-modal" class="modal-overlay" onclick="if(event.target === this) closeCalculator()">
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-xs mx-4 transform transition-all border border-cyan-700 relative">
+            <!-- Header Calc -->
+            <div class="mb-4 text-center">
+                <h2 class="text-lg font-bold text-cyan-400 leading-tight truncate px-2" id="calc-product-name">Producto</h2>
             </div>
 
-            <!-- Botones de la Calculadora -->
-            <div class="grid grid-cols-4 gap-3">
-                <!-- Fila 1 -->
-                <button onclick="clearCalculator()" class="calc-btn bg-red-600 text-white hover:bg-red-500">C</button>
-                <button onclick="backspaceCalculator()" class="calc-btn bg-red-500 text-white hover:bg-red-400">←</button>
-                <button onclick="handleOperator('/')" class="calc-btn bg-gray-700 text-cyan-400 hover:bg-gray-600">/</button>
-                <button onclick="handleOperator('*')" class="calc-btn bg-gray-700 text-cyan-400 hover:bg-gray-600">*</button>
-                
-                <!-- Fila 2 -->
-                <button onclick="inputDigit('7')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">7</button>
-                <button onclick="inputDigit('8')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">8</button>
-                <button onclick="inputDigit('9')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">9</button>
-                <button onclick="handleOperator('-')" class="calc-btn bg-gray-700 text-cyan-400 hover:bg-gray-600">-</button>
-                
-                <!-- Fila 3 -->
-                <button onclick="inputDigit('4')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">4</button>
-                <button onclick="inputDigit('5')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">5</button>
-                <button onclick="inputDigit('6')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">6</button>
-                <button onclick="handleOperator('+')" class="calc-btn bg-gray-700 text-cyan-400 hover:bg-gray-600">+</button>
-                
-                <!-- Fila 4 -->
-                <button onclick="inputDigit('1')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">1</button>
-                <button onclick="inputDigit('2')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">2</button>
-                <button onclick="inputDigit('3')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">3</button>
-                <button onclick="handleOperator('=')" class="calc-btn bg-cyan-500 text-gray-900 hover:bg-cyan-400">=</button>
-                
-                <!-- Fila 5 -->
-                <button onclick="inputDigit('0')" class="calc-btn col-span-2 bg-gray-900 text-white hover:bg-gray-700">0</button>
-                <button onclick="inputDigit('.')" class="calc-btn bg-gray-900 text-white hover:bg-gray-700">.</button>
-                <button onclick="saveAndClose()" class="calc-btn bg-lime-500 text-gray-900 hover:bg-lime-400">Guardar</button>
+            <!-- Pantalla -->
+            <div class="bg-gray-900 p-3 mb-4 rounded-lg text-right border border-gray-700 shadow-inner">
+                <div class="text-gray-500 text-xs h-4 mb-1 truncate" id="calc-history"></div>
+                <div id="calc-display" class="text-white text-4xl font-mono font-bold truncate tracking-widest">0</div>
             </div>
-            
-            <button onclick="closeCalculator()" class="w-full mt-4 p-3 text-lg bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition duration-150">Cancelar</button>
+
+            <!-- Teclado -->
+            <div class="grid grid-cols-4 gap-2 mb-4">
+                <button onclick="clearCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800">C</button>
+                <button onclick="backspaceCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800">⌫</button>
+                <button onclick="handleOperator('/')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">÷</button>
+                <button onclick="handleOperator('*')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">×</button>
+
+                <button onclick="inputDigit('7')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">7</button>
+                <button onclick="inputDigit('8')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">8</button>
+                <button onclick="inputDigit('9')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">9</button>
+                <button onclick="handleOperator('-')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">-</button>
+
+                <button onclick="inputDigit('4')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">4</button>
+                <button onclick="inputDigit('5')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">5</button>
+                <button onclick="inputDigit('6')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">6</button>
+                <button onclick="handleOperator('+')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">+</button>
+
+                <button onclick="inputDigit('1')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">1</button>
+                <button onclick="inputDigit('2')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">2</button>
+                <button onclick="inputDigit('3')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">3</button>
+                <button onclick="handleOperator('=')" class="row-span-2 bg-cyan-600 text-white rounded-lg p-3 font-bold hover:bg-cyan-500 shadow-lg flex items-center justify-center text-xl">=</button>
+
+                <button onclick="inputDigit('0')" class="col-span-2 bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">0</button>
+                <button onclick="inputDigit('.')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">.</button>
+            </div>
+
+            <!-- Botones Control -->
+            <div class="flex space-x-2">
+                <button onclick="closeCalculator()" class="flex-1 py-3 bg-gray-700 text-gray-300 rounded-xl font-semibold hover:bg-gray-600">Cancelar</button>
+                <button onclick="saveAndClose()" class="flex-1 py-3 bg-lime-600 text-white rounded-xl font-bold hover:bg-lime-500 shadow-lg shadow-lime-900/20">GUARDAR</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Array original con solo nombres
+        // --- DATOS ---
         const productNames = [
             "ACEITE DE SOYA 1 LITRO", "ACEITE DE SOYA LA LUCHA 828ML", "ACEITE MAZEITE 1 LITRO", "ACEITE NATUROL 850ML", 
             "ACEITE SANTA LUCÍA 828ML", "ACEITE SANTA LUCÍA 900ML", "ACEITE VATEL 1 LITRO", "ACEITE VATEL 500ML", 
@@ -276,535 +313,310 @@
             "SARDINA MARGARITA EN ACEITE 170 GR", "SARDINA MARGARITA PICANTE 170 GR", "TAMARINDO EL ESFUERZO 400 GR", 
             "TAMARINDO ETNA 400 GR", "VAINILLA"
         ];
-        
 
-        // Creamos un array de objetos para manejar el estado del inventario completo, incluyendo el historial.
-        const inventoryData = productNames.map(name => ({
+        // CARGAR DATOS GUARDADOS
+        let savedData = localStorage.getItem('inventoryData_Cafe');
+        let inventoryData = savedData ? JSON.parse(savedData) : productNames.map(name => ({
             name: name,
             quantity: 0,
-            history: "0" // Inicialmente el historial es solo 0
+            history: "0"
         }));
-        
-        const inventoryListEl = document.getElementById('inventory-list');
-        
-        // Estado de la Calculadora
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Restaurar Responsables
+            const savedResp1 = localStorage.getItem('resp1_Cafe');
+            const savedResp2 = localStorage.getItem('resp2_Cafe');
+            
+            if(savedResp1) document.getElementById('responsable-1').value = savedResp1;
+            if(savedResp2) document.getElementById('responsable-2').value = savedResp2;
+
+            renderInventoryTable();
+            updateReportHeaders(); 
+            calculateTotalItems(); 
+            
+            document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        });
+
+        // TOAST DE GUARDADO
+        let toastTimeout;
+        function showSaveToast() {
+            const toast = document.getElementById('save-toast');
+            toast.classList.add('show');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000); // 2 segundos visible
+        }
+
+        // Función para guardar todo en LocalStorage
+        function saveDataToLocal() {
+            localStorage.setItem('inventoryData_Cafe', JSON.stringify(inventoryData));
+            localStorage.setItem('resp1_Cafe', document.getElementById('responsable-1').value);
+            localStorage.setItem('resp2_Cafe', document.getElementById('responsable-2').value);
+            showSaveToast(); // Mostrar confirmación visual
+        }
+
+        function resetAllData() {
+            if(confirm("⚠️ ¿Estás seguro de que quieres BORRAR TODOS LOS DATOS?\n\nEsta acción no se puede deshacer. Úsala solo cuando vayas a comenzar un inventario nuevo.")) {
+                localStorage.removeItem('inventoryData_Cafe');
+                localStorage.removeItem('resp1_Cafe');
+                localStorage.removeItem('resp2_Cafe');
+                location.reload();
+            }
+        }
+
+        function renderInventoryTable() {
+            const tbody = document.getElementById('inventory-list');
+            tbody.innerHTML = ''; 
+
+            inventoryData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'table-row';
+                tr.innerHTML = `
+                    <td class="table-data product-cell">${item.name}</td>
+                    <td class="table-data qty-cell" 
+                        onclick="openCalculator(${index}, '${item.name.replace(/'/g, "\\'")}')"
+                        id="qty-cell-${index}">
+                        <span id="qty-display-${index}" data-quantity="${item.quantity}" data-history="${item.history || '0'}">${item.quantity}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                
+                if(item.quantity > 0) {
+                    setTimeout(() => { 
+                        const cell = document.getElementById(`qty-cell-${index}`);
+                        if(cell) {
+                            cell.style.color = document.body.classList.contains('light-theme') ? '#059669' : '#a3e635';
+                        }
+                    }, 0);
+                }
+            });
+        }
+
+        // --- LÓGICA DE CALCULADORA ---
         const calculator = {
             displayValue: '0',
             firstOperand: null,
             waitingForSecondOperand: false,
             operator: null,
-            currentProductIndex: null, // Índice del producto que se está editando
-            fullExpression: '0', // Cadena completa de la operación (ej: '10 + 5 * 2')
-            isResultCalculated: false, // Indica si el displayValue es el resultado de un '='
+            currentProductIndex: null,
+            fullExpression: '0',
+            isResultCalculated: false,
         };
 
-        const calcDisplay = document.getElementById('calc-display');
-        const calcHistory = document.getElementById('calc-history');
+        function openCalculator(index, productName) {
+            calculator.currentProductIndex = index;
+            document.getElementById('calc-product-name').innerText = productName;
+            
+            const currentQty = inventoryData[index].quantity;
+            const currentHist = inventoryData[index].history || '0';
+            
+            clearCalculator(false); 
+            
+            calculator.displayValue = String(currentQty);
+            calculator.fullExpression = currentHist;
+            calculator.firstOperand = parseFloat(currentQty);
+            calculator.isResultCalculated = true; 
 
-        /**
-         * Alterna entre el tema oscuro y el tema claro.
-         */
-        function toggleTheme() {
-            const body = document.body;
-            const moonIcon = document.getElementById('moon-icon');
-            const sunIcon = document.getElementById('sun-icon');
-            
-            body.classList.toggle('light-theme');
-            
-            const isLightTheme = body.classList.contains('light-theme');
-            
-            // Alternar iconos
-            moonIcon.classList.toggle('hidden', isLightTheme);
-            sunIcon.classList.toggle('hidden', !isLightTheme);
-            
-            // Alternar colores del botón de tema
-            const toggleBtn = document.getElementById('toggle-theme-btn');
-            toggleBtn.classList.toggle('text-cyan-400', !isLightTheme);
-            toggleBtn.classList.toggle('hover:bg-gray-700', !isLightTheme);
-            toggleBtn.classList.toggle('text-blue-600', isLightTheme);
-            toggleBtn.classList.toggle('hover:bg-gray-200', isLightTheme);
-
-            // Llamar a la función de actualización de clases para la tabla y otros elementos
-            updateInventoryDisplayClasses(); 
+            updateDisplay();
+            document.getElementById('calculator-modal').style.display = 'flex';
         }
 
-        /**
-         * Actualiza los campos de responsable y fecha en la cabecera del reporte.
-         */
-        function updateReportHeaders() {
-            const resp1 = document.getElementById('responsable-1').value || 'Sin Nombre';
-            const resp2 = document.getElementById('responsable-2').value || 'Sin Nombre';
-            const date = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            
-            document.getElementById('resp1-display').textContent = resp1;
-            document.getElementById('resp2-display').textContent = resp2;
-            document.getElementById('report-date').textContent = date;
+        function closeCalculator() {
+            document.getElementById('calculator-modal').style.display = 'none';
+            calculator.currentProductIndex = null;
         }
 
-        /**
-         * Actualiza la pantalla de la calculadora.
-         */
         function updateDisplay() {
-            calcDisplay.textContent = calculator.displayValue;
-            calcHistory.textContent = calculator.fullExpression;
+            const display = document.getElementById('calc-display');
+            const history = document.getElementById('calc-history');
+            
+            display.textContent = calculator.displayValue;
+            history.textContent = calculator.fullExpression;
+
+            if(calculator.displayValue.length > 9) {
+                display.style.fontSize = '1.5rem';
+            } else {
+                display.style.fontSize = '2.25rem';
+            }
         }
 
-        /**
-         * Maneja la entrada de dígitos (números).
-         */
         function inputDigit(digit) {
-            const { displayValue, waitingForSecondOperand, isResultCalculated, operator } = calculator;
+            const { displayValue, waitingForSecondOperand, isResultCalculated } = calculator;
 
-            if (displayValue === 'Error') {
-                 clearCalculator();
-                 return;
-            }
-
-            if (isResultCalculated || waitingForSecondOperand) {
-                calculator.displayValue = digit === '.' ? '0.' : digit;
-                
-                if (isResultCalculated) {
-                    calculator.fullExpression = calculator.displayValue;
-                    calculator.isResultCalculated = false;
-                    calculator.firstOperand = null;
-                } else {
-                    if (operator) {
-                        const fullExpr = calculator.fullExpression.trim();
-                        const parts = fullExpr.split(' ');
-                        
-                        if (['+', '-', '*', '/'].includes(parts[parts.length - 1])) {
-                            calculator.fullExpression += ` ${calculator.displayValue}`;
-                        } else {
-                            parts[parts.length - 1] = calculator.displayValue;
-                            calculator.fullExpression = parts.join(' ');
-                        }
-                    } else {
-                        calculator.fullExpression = calculator.displayValue;
-                    }
-                }
+            if (isResultCalculated) {
+                calculator.displayValue = digit;
+                calculator.fullExpression = digit; 
+                calculator.isResultCalculated = false;
+                calculator.firstOperand = null;
+            } else if (waitingForSecondOperand) {
+                calculator.displayValue = digit;
                 calculator.waitingForSecondOperand = false;
-
+                calculator.fullExpression += digit;
             } else {
-                if (digit === '.') {
-                    if (displayValue.includes('.')) return;
-                }
-                
-                const newDisplayValue = displayValue === '0' && digit !== '.' ? digit : displayValue + digit;
-                calculator.displayValue = newDisplayValue;
-
-                const parts = calculator.fullExpression.split(' ');
-                
-                if (operator) {
-                     parts[parts.length - 1] = newDisplayValue;
-                } else {
-                     parts[0] = newDisplayValue;
-                }
-                
-                calculator.fullExpression = parts.join(' ');
+                calculator.displayValue = displayValue === '0' ? digit : displayValue + digit;
+                if(calculator.fullExpression === '0' && digit !== '.') calculator.fullExpression = '';
+                calculator.fullExpression += digit;
             }
             updateDisplay();
         }
 
-        /**
-         * Borra el último dígito del display.
-         */
-        function backspaceCalculator() {
-            const { displayValue, fullExpression, isResultCalculated } = calculator;
-            
-            if (displayValue === 'Error' || isResultCalculated) {
-                clearCalculator();
-                return;
-            }
-
-            let newDisplayValue;
-            if (displayValue.length > 1) {
-                newDisplayValue = displayValue.slice(0, -1);
-            } else {
-                newDisplayValue = '0';
-            }
-            calculator.displayValue = newDisplayValue;
-            
-            const parts = fullExpression.split(' ');
-            const lastPartIndex = parts.length - 1;
-            let lastPart = parts[lastPartIndex];
-
-            if (lastPart.length > 1) {
-                lastPart = lastPart.slice(0, -1);
-                parts[lastPartIndex] = lastPart;
-                calculator.fullExpression = parts.join(' ');
-            } else {
-                if (parts.length > 1) {
-                    parts.pop(); // Borra el número
-                    parts.pop(); // Borra el operador
-                    calculator.fullExpression = parts.join(' ');
-                    
-                    calculator.displayValue = parts[parts.length - 1] || '0';
-                    calculator.firstOperand = parseFloat(calculator.displayValue);
-                    calculator.operator = null;
-                    calculator.waitingForSecondOperand = false;
-                } else {
-                    calculator.fullExpression = '0';
-                    calculator.displayValue = '0';
-                    calculator.firstOperand = null;
-                }
-            }
-            updateDisplay();
-        }
-
-        /**
-         * Realiza el cálculo de la operación pendiente.
-         */
-        function performCalculation(firstOperand, secondOperand, operator) {
-            if (operator === '+') { return firstOperand + secondOperand; }
-            if (operator === '-') { return firstOperand - secondOperand; }
-            if (operator === '*') { return firstOperand * secondOperand; }
-            if (operator === '/') {
-                if (secondOperand === 0) return 'Error';
-                return firstOperand / secondOperand;
-            }
-            return secondOperand;
-        }
-
-        /**
-         * Maneja la pulsación de operadores.
-         */
         function handleOperator(nextOperator) {
-            const { firstOperand, displayValue, operator, isResultCalculated } = calculator;
+            const { firstOperand, displayValue, operator } = calculator;
             const inputValue = parseFloat(displayValue);
-
-            if (displayValue === 'Error') {
-                 clearCalculator();
-                 return;
-            }
-
-            if (isResultCalculated && nextOperator !== '=') {
-                calculator.firstOperand = inputValue;
-                calculator.operator = nextOperator;
-                calculator.waitingForSecondOperand = true;
-                calculator.isResultCalculated = false; 
-                calculator.fullExpression = `${inputValue} ${nextOperator}`;
-                updateDisplay();
-                return;
-            }
 
             if (operator && calculator.waitingForSecondOperand) {
                 calculator.operator = nextOperator;
-                const fullExpr = calculator.fullExpression.trim();
-                const lastOpIndex = fullExpr.lastIndexOf(operator);
-                if (lastOpIndex !== -1) {
-                    calculator.fullExpression = fullExpr.substring(0, lastOpIndex) + nextOperator;
-                }
+                calculator.fullExpression = calculator.fullExpression.slice(0, -1) + nextOperator;
                 updateDisplay();
                 return;
             }
 
-            if (firstOperand !== null && operator) {
+            if (firstOperand == null && !isNaN(inputValue)) {
+                calculator.firstOperand = inputValue;
+            } else if (operator) {
                 const result = performCalculation(firstOperand, inputValue, operator);
-                
-                if (result === 'Error') {
-                    calculator.displayValue = 'Error';
-                    calculator.firstOperand = null;
-                    calculator.operator = null;
-                    calculator.waitingForSecondOperand = true;
-                    calculator.isResultCalculated = true;
-                    calculator.fullExpression = 'Error';
-                    updateDisplay();
-                    return;
-                }
-
-                const resultFixed = parseFloat(result.toFixed(6));
-                calculator.displayValue = `${resultFixed}`; 
-                calculator.firstOperand = resultFixed; 
-            } else if (firstOperand === null && !isNaN(inputValue)) {
-                 calculator.firstOperand = inputValue;
-            }
-
-            if (nextOperator === '=') {
-                if (calculator.displayValue !== 'Error') {
-                    const lastNumber = calculator.displayValue;
-                    const parts = calculator.fullExpression.split(' ');
-                    const lastPart = parts[parts.length - 1];
-
-                    if (['+', '-', '*', '/'].includes(lastPart)) {
-                         calculator.fullExpression += ` ${lastNumber}`;
-                    }
-                    
-                    calculator.fullExpression += ` = ${calculator.displayValue}`;
-                }
-                calculator.waitingForSecondOperand = true;
-                calculator.operator = null;
-                calculator.isResultCalculated = true;
-                updateDisplay();
-                return;
-            }
-            
-            const currentParts = calculator.fullExpression.trim().split(' ');
-            const lastPart = currentParts[currentParts.length - 1];
-            
-            if (!['+', '-', '*', '/'].includes(lastPart)) {
-                calculator.fullExpression += ` ${nextOperator}`;
+                calculator.displayValue = String(result);
+                calculator.firstOperand = result;
             }
 
             calculator.waitingForSecondOperand = true;
             calculator.operator = nextOperator;
-            calculator.isResultCalculated = false;
+            calculator.isResultCalculated = false; 
+
+            if(nextOperator !== '=') {
+                 calculator.fullExpression += nextOperator;
+            }
             updateDisplay();
         }
-        
-        /**
-         * Reinicia la calculadora a su estado inicial.
-         */
-        function clearCalculator() {
+
+        function performCalculation(first, second, op) {
+            if (op === '+') return first + second;
+            if (op === '-') return first - second;
+            if (op === '*') return first * second;
+            if (op === '/') return second !== 0 ? first / second : 0; 
+            return second;
+        }
+
+        function clearCalculator(resetUI = true) {
             calculator.displayValue = '0';
             calculator.firstOperand = null;
             calculator.waitingForSecondOperand = false;
             calculator.operator = null;
             calculator.fullExpression = '0';
             calculator.isResultCalculated = false;
-            updateDisplay();
+            if(resetUI) updateDisplay();
         }
 
-        /**
-         * Abre el modal de la calculadora.
-         */
-        function openCalculator(index, productName) {
-            calculator.currentProductIndex = index;
-            document.getElementById('calc-product-name').textContent = productName;
+        function backspaceCalculator() {
+            if(calculator.isResultCalculated) { clearCalculator(); return; }
             
-            const product = inventoryData[index];
-            const currentQuantity = product.quantity.toString();
-            const currentHistory = product.history;
-
-            clearCalculator();
+            let val = calculator.displayValue;
+            calculator.displayValue = val.length > 1 ? val.slice(0, -1) : '0';
             
-            calculator.displayValue = currentQuantity;
-            calculator.fullExpression = currentHistory;
-            calculator.firstOperand = parseFloat(currentQuantity); 
-            calculator.isResultCalculated = true; 
+            let expr = calculator.fullExpression;
+            calculator.fullExpression = expr.length > 1 ? expr.slice(0, -1) : '0';
             
             updateDisplay();
-            document.getElementById('calculator-modal').style.display = 'flex';
-        }
-        
-        /**
-         * Cierra el modal de la calculadora sin guardar.
-         */
-        function closeCalculator() {
-            calculator.currentProductIndex = null; 
-            document.getElementById('calculator-modal').style.display = 'none';
         }
 
-        /**
-         * Guarda el resultado de la calculadora en el producto y cierra el modal.
-         */
         function saveAndClose() {
-            const index = calculator.currentProductIndex;
+            if(calculator.currentProductIndex === null) return;
 
-            // FIX: Verificar si el índice es válido antes de acceder al array
-            if (index === null || typeof inventoryData[index] === 'undefined') {
-                console.error("Error: Producto no seleccionado o índice inválido para guardar.");
-                closeCalculator();
-                return; 
+            if(calculator.operator && !calculator.waitingForSecondOperand) {
+                handleOperator('=');
             }
             
-            if (calculator.operator) {
-                 handleOperator('=');
-            }
-            
-            if (calculator.displayValue === 'Error') {
-                closeCalculator();
-                return;
-            }
-            
-            const finalValue = Math.max(0, Math.floor(parseFloat(calculator.displayValue) || 0)); 
-            
-            let finalHistory = calculator.fullExpression.replace(/=\s*[\d\.]*/, '').trim(); 
-            if (finalHistory === '' || finalHistory === '0') finalHistory = finalValue.toString();
+            let finalVal = parseFloat(calculator.displayValue);
+            if(isNaN(finalVal) || finalVal < 0) finalVal = 0;
+            finalVal = Math.floor(finalVal); 
 
-            // 1. Actualizar el array de estado
-            inventoryData[index].quantity = finalValue;
-            inventoryData[index].history = finalHistory;
+            inventoryData[calculator.currentProductIndex].quantity = finalVal;
+            inventoryData[calculator.currentProductIndex].history = String(finalVal); 
+            
+            saveDataToLocal(); // GUARDAR + TOAST
 
-            // 2. Actualizar el display visual y los atributos de datos del DOM
-            const displayEl = document.getElementById(`qty-display-${index}`);
+            const displayEl = document.getElementById(`qty-display-${calculator.currentProductIndex}`);
+            displayEl.textContent = finalVal;
+            displayEl.setAttribute('data-quantity', finalVal);
             
-            displayEl.textContent = finalValue.toLocaleString('es-ES');
-            displayEl.setAttribute('data-quantity', finalValue);
-            displayEl.setAttribute('data-history', finalHistory); 
-            
-            // 3. Recalcular el total de SKUs
-            calculateTotal();
-            
-            // 4. Reiniciar el índice del producto al cerrar
-            calculator.currentProductIndex = null;
+            const cell = document.getElementById(`qty-cell-${calculator.currentProductIndex}`);
+            if(finalVal > 0) {
+                cell.style.color = '#a3e635'; 
+                if(document.body.classList.contains('light-theme')) cell.style.color = '#059669'; 
+            } else {
+                cell.style.color = ''; 
+            }
+
+            calculateTotalItems();
             closeCalculator();
         }
-        
-        /**
-         * Recalcula y actualiza el contador de SKUs con stock.
-         */
-        function calculateTotal() {
-            let count = 0;
-            const productDisplays = document.querySelectorAll('[id^="qty-display-"]');
-            productDisplays.forEach(display => {
-                const quantity = parseInt(display.getAttribute('data-quantity') || '0');
-                if (quantity > 0) {
-                    count++;
-                }
-            });
+
+        function calculateTotalItems() {
+            const count = inventoryData.filter(i => i.quantity > 0).length;
             document.getElementById('stocked-products-count').textContent = count;
         }
 
-        /**
-         * Genera y descarga un archivo CSV compatible con Excel de Windows (usando delimitador ; y UTF-8 BOM).
-         */
+        // --- EXPORTAR EXCEL (CSV) ---
         function downloadExcel() {
-            const date = document.getElementById('report-date').textContent || 'N/A';
-            const resp1 = document.getElementById('responsable-1').value || 'N/A';
-            const resp2 = document.getElementById('responsable-2').value || 'N/A';
+            const resp1 = document.getElementById('responsable-1').value || "Sin Nombre";
+            const resp2 = document.getElementById('responsable-2').value || "Sin Nombre";
+            const fecha = document.getElementById('report-date').textContent;
+
+            let csvContent = "\uFEFF"; 
             
-            // BOM (Byte Order Mark) y Delimitador (Punto y Coma) para compatibilidad con Excel en Windows/español.
-            const BOM = "\ufeff"; 
-            const DELIMITER = ";";
-            
-            let csvContent = ""; // Empezamos sin el data URI
+            csvContent += `REPORTE DE INVENTARIO - PASILLO CAFE\n`;
+            csvContent += `ORGANISMO: CECOSESOLA R.L.\n`;
+            csvContent += `FECHA:;${fecha}\n`;
+            csvContent += `RESPONSABLE 1:;${resp1}\n`;
+            csvContent += `RESPONSABLE 2:;${resp2}\n\n`;
 
-            // Metadatos
-            csvContent += `ORGANISMO DE INTEGRACIÓN COOPERATIVA CECOSESOLA, R.L. J085030140${DELIMITER}\n`;
-            csvContent += `PASILLO 2 ☕ ${DELIMITER}FERIA DEL ESTE\n`;
-            csvContent += `Fecha:${DELIMITER}${date}\n`;
-            csvContent += `Responsable 1:${DELIMITER}${resp1}\n`;
-            csvContent += `Responsable 2:${DELIMITER}${resp2}\n`;
-            csvContent += `PRODUCTOS CONTADOS:${DELIMITER}${document.getElementById('stocked-products-count').textContent}\n\n`;
+            csvContent += "PRODUCTO;CANTIDAD\n";
 
-            // Encabezados de la tabla
-            csvContent += `Producto${DELIMITER}Historial ${DELIMITER}Cantidad Contada\n`; 
-
-            // Datos de los productos
-            inventoryData.forEach((product) => {
-                const quantity = product.quantity;
-                const history = product.history;
-                
-                // Escapar comillas en campos de texto, si existen
-                const safeProduct = product.name.replace(/"/g, '""'); 
-                const safeHistory = history.replace(/"/g, '""');
-
-                // Usando el delimitador ; para mayor compatibilidad con Excel en español
-                csvContent += `"${safeProduct}"${DELIMITER}"${safeHistory}"${DELIMITER}${quantity}\n`;
+            inventoryData.forEach(row => {
+                csvContent += `${row.name};${row.quantity}\n`;
             });
-            
-            // 1. Prepend BOM to content
-            const finalContent = BOM + csvContent;
-            
-            // 2. Create Blob with explicit UTF-8 encoding
-            const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
 
-            // 3. Create and click link
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
+            
+            const cleanDate = fecha.replace(/\//g, '-');
             link.setAttribute("href", url);
-            link.setAttribute("download", `inventario_pasillo2_${date.replace(/\//g, '-')}.csv`);
+            link.setAttribute("download", `Inventario_Cafe_${cleanDate}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
-            // 4. Clean up
-            URL.revokeObjectURL(url);
         }
 
-        /**
-         * Inicializa la interfaz de inventario.
-         */
-        function initializeInventory() {
-            // Generar la estructura de la lista de productos usando inventoryData
-            inventoryListEl.innerHTML = inventoryData.map((product, index) => {
-                const safeName = product.name.replace(/'/g, "\\'");
-                
-                return `
-                <tr id="product-row-${index}" class="table-row cursor-pointer" onclick="openCalculator(${index}, '${safeName}')">
-                    <td class="table-data product-cell">${product.name}</td>
-                    <td 
-                        id="qty-display-${index}"
-                        data-quantity="${product.quantity}"
-                        data-history="${product.history}"
-                        class="table-data qty-cell"
-                    >
-                        ${product.quantity.toLocaleString('es-ES')}
-                    </td>
-                </tr>
-                `;
-            }).join('');
-
-            // Inicializar las cabeceras del reporte con la fecha y responsables iniciales
-            updateReportHeaders();
+        // --- UTILIDADES UI ---
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            const isLight = document.body.classList.contains('light-theme');
+            document.getElementById('moon-icon').classList.toggle('hidden', isLight);
+            document.getElementById('sun-icon').classList.toggle('hidden', !isLight);
             
-            // Calcular el total inicial
-            calculateTotal();
-            
-            // Inicializar la calculadora con el estado de inicio
-            clearCalculator(); 
+            renderInventoryTable(); 
+            inventoryData.forEach((item, idx) => {
+                const el = document.getElementById(`qty-display-${idx}`);
+                if(el) el.textContent = item.quantity;
+                if(item.quantity > 0) {
+                     const cell = document.getElementById(`qty-cell-${idx}`);
+                     cell.style.color = isLight ? '#059669' : '#a3e635';
+                }
+            });
         }
-        
-        /**
-         * Actualiza las clases de tema claro/oscuro en los elementos de la lista.
-         */
-        function updateInventoryDisplayClasses() {
-             const isLightTheme = document.body.classList.contains('light-theme');
-             
-             // Actualizar clases de acentos
-             document.querySelectorAll('.accent-text').forEach(el => {
-                 el.classList.toggle('text-cyan-400', !isLightTheme);
-                 el.classList.toggle('text-blue-600', isLightTheme);
-             });
-             
-             // Actualizar clases de tabla (headers, data, cells)
-             document.querySelectorAll('.table-header').forEach(el => {
-                 el.classList.toggle('bg-[#1f2937]', !isLightTheme);
-                 el.classList.toggle('text-[#22d3ee]', !isLightTheme);
-                 el.classList.toggle('bg-blue-300', isLightTheme);
-                 el.classList.toggle('text-blue-900', isLightTheme);
-                 el.classList.toggle('border-gray-900', !isLightTheme);
-                 el.classList.toggle('border-gray-400', isLightTheme);
-             });
-             
-             document.querySelectorAll('.table-data').forEach(el => {
-                 el.classList.toggle('border-[#1f2937]', !isLightTheme);
-                 el.classList.toggle('border-[#e5e7eb]', isLightTheme);
-                 el.classList.toggle('bg-white', isLightTheme);
-                 el.classList.toggle('bg-gray-800', !isLightTheme);
-                 el.classList.toggle('text-gray-900', isLightTheme);
-                 el.classList.toggle('text-white', !isLightTheme);
-             });
-             
-             document.querySelectorAll('.qty-cell').forEach(el => {
-                 el.classList.toggle('text-lime-400', !isLightTheme);
-                 el.classList.toggle('bg-gray-900', !isLightTheme);
-                 el.classList.toggle('text-emerald-600', isLightTheme);
-                 el.classList.toggle('bg-emerald-50', isLightTheme);
-             });
-             
-             // Ajuste de colores de inputs y contenedores principales
-             [document.querySelector('.main-container'), document.querySelector('.calculator-content')].forEach(container => {
-                 if (container) {
-                    container.classList.toggle('bg-gray-900', !isLightTheme);
-                    container.classList.toggle('border-cyan-700', !isLightTheme);
-                    container.classList.toggle('bg-gray-100', isLightTheme);
-                    container.classList.toggle('border-blue-300', isLightTheme);
-                 }
-             });
 
-             [document.querySelector('.footer-container')].forEach(container => {
-                 if (container) {
-                    container.classList.toggle('bg-gray-800', !isLightTheme);
-                    container.classList.toggle('border-cyan-600', !isLightTheme);
-                    container.classList.toggle('bg-gray-100', isLightTheme);
-                    container.classList.toggle('border-blue-500', isLightTheme);
-                 }
-             });
+        function updateReportHeaders() {
+            const r1 = document.getElementById('responsable-1').value;
+            const r2 = document.getElementById('responsable-2').value;
+            document.getElementById('resp1-display').textContent = r1 || "SIN NOMBRE";
+            document.getElementById('resp2-display').textContent = r2 || "SIN NOMBRE";
+            
+            saveDataToLocal(); // GUARDAR + TOAST
         }
-        
-        // Inicializar la interfaz cuando el DOM esté listo
-        window.onload = initializeInventory;
     </script>
 </body>
 </html>
