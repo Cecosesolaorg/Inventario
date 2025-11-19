@@ -273,7 +273,6 @@
         ];
 
         // CONFIGURACIÓN DE CLAVES DE ALMACENAMIENTO
-        // Usamos 'Panes' para diferenciar de la app de 'Cafe'
         const STORAGE_KEY_DATA = 'inventoryData_Panes';
         const STORAGE_KEY_RESP1 = 'resp1_Panes';
         const STORAGE_KEY_RESP2 = 'resp2_Panes';
@@ -486,7 +485,7 @@
             finalVal = Math.floor(finalVal); 
 
             inventoryData[calculator.currentProductIndex].quantity = finalVal;
-            inventoryData[calculator.currentProductIndex].history = String(finalVal); 
+            inventoryData[calculator.currentProductIndex].history = calculator.fullExpression; 
             
             saveDataToLocal(); // GUARDAR 
 
@@ -516,21 +515,29 @@
             const resp1 = document.getElementById('responsable-1').value || "Sin Nombre";
             const resp2 = document.getElementById('responsable-2').value || "Sin Nombre";
             const fecha = document.getElementById('report-date').textContent;
+            
+            // Calcular Total General
+            const totalGeneral = inventoryData.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
 
             let csvContent = "\uFEFF"; 
             
-            // CORREGIDO: Título interno del reporte
+            // Cabecera Reporte
             csvContent += `REPORTE DE INVENTARIO - PASILLO PANES\n`;
             csvContent += `ORGANISMO: CECOSESOLA R.L.\n`;
             csvContent += `FECHA:;${fecha}\n`;
             csvContent += `RESPONSABLE 1:;${resp1}\n`;
             csvContent += `RESPONSABLE 2:;${resp2}\n\n`;
 
-            csvContent += "PRODUCTO;CANTIDAD\n";
+            // Columnas: ORDEN CAMBIADO A PRODUCTO, HISTORIAL, CANTIDAD
+            csvContent += "PRODUCTO;HISTORIAL (OPERACIONES);CANTIDAD\n";
 
             inventoryData.forEach(row => {
-                csvContent += `${row.name};${row.quantity}\n`;
+                // Datos en el nuevo orden
+                csvContent += `${row.name};${row.history};${row.quantity}\n`;
             });
+            
+            // Fila de Total General al final (ajustada a la columna 3)
+            csvContent += `\nTOTAL GENERAL;;${totalGeneral}\n`;
 
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
             const url = URL.createObjectURL(blob);
@@ -538,7 +545,6 @@
             
             const cleanDate = fecha.replace(/\//g, '-');
             
-            // CORREGIDO: Nombre del archivo
             link.setAttribute("href", url);
             link.setAttribute("download", `Inventario_Panes_${cleanDate}.csv`);
             document.body.appendChild(link);
