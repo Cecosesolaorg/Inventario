@@ -6,6 +6,77 @@
     <title>☕INVENTARIO DE VIVERES PASILLO 2 CAFE ☕ </title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Importaciones de Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Variables globales que serán inicializadas al inicio
+        window.firebaseApp = null;
+        window.db = null;
+        window.auth = null;
+        window.currentUserId = null;
+        window.inventoryRef = null;
+
+        // Configuración y Inicialización de Firebase
+        const initFirebase = async () => {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            let firebaseConfig;
+            try {
+                firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            } catch (e) {
+                console.error("Error al parsear __firebase_config:", e);
+                return;
+            }
+
+            if (Object.keys(firebaseConfig).length === 0) {
+                console.error("La configuración de Firebase está vacía.");
+                return;
+            }
+
+            try {
+                window.firebaseApp = initializeApp(firebaseConfig);
+                window.db = getFirestore(window.firebaseApp);
+                window.auth = getAuth(window.firebaseApp);
+                // setLogLevel('Debug'); // Descomentar para depuración
+
+                // Autenticación usando el token o anónima
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (initialAuthToken) {
+                    await signInWithCustomToken(window.auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(window.auth);
+                }
+
+                // Esperar a que el estado de autenticación cambie y obtener el userId
+                onAuthStateChanged(window.auth, (user) => {
+                    if (user) {
+                        window.currentUserId = user.uid;
+                        console.log("Usuario autenticado:", window.currentUserId);
+                        
+                        // Definir la referencia del documento: /artifacts/{appId}/users/{userId}/cafe_inventory/current_data
+                        const collectionPath = `/artifacts/${appId}/users/${window.currentUserId}/cafe_inventory`;
+                        window.inventoryRef = doc(window.db, collectionPath, 'current_data');
+
+                        // 3. Iniciar la escucha en tiempo real (onSnapshot)
+                        window.startRealtimeListener();
+                    } else {
+                        // Usar un ID anónimo si no hay autenticación, aunque Canvas garantiza un token.
+                        window.currentUserId = crypto.randomUUID();
+                        console.log("Iniciando sesión anónima (ID aleatorio):", window.currentUserId);
+                        // Aún así, esperamos el listener para configurar la referencia
+                    }
+                });
+
+            } catch (e) {
+                console.error("Error en la inicialización de Firebase:", e);
+            }
+        };
+
+        // Exportar initFirebase para usarlo en el script principal
+        window.initFirebase = initFirebase;
+    </script>
     <style>
         /* --- CONFIGURACIÓN DE VARIABLES Y TEMA --- */
         :root {
@@ -33,10 +104,6 @@
 
         .neon-title { text-shadow: 0 0 5px rgba(34, 211, 238, 0.8); }
         
-        .calc-btn { 
-            @apply p-4 text-2xl font-bold rounded-xl shadow-md transition duration-150 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none; 
-        }
-
         /* --- ESTILOS DE TABLA (Simulación Excel) --- */
         #inventory-table {
             border-collapse: separate; 
@@ -85,6 +152,7 @@
             background-color: #374151;
             text-decoration: underline;
         }
+        .zero-qty { color: #9ca3af !important; }
 
         /* --- TEMA CLARO --- */
         .light-theme body { background-color: #f3f4f6; color: #1f2937; }
@@ -100,6 +168,7 @@
         .light-theme .table-row:hover { background-color: #f0f9ff; }
         .light-theme .qty-cell { background-color: #ecfdf5; color: #059669; }
         .light-theme .qty-cell:hover { background-color: #d1fae5; }
+        .light-theme .zero-qty { color: #6b7280 !important; }
 
         /* Inputs y Footer Claro */
         .light-theme input[type="text"] { background-color: #ffffff; border-color: #94a3b8; color: #0f172a; }
@@ -126,59 +195,63 @@
                     </div>
                     
                     <div class="text-sm w-full md:w-auto bg-gray-900/50 p-2 rounded light-theme:bg-gray-100">
-                        <p class="text-gray-400 light-theme:text-gray-500 mb-1">RESPONSABLE 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">Sin Nombre</span></p>
-                        <p class="text-gray-400 light-theme:text-gray-500">RESPONSABLE 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">Sin Nombre</span></p>
+                        <p class="text-gray-400 light-theme:text-gray-500 mb-1">RESPONSABLE 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
+                        <p class="text-gray-400 light-theme:text-gray-500">RESPONSABLE 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
                     </div>
                 </div>
             </div>
 
-            <!-- Botones de Acción -->
-            <div class="flex justify-end space-x-3 items-center sticky top-2 z-10 bg-gray-900/90 p-2 rounded-xl backdrop-blur-sm light-theme:bg-white/90">
-                <button 
-                    id="toggle-theme-btn"
-                    onclick="toggleTheme()"
-                    class="p-2 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200 border border-transparent hover:border-gray-600"
-                    aria-label="Cambiar tema"
-                >
-                    <!-- Luna -->
-                    <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12.001 12.001 0 0012 21a12.001 12.001 0 008.354-5.646z" />
-                    </svg>
-                    <!-- Sol -->
-                    <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </button>
+            <!-- Indicador de Carga y Botones de Acción -->
+            <div class="flex justify-between space-x-3 items-center sticky top-2 z-10 bg-gray-900/90 p-2 rounded-xl backdrop-blur-sm light-theme:bg-white/90">
+                <div id="loading-indicator" class="text-sm font-semibold text-yellow-500 hidden">Cargando datos...</div>
+                <div class="flex space-x-3 ml-auto">
+                    <button 
+                        id="toggle-theme-btn"
+                        onclick="toggleTheme()"
+                        class="p-2 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200 border border-transparent hover:border-gray-600 light-theme:hover:bg-blue-100 light-theme:text-blue-600"
+                        aria-label="Cambiar tema"
+                    >
+                        <!-- Luna -->
+                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12.001 12.001 0 0012 21a12.001 12.001 0 008.354-5.646z" />
+                        </svg>
+                        <!-- Sol -->
+                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
 
-                <!-- Botón Reset (Borrar Todo) -->
-                <button 
-                    onclick="resetAllData()"
-                    class="bg-red-600/80 hover:bg-red-500 text-white p-2 rounded-xl shadow-lg transition duration-200"
-                    title="Borrar todos los datos y empezar de nuevo"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                </button>
-                
-                <button 
-                    onclick="downloadExcel()"
-                    class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm md:text-base"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                    Descargar CSV
-                </button>
+                    <!-- Botón Reset (Borrar Todo) -->
+                    <button 
+                        onclick="openResetModal()"
+                        class="bg-red-600/80 hover:bg-red-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95"
+                        title="Borrar todos los datos y empezar de nuevo"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                    
+                    <button 
+                        onclick="downloadExcel()"
+                        class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm md:text-base"
+                        title="Descargar datos en formato CSV para Excel"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Descargar CSV
+                    </button>
+                </div>
             </div>
         </header>
 
         <!-- Tabla de Inventario -->
-        <div class="mt-4">
+        <div class="mt-4 overflow-x-auto">
             <table id="inventory-table">
                 <thead>
                     <tr>
-                        <th class="table-header text-left w-[75%] md:w-[80%] pl-4">PRODUCTO</th>
+                        <th class="table-header text-left w-[75%] md:w-[80%] pl-4 sticky left-0 z-10">PRODUCTO</th>
                         <th class="table-header w-[25%] md:w-[20%]">CANTIDAD</th>
                     </tr>
                 </thead>
@@ -194,7 +267,7 @@
                 
                 <!-- Contador -->
                 <div class="w-full sm:w-1/2 flex flex-col"> 
-                    <p class="text-lg font-bold text-cyan-400 mb-2 accent-text uppercase">Items con Existencia:</p>
+                    <p class="text-lg font-bold text-cyan-400 mb-2 accent-text uppercase">Items con Existencia ( > 0 ):</p>
                     <div class="flex-grow bg-cyan-600/20 border border-cyan-600/50 rounded-xl p-4 flex items-center justify-center">
                         <span id="stocked-products-count" class="text-5xl font-extrabold text-cyan-400 light-theme:text-blue-600">0</span>
                     </div>
@@ -263,8 +336,24 @@
         </div>
     </div>
 
-    <script>
-        // --- DATOS ---
+    <!-- Modal de Confirmación para Borrar -->
+    <div id="reset-modal" class="modal-overlay" onclick="if(event.target === this) closeResetModal()">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-red-700">
+            <h3 class="text-xl font-bold text-red-400 mb-4">⚠️ Confirmar Borrado Total</h3>
+            <p class="text-gray-300 mb-6">Estás a punto de **eliminar todo el inventario** de la base de datos de forma permanente. Esta acción no se puede deshacer.</p>
+            <p class="text-white font-semibold mb-6">¿Estás absolutamente seguro de que deseas continuar?</p>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeResetModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="resetAllDataConfirmed()" class="py-2 px-4 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 transition shadow-lg">Sí, Borrar Todo</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importar funciones de Firestore
+        import { doc, setDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- DATOS INICIALES Y ESTRUCTURA ---
         const productNames = [
             "ACEITE DE SOYA 1 LITRO", "ACEITE DE SOYA LA LUCHA 828ML", "ACEITE MAZEITE 1 LITRO", "ACEITE NATUROL 850ML", 
             "ACEITE SANTA LUCÍA 828ML", "ACEITE SANTA LUCÍA 900ML", "ACEITE VATEL 1 LITRO", "ACEITE VATEL 500ML", 
@@ -281,51 +370,96 @@
             "TAMARINDO ETNA 400 GR", "VAINILLA"
         ];
 
-        // CONFIGURACIÓN DE CLAVES DE ALMACENAMIENTO
-        const STORAGE_KEY_DATA = 'inventoryData_cafe';
-        const STORAGE_KEY_RESP1 = 'resp1_cafe';
-        const STORAGE_KEY_RESP2 = 'resp2_cafe';
+        let inventoryData = [];
+        let responsables = { resp1: "SIN NOMBRE", resp2: "SIN NOMBRE" };
 
-        // CARGAR DATOS GUARDADOS
-        let savedData = localStorage.getItem(STORAGE_KEY_DATA);
-        let inventoryData = savedData ? JSON.parse(savedData) : productNames.map(name => ({
+        // Función para generar la estructura de inventario inicial
+        const getInitialInventoryData = () => productNames.map(name => ({
             name: name,
             quantity: 0,
-            history: "0"
+            history: "0" // El historial inicial es solo la cantidad
         }));
+        
+        // --- FIREBASE: LECTURA EN TIEMPO REAL (onSnapshot) ---
+        window.startRealtimeListener = () => {
+            if (!window.inventoryRef) {
+                console.error("Referencia de inventario no disponible.");
+                return;
+            }
 
-        // --- INICIALIZACIÓN ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // Restaurar Responsables
-            const savedResp1 = localStorage.getItem(STORAGE_KEY_RESP1);
-            const savedResp2 = localStorage.getItem(STORAGE_KEY_RESP2);
-            
-            if(savedResp1) document.getElementById('responsable-1').value = savedResp1;
-            if(savedResp2) document.getElementById('responsable-2').value = savedResp2;
+            document.getElementById('loading-indicator').classList.remove('hidden');
 
-            renderInventoryTable();
-            updateReportHeaders(); 
-            calculateTotalItems(); 
-            
-            document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        });
+            onSnapshot(window.inventoryRef, (docSnapshot) => {
+                let data = docSnapshot.data();
 
-        // Función para guardar todo en LocalStorage
-        function saveDataToLocal() {
-            localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(inventoryData));
-            localStorage.setItem(STORAGE_KEY_RESP1, document.getElementById('responsable-1').value);
-            localStorage.setItem(STORAGE_KEY_RESP2, document.getElementById('responsable-2').value);
-            // Guardado silencioso
-        }
+                if (docSnapshot.exists() && data && Array.isArray(data.inventory)) {
+                    // Datos encontrados: Usar datos de Firestore
+                    inventoryData = data.inventory;
+                    responsables.resp1 = data.responsable1 || "SIN NOMBRE";
+                    responsables.resp2 = data.responsable2 || "SIN NOMBRE";
+                    console.log("Datos de Firestore cargados.");
+                } else {
+                    // Datos no encontrados o estructura inválida: Inicializar y guardar en DB
+                    console.log("Datos no encontrados, inicializando y guardando estructura base.");
+                    inventoryData = getInitialInventoryData();
+                    // Guardar la estructura inicial en la DB
+                    saveInventoryData(); 
+                }
+                
+                // 4. Actualizar toda la UI con los datos cargados/inicializados
+                renderInventoryTable();
+                updateReportHeaders(false); // No guardar de nuevo, ya se cargó de la DB
+                calculateTotalItems();
+                document.getElementById('loading-indicator').classList.add('hidden');
+            }, (error) => {
+                console.error("Error al escuchar la base de datos:", error);
+                document.getElementById('loading-indicator').textContent = 'Error al cargar datos.';
+            });
+        };
 
-        function resetAllData() {
-            if(confirm("⚠️ ¿Estás seguro de que quieres BORRAR TODOS LOS DATOS DEL INVENTARIO DE CAFE?\n\nEsta acción no se puede deshacer.")) {
-                localStorage.removeItem(STORAGE_KEY_DATA);
-                localStorage.removeItem(STORAGE_KEY_RESP1);
-                localStorage.removeItem(STORAGE_KEY_RESP2);
-                location.reload();
+        // --- FIREBASE: ESCRITURA (setDoc) ---
+        async function saveInventoryData() {
+            if (!window.inventoryRef) {
+                console.error("Referencia de inventario no disponible para guardar.");
+                return;
+            }
+            try {
+                const dataToSave = {
+                    inventory: inventoryData,
+                    responsable1: document.getElementById('responsable-1').value || "SIN NOMBRE",
+                    responsable2: document.getElementById('responsable-2').value || "SIN NOMBRE",
+                    lastUpdated: new Date().toISOString()
+                };
+                await setDoc(window.inventoryRef, dataToSave);
+                console.log("Datos guardados en Firestore.");
+            } catch (e) {
+                console.error("Error al guardar en Firestore:", e);
             }
         }
+
+        // --- FIREBASE: BORRADO (deleteDoc) ---
+        async function resetAllDataConfirmed() {
+            closeResetModal();
+            if (!window.inventoryRef) {
+                console.error("Referencia de inventario no disponible para borrar.");
+                return;
+            }
+            try {
+                await deleteDoc(window.inventoryRef);
+                console.log("Documento de inventario borrado.");
+                // onSnapshot se encargará de re-inicializar la estructura
+            } catch (e) {
+                console.error("Error al borrar el inventario:", e);
+            }
+        }
+
+        // --- MANEJO DE UI Y DATOS LOCALES ---
+
+        // Inicialización de la aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            window.initFirebase(); // Iniciar Firebase y la autenticación
+            document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        });
 
         function renderInventoryTable() {
             const tbody = document.getElementById('inventory-list');
@@ -334,25 +468,44 @@
             inventoryData.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.className = 'table-row';
+                const zeroClass = item.quantity === 0 ? 'zero-qty' : '';
+
                 tr.innerHTML = `
                     <td class="table-data product-cell">${item.name}</td>
-                    <td class="table-data qty-cell" 
+                    <td class="table-data qty-cell ${zeroClass}" 
                         onclick="openCalculator(${index}, '${item.name.replace(/'/g, "\\'")}')"
                         id="qty-cell-${index}">
                         <span id="qty-display-${index}" data-quantity="${item.quantity}" data-history="${item.history || '0'}">${item.quantity}</span>
                     </td>
                 `;
                 tbody.appendChild(tr);
-                
-                if(item.quantity > 0) {
-                    setTimeout(() => { 
-                        const cell = document.getElementById(`qty-cell-${index}`);
-                        if(cell) {
-                            cell.style.color = document.body.classList.contains('light-theme') ? '#059669' : '#a3e635';
-                        }
-                    }, 0);
-                }
             });
+        }
+
+        function updateReportHeaders(shouldSave = true) {
+            const r1Input = document.getElementById('responsable-1');
+            const r2Input = document.getElementById('responsable-2');
+            
+            // Si cargamos de la DB, actualizar inputs primero
+            if (!shouldSave) {
+                r1Input.value = responsables.resp1 === "SIN NOMBRE" ? "" : responsables.resp1;
+                r2Input.value = responsables.resp2 === "SIN NOMBRE" ? "" : responsables.resp2;
+            }
+
+            const r1 = r1Input.value || "SIN NOMBRE";
+            const r2 = r2Input.value || "SIN NOMBRE";
+
+            document.getElementById('resp1-display').textContent = r1.toUpperCase();
+            document.getElementById('resp2-display').textContent = r2.toUpperCase();
+            
+            if (shouldSave) {
+                saveInventoryData(); // Guardar cambios de responsables en DB
+            }
+        }
+
+        function calculateTotalItems() {
+            const count = inventoryData.filter(i => (parseInt(i.quantity) || 0) > 0).length;
+            document.getElementById('stocked-products-count').textContent = count;
         }
 
         // --- LÓGICA DE CALCULADORA ---
@@ -363,7 +516,7 @@
             operator: null,
             currentProductIndex: null,
             fullExpression: '0',
-            isResultCalculated: false,
+            isResultCalculated: false, // Indica si el display muestra un resultado final o el valor cargado de la DB
         };
 
         function openCalculator(index, productName) {
@@ -371,12 +524,14 @@
             document.getElementById('calc-product-name').innerText = productName;
             
             const currentQty = inventoryData[index].quantity;
-            const currentHist = inventoryData[index].history || '0';
+            // El historial debe ser la expresión completa guardada, o la cantidad si no hay historial
+            const currentHist = inventoryData[index].history || String(currentQty); 
             
             clearCalculator(false); 
             
             calculator.displayValue = String(currentQty);
             calculator.fullExpression = currentHist;
+            // Configuramos el primer operando como la cantidad actual y la bandera de resultado
             calculator.firstOperand = parseFloat(currentQty);
             calculator.isResultCalculated = true; 
 
@@ -396,6 +551,7 @@
             display.textContent = calculator.displayValue;
             history.textContent = calculator.fullExpression;
 
+            // Ajuste de tamaño de fuente para grandes números
             if(calculator.displayValue.length > 9) {
                 display.style.fontSize = '1.5rem';
             } else {
@@ -403,61 +559,120 @@
             }
         }
 
+        // *** LÓGICA CORREGIDA PARA inputDigit ***
         function inputDigit(digit) {
             const { displayValue, waitingForSecondOperand, isResultCalculated } = calculator;
 
+            // 1. Empezar un cálculo nuevo (después de '=' o carga inicial)
             if (isResultCalculated) {
-                calculator.displayValue = digit;
-                calculator.fullExpression = digit; 
+                if (digit === '.') {
+                    calculator.displayValue = '0.';
+                    calculator.fullExpression = '0.';
+                } else {
+                    calculator.displayValue = digit;
+                    calculator.fullExpression = digit;
+                }
                 calculator.isResultCalculated = false;
-                calculator.firstOperand = null;
+                calculator.firstOperand = null; // Borrar el primer operando si empezamos de cero
+                calculator.waitingForSecondOperand = false; 
+
+            } else if (digit === '.') {
+                // 2. Manejar punto decimal para un cálculo en curso
+                if (displayValue.includes('.')) return;
+                
+                // Si esperamos un segundo operando (operador recién presionado), empezamos el nuevo número con 0.
+                if (waitingForSecondOperand) {
+                     calculator.displayValue = '0.';
+                     calculator.fullExpression += '0.';
+                     calculator.waitingForSecondOperand = false;
+                } else {
+                    // Agregar el punto decimal
+                    calculator.displayValue = displayValue + digit;
+                    calculator.fullExpression += digit;
+                }
             } else if (waitingForSecondOperand) {
+                // 3. Inicio del segundo operando después de un operador
                 calculator.displayValue = digit;
                 calculator.waitingForSecondOperand = false;
                 calculator.fullExpression += digit;
             } else {
-                calculator.displayValue = displayValue === '0' ? digit : displayValue + digit;
-                if(calculator.fullExpression === '0' && digit !== '.') calculator.fullExpression = '';
-                calculator.fullExpression += digit;
+                // 4. Continuación del operando actual
+                if (displayValue === '0' && digit !== '0') {
+                    // Reemplazar el '0' inicial en el display y la expresión
+                    calculator.displayValue = digit;
+                    calculator.fullExpression = calculator.fullExpression.slice(0, -1) + digit; // Reemplaza el último '0'
+                } else {
+                    calculator.displayValue = displayValue === '0' ? digit : displayValue + digit;
+                    if(calculator.fullExpression === '0' && digit !== '.') {
+                         calculator.fullExpression = digit;
+                    } else {
+                         calculator.fullExpression += digit;
+                    }
+                }
             }
             updateDisplay();
         }
 
+        // *** LÓGICA CORREGIDA PARA handleOperator ***
         function handleOperator(nextOperator) {
-            const { firstOperand, displayValue, operator } = calculator;
+            const { firstOperand, displayValue, operator, waitingForSecondOperand } = calculator;
             const inputValue = parseFloat(displayValue);
 
-            if (operator && calculator.waitingForSecondOperand) {
+            // 1. Manejar reemplazo de operador (ej: 5+ luego presiona -)
+            if (operator && waitingForSecondOperand && nextOperator !== '=') {
                 calculator.operator = nextOperator;
-                calculator.fullExpression = calculator.fullExpression.slice(0, -1) + nextOperator;
+                // Reemplazar el operador al final de la expresión
+                calculator.fullExpression = calculator.fullExpression.replace(/[-+*/]$/, nextOperator);
                 updateDisplay();
                 return;
             }
+            
+            if (isNaN(inputValue)) return;
 
-            if (firstOperand == null && !isNaN(inputValue)) {
-                calculator.firstOperand = inputValue;
-            } else if (operator) {
+            // 2. Realizar Cálculo si existe un operador y no estamos esperando el segundo operando (cálculo en cadena)
+            if (firstOperand !== null && operator && !waitingForSecondOperand) {
                 const result = performCalculation(firstOperand, inputValue, operator);
                 calculator.displayValue = String(result);
                 calculator.firstOperand = result;
+                // NOTA: fullExpression NO se modifica aquí, se mantiene la cadena de operaciones para el CSV.
+            } else if (firstOperand === null || calculator.isResultCalculated) {
+                 // Iniciar de cero o después de '='
+                 calculator.firstOperand = inputValue;
             }
 
-            calculator.waitingForSecondOperand = true;
-            calculator.operator = nextOperator;
-            calculator.isResultCalculated = false; 
-
-            if(nextOperator !== '=') {
-                 calculator.fullExpression += nextOperator;
+            // 3. Establecer el siguiente operador/estado
+            if (nextOperator === '=') {
+                calculator.operator = null;
+                calculator.waitingForSecondOperand = true;
+                calculator.isResultCalculated = true; 
+                // La fullExpression se mantiene como la expresión que acaba de ser evaluada (ej: 5+3)
+                
+            } else {
+                calculator.waitingForSecondOperand = true;
+                calculator.operator = nextOperator;
+                calculator.isResultCalculated = false;
+                
+                // Si la pantalla muestra un resultado final (isResultCalculated era true),
+                // la nueva expresión comienza con ese resultado.
+                if (calculator.isResultCalculated) {
+                     calculator.fullExpression = calculator.displayValue;
+                }
+                
+                // Agregar el operador a la full expression
+                calculator.fullExpression += nextOperator;
             }
             updateDisplay();
         }
 
         function performCalculation(first, second, op) {
-            if (op === '+') return first + second;
-            if (op === '-') return first - second;
-            if (op === '*') return first * second;
-            if (op === '/') return second !== 0 ? first / second : 0; 
-            return second;
+            let result;
+            if (op === '+') result = first + second;
+            if (op === '-') result = first - second;
+            if (op === '*') result = first * second;
+            if (op === '/') result = second !== 0 ? first / second : 0; 
+            
+            // Redondear a 4 decimales para evitar problemas de flotantes
+            return Math.round(result * 10000) / 10000;
         }
 
         function clearCalculator(resetUI = true) {
@@ -474,80 +689,86 @@
             if(calculator.isResultCalculated) { clearCalculator(); return; }
             
             let val = calculator.displayValue;
+            let expr = calculator.fullExpression;
+            
+            // Borra el último dígito del valor mostrado (displayValue)
             calculator.displayValue = val.length > 1 ? val.slice(0, -1) : '0';
             
-            let expr = calculator.fullExpression;
-            calculator.fullExpression = expr.length > 1 ? expr.slice(0, -1) : '0';
+            // Borra el último carácter de la expresión completa (fullExpression)
+            // Solo si la expresión no es ya un simple '0'
+            if (expr.length > 1) {
+                calculator.fullExpression = expr.slice(0, -1);
+            } else {
+                calculator.fullExpression = '0';
+            }
             
+            // Si el display vuelve a '0' después de borrar, podría implicar un cambio de estado,
+            // pero para simplificar, confiamos en la lógica anterior.
+
             updateDisplay();
         }
 
+        // *** LÓGICA CORREGIDA PARA saveAndClose ***
         function saveAndClose() {
             if(calculator.currentProductIndex === null) return;
 
+            // Finalizar cualquier operación pendiente antes de guardar
             if(calculator.operator && !calculator.waitingForSecondOperand) {
-                handleOperator('=');
+                // Forzar la operación para obtener el resultado final
+                const result = performCalculation(calculator.firstOperand, parseFloat(calculator.displayValue), calculator.operator);
+                calculator.displayValue = String(result);
             }
             
             let finalVal = parseFloat(calculator.displayValue);
             if(isNaN(finalVal) || finalVal < 0) finalVal = 0;
-            finalVal = Math.floor(finalVal); 
+            finalVal = Math.floor(finalVal); // Las cantidades de inventario son enteras
 
+            // Actualizar datos locales y luego guardar en DB
             inventoryData[calculator.currentProductIndex].quantity = finalVal;
+            // Guardar la expresión completa registrada en la calculadora
             inventoryData[calculator.currentProductIndex].history = calculator.fullExpression; 
             
-            saveDataToLocal(); // GUARDAR 
-
-            const displayEl = document.getElementById(`qty-display-${calculator.currentProductIndex}`);
-            displayEl.textContent = finalVal;
-            displayEl.setAttribute('data-quantity', finalVal);
+            saveInventoryData(); // GUARDAR en Firestore (asíncrono)
             
-            const cell = document.getElementById(`qty-cell-${calculator.currentProductIndex}`);
-            if(finalVal > 0) {
-                cell.style.color = '#a3e635'; 
-                if(document.body.classList.contains('light-theme')) cell.style.color = '#059669'; 
-            } else {
-                cell.style.color = ''; 
-            }
-
-            calculateTotalItems();
+            // onSnapshot se encargará de actualizar la tabla, pero podemos cerrar el modal inmediatamente
             closeCalculator();
         }
-
-        function calculateTotalItems() {
-            const count = inventoryData.filter(i => i.quantity > 0).length;
-            document.getElementById('stocked-products-count').textContent = count;
+        
+        // --- MODAL DE CONFIRMACIÓN ---
+        function openResetModal() {
+            document.getElementById('reset-modal').style.display = 'flex';
         }
+
+        function closeResetModal() {
+            document.getElementById('reset-modal').style.display = 'none';
+        }
+
 
         // --- EXPORTAR EXCEL (CSV) ---
         function downloadExcel() {
-            const resp1 = document.getElementById('responsable-1').value || "Sin Nombre";
-            const resp2 = document.getElementById('responsable-2').value || "Sin Nombre";
+            const resp1 = document.getElementById('responsable-1').value || "SIN NOMBRE";
+            const resp2 = document.getElementById('responsable-2').value || "SIN NOMBRE";
             const fecha = document.getElementById('report-date').textContent;
             
-            // Calcular Total General
-            const totalGeneral = inventoryData.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
-
-            let csvContent = "\uFEFF"; 
+            let csvContent = "\uFEFF"; // BOM para asegurar que Excel reconozca UTF-8
             
             // Cabecera Reporte
-            csvContent += `REPORTE DE INVENTARIO - PASILLO CAFE\n`;
-            csvContent += `ORGANISMO: CECOSESOLA R.L.\n`;
+            // Usamos ";;" para forzar que el título ocupe 3 columnas, simulando el centrado en Excel.
+            csvContent += `REPORTE DE INVENTARIO - PASILLO CAFE;;\n`;
+            csvContent += `CECOSESOLA R.L.;;\n`; // Línea de la organización
             csvContent += `FECHA:;${fecha}\n`;
-            csvContent += `RESPONSABLE 1:;${resp1}\n`;
-            csvContent += `RESPONSABLE 2:;${resp2}\n\n`;
+            csvContent += `RESPONSABLE 1:;${resp1.toUpperCase()}\n`;
+            csvContent += `RESPONSABLE 2:;${resp2.toUpperCase()}\n\n`;
 
             // Columnas: ORDEN CAMBIADO A PRODUCTO, HISTORIAL, CANTIDAD
-            csvContent += "PRODUCTO;HISTORIAL (OPERACIONES);CANTIDAD\n";
+            csvContent += "PRODUCTO;HISTORIAL ;CANTIDAD\n";
 
             inventoryData.forEach(row => {
-                // Datos en el nuevo orden
+                // Datos en el nuevo orden, usando punto y coma como separador
+                // row.history ahora contiene la expresión completa, tal como se corrigió.
                 csvContent += `${row.name};${row.history};${row.quantity}\n`;
             });
             
-            // Fila de Total General al final (ajustada a la columna 3)
-            csvContent += `\nTOTAL GENERAL;;${totalGeneral}\n`;
-
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -568,25 +789,24 @@
             document.getElementById('moon-icon').classList.toggle('hidden', isLight);
             document.getElementById('sun-icon').classList.toggle('hidden', !isLight);
             
-            renderInventoryTable(); 
-            inventoryData.forEach((item, idx) => {
-                const el = document.getElementById(`qty-display-${idx}`);
-                if(el) el.textContent = item.quantity;
-                if(item.quantity > 0) {
-                     const cell = document.getElementById(`qty-cell-${idx}`);
-                     cell.style.color = isLight ? '#059669' : '#a3e635';
-                }
-            });
+            // Volver a renderizar para aplicar correctamente los colores de cantidad
+            renderInventoryTable();
         }
 
-        function updateReportHeaders() {
-            const r1 = document.getElementById('responsable-1').value;
-            const r2 = document.getElementById('responsable-2').value;
-            document.getElementById('resp1-display').textContent = r1 || "SIN NOMBRE";
-            document.getElementById('resp2-display').textContent = r2 || "SIN NOMBRE";
-            
-            saveDataToLocal(); // GUARDAR 
-        }
+        // Exponer funciones globales para onclick
+        window.openCalculator = openCalculator;
+        window.closeCalculator = closeCalculator;
+        window.clearCalculator = clearCalculator;
+        window.backspaceCalculator = backspaceCalculator;
+        window.handleOperator = handleOperator;
+        window.inputDigit = inputDigit;
+        window.saveAndClose = saveAndClose;
+        window.updateReportHeaders = updateReportHeaders;
+        window.downloadExcel = downloadExcel;
+        window.toggleTheme = toggleTheme;
+        window.openResetModal = openResetModal;
+        window.closeResetModal = closeResetModal;
+        window.resetAllDataConfirmed = resetAllDataConfirmed;
     </script>
 </body>
 </html>
