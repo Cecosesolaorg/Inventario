@@ -201,9 +201,8 @@
                 </div>
             </div>
 
-            <!-- Indicador de Carga y Botones de Acción -->
-            <div class="flex justify-between space-x-3 items-center sticky top-2 z-10 bg-gray-900/90 p-2 rounded-xl backdrop-blur-sm light-theme:bg-white/90">
-                <div id="loading-indicator" class="text-sm font-semibold text-yellow-500 hidden">Cargando datos...</div>
+            <!-- Botones de Acción -->
+            <div class="flex justify-end space-x-3 items-center sticky top-2 z-10 bg-gray-900/90 p-2 rounded-xl backdrop-blur-sm light-theme:bg-white/90">
                 <div class="flex space-x-3 ml-auto">
                     <button 
                         id="toggle-theme-btn"
@@ -387,8 +386,6 @@
                 return;
             }
 
-            document.getElementById('loading-indicator').classList.remove('hidden');
-
             onSnapshot(window.inventoryRef, (docSnapshot) => {
                 let data = docSnapshot.data();
 
@@ -410,10 +407,9 @@
                 renderInventoryTable();
                 updateReportHeaders(false); // No guardar de nuevo, ya se cargó de la DB
                 calculateTotalItems();
-                document.getElementById('loading-indicator').classList.add('hidden');
             }, (error) => {
                 console.error("Error al escuchar la base de datos:", error);
-                document.getElementById('loading-indicator').textContent = 'Error al cargar datos.';
+                // Mostrar un error en la consola, pero no en la UI, como se solicitó
             });
         };
 
@@ -761,7 +757,7 @@
             csvContent += `RESPONSABLE 2:;${resp2.toUpperCase()}\n\n`;
 
             // Columnas: ORDEN CAMBIADO A PRODUCTO, HISTORIAL, CANTIDAD
-            csvContent += "PRODUCTO;HISTORIAL ;CANTIDAD\n";
+            csvContent += "PRODUCTO;HISTORIAL (OPERACIONES);CANTIDAD\n";
 
             inventoryData.forEach(row => {
                 // Datos en el nuevo orden, usando punto y coma como separador
