@@ -86,31 +86,6 @@
             text-decoration: underline;
         }
 
-        /* Notificación de Guardado (Toast) */
-        #save-toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px); /* Oculto abajo */
-            background-color: #10b981; /* Verde */
-            color: #064e3b;
-            padding: 10px 24px;
-            border-radius: 50px;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
-            opacity: 0;
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            pointer-events: none;
-        }
-        #save-toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
         /* --- TEMA CLARO --- */
         .light-theme body { background-color: #f3f4f6; color: #1f2937; }
         .light-theme .main-container { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
@@ -132,14 +107,6 @@
     </style>
 </head>
 <body class="p-2 md:p-6 min-h-screen">
-
-    <!-- Notificación Flotante de Guardado -->
-    <div id="save-toast">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-        </svg>
-        <span>Guardado</span>
-    </div>
 
     <div class="max-w-4xl mx-auto bg-gray-900 p-4 md:p-8 rounded-2xl shadow-2xl border border-cyan-900 main-container">
         <header class="mb-4">
@@ -338,24 +305,12 @@
             document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
         });
 
-        // TOAST DE GUARDADO
-        let toastTimeout;
-        function showSaveToast() {
-            const toast = document.getElementById('save-toast');
-            toast.classList.add('show');
-            
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2000); // 2 segundos visible
-        }
-
         // Función para guardar todo en LocalStorage
         function saveDataToLocal() {
             localStorage.setItem('inventoryData_Cafe', JSON.stringify(inventoryData));
             localStorage.setItem('resp1_Cafe', document.getElementById('responsable-1').value);
             localStorage.setItem('resp2_Cafe', document.getElementById('responsable-2').value);
-            showSaveToast(); // Mostrar confirmación visual
+            // Eliminado showSaveToast() para que sea silencioso
         }
 
         function resetAllData() {
@@ -536,7 +491,7 @@
             inventoryData[calculator.currentProductIndex].quantity = finalVal;
             inventoryData[calculator.currentProductIndex].history = String(finalVal); 
             
-            saveDataToLocal(); // GUARDAR + TOAST
+            saveDataToLocal(); // GUARDAR SILENCIOSO
 
             const displayEl = document.getElementById(`qty-display-${calculator.currentProductIndex}`);
             displayEl.textContent = finalVal;
@@ -615,7 +570,7 @@
             document.getElementById('resp1-display').textContent = r1 || "SIN NOMBRE";
             document.getElementById('resp2-display').textContent = r2 || "SIN NOMBRE";
             
-            saveDataToLocal(); // GUARDAR + TOAST
+            saveDataToLocal(); // GUARDAR SILENCIOSO
         }
     </script>
 </body>
