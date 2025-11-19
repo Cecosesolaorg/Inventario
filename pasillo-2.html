@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVENTARIO DE VIVERES PASILLO 2 CAFE ☕ </title>
+    <title>INVENTARIO DE VIVERES PASILLO 2 CAFE ☕</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -121,7 +121,7 @@
                 <!-- Fila 2: PASILLO Y RESPONSABLES -->
                 <div class="flex flex-col md:flex-row justify-between items-start">
                     <div class="mb-2 md:mb-0">
-                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase">Pasillo Café ☕</h2>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase">PASILLO CAFE</h2>
                         <h3 class="text-lg font-bold text-gray-300 light-theme:text-gray-600">FERIA DEL ESTE</h3>
                     </div>
                     
@@ -281,8 +281,13 @@
             "TAMARINDO ETNA 400 GR", "VAINILLA"
         ];
 
+        // CONFIGURACIÓN DE CLAVES DE ALMACENAMIENTO
+        const STORAGE_KEY_DATA = 'inventoryData_cafe';
+        const STORAGE_KEY_RESP1 = 'resp1_cafe';
+        const STORAGE_KEY_RESP2 = 'resp2_cafe';
+
         // CARGAR DATOS GUARDADOS
-        let savedData = localStorage.getItem('inventoryData_Cafe');
+        let savedData = localStorage.getItem(STORAGE_KEY_DATA);
         let inventoryData = savedData ? JSON.parse(savedData) : productNames.map(name => ({
             name: name,
             quantity: 0,
@@ -292,8 +297,8 @@
         // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
             // Restaurar Responsables
-            const savedResp1 = localStorage.getItem('resp1_Cafe');
-            const savedResp2 = localStorage.getItem('resp2_Cafe');
+            const savedResp1 = localStorage.getItem(STORAGE_KEY_RESP1);
+            const savedResp2 = localStorage.getItem(STORAGE_KEY_RESP2);
             
             if(savedResp1) document.getElementById('responsable-1').value = savedResp1;
             if(savedResp2) document.getElementById('responsable-2').value = savedResp2;
@@ -307,17 +312,17 @@
 
         // Función para guardar todo en LocalStorage
         function saveDataToLocal() {
-            localStorage.setItem('inventoryData_Cafe', JSON.stringify(inventoryData));
-            localStorage.setItem('resp1_Cafe', document.getElementById('responsable-1').value);
-            localStorage.setItem('resp2_Cafe', document.getElementById('responsable-2').value);
-            // Eliminado showSaveToast() para que sea silencioso
+            localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(inventoryData));
+            localStorage.setItem(STORAGE_KEY_RESP1, document.getElementById('responsable-1').value);
+            localStorage.setItem(STORAGE_KEY_RESP2, document.getElementById('responsable-2').value);
+            // Guardado silencioso
         }
 
         function resetAllData() {
-            if(confirm("⚠️ ¿Estás seguro de que quieres BORRAR TODOS LOS DATOS?\n\nEsta acción no se puede deshacer. Úsala solo cuando vayas a comenzar un inventario nuevo.")) {
-                localStorage.removeItem('inventoryData_Cafe');
-                localStorage.removeItem('resp1_Cafe');
-                localStorage.removeItem('resp2_Cafe');
+            if(confirm("⚠️ ¿Estás seguro de que quieres BORRAR TODOS LOS DATOS DEL INVENTARIO DE CAFE?\n\nEsta acción no se puede deshacer.")) {
+                localStorage.removeItem(STORAGE_KEY_DATA);
+                localStorage.removeItem(STORAGE_KEY_RESP1);
+                localStorage.removeItem(STORAGE_KEY_RESP2);
                 location.reload();
             }
         }
@@ -489,9 +494,9 @@
             finalVal = Math.floor(finalVal); 
 
             inventoryData[calculator.currentProductIndex].quantity = finalVal;
-            inventoryData[calculator.currentProductIndex].history = String(finalVal); 
+            inventoryData[calculator.currentProductIndex].history = calculator.fullExpression; 
             
-            saveDataToLocal(); // GUARDAR SILENCIOSO
+            saveDataToLocal(); // GUARDAR 
 
             const displayEl = document.getElementById(`qty-display-${calculator.currentProductIndex}`);
             displayEl.textContent = finalVal;
@@ -519,28 +524,38 @@
             const resp1 = document.getElementById('responsable-1').value || "Sin Nombre";
             const resp2 = document.getElementById('responsable-2').value || "Sin Nombre";
             const fecha = document.getElementById('report-date').textContent;
+            
+            // Calcular Total General
+            const totalGeneral = inventoryData.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
 
             let csvContent = "\uFEFF"; 
             
+            // Cabecera Reporte
             csvContent += `REPORTE DE INVENTARIO - PASILLO CAFE\n`;
             csvContent += `ORGANISMO: CECOSESOLA R.L.\n`;
             csvContent += `FECHA:;${fecha}\n`;
             csvContent += `RESPONSABLE 1:;${resp1}\n`;
             csvContent += `RESPONSABLE 2:;${resp2}\n\n`;
 
-            csvContent += "PRODUCTO;CANTIDAD\n";
+            // Columnas: ORDEN CAMBIADO A PRODUCTO, HISTORIAL, CANTIDAD
+            csvContent += "PRODUCTO;HISTORIAL (OPERACIONES);CANTIDAD\n";
 
             inventoryData.forEach(row => {
-                csvContent += `${row.name};${row.quantity}\n`;
+                // Datos en el nuevo orden
+                csvContent += `${row.name};${row.history};${row.quantity}\n`;
             });
+            
+            // Fila de Total General al final (ajustada a la columna 3)
+            csvContent += `\nTOTAL GENERAL;;${totalGeneral}\n`;
 
             const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             
             const cleanDate = fecha.replace(/\//g, '-');
+            
             link.setAttribute("href", url);
-            link.setAttribute("download", `Inventario_Cafe_${cleanDate}.csv`);
+            link.setAttribute("download", `Inventario_CAFE_${cleanDate}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -570,7 +585,7 @@
             document.getElementById('resp1-display').textContent = r1 || "SIN NOMBRE";
             document.getElementById('resp2-display').textContent = r2 || "SIN NOMBRE";
             
-            saveDataToLocal(); // GUARDAR SILENCIOSO
+            saveDataToLocal(); // GUARDAR 
         }
     </script>
 </body>
