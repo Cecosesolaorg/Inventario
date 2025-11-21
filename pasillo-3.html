@@ -21,20 +21,21 @@
 
         // Configuración y Inicialización de Firebase
         const initFirebase = async () => {
-            // =========================================================================
-            //  --- ⚠️ ZONA DE CONFIGURACIÓN DE FIREBASE (IMPORTANTE PARA GITHUB) ⚠️ ---
-            //  Si estás ejecutando esto en GitHub, DEBES reemplazar el contenido de 
-            //  'userFirebaseConfig' con tu propia configuración de proyecto de Firebase.
-            // =========================================================================
+            // ====================================================================================
+            //  --- 🚨 ZONA DE CONFIGURACIÓN DE FIREBASE (¡MANDATORIO PARA GITHUB!) 🚨 ---
+            //  DEBES reemplazar el contenido de 'userFirebaseConfig' con tu propia configuración 
+            //  copiada de la Consola de Firebase para que funcione fuera de este entorno.
+            // ====================================================================================
             const userFirebaseConfig = {
-                apiKey: "TU_API_KEY_AQUI", // <-- REEMPLAZA ESTO
-                authDomain: "TU_DOMINIO.firebaseapp.com",
-                projectId: "TU_PROJECT_ID",
-                storageBucket: "TU_BUCKET.appspot.com",
-                messagingSenderId: "1234567890",
-                appId: "1:1234567890:web:abcdefghij",
+                apiKey: "TU_API_KEY_DE_FIREBASE_AQUI", // REEMPLAZA ESTO
+                authDomain: "TU_DOMINIO.firebaseapp.com", // REEMPLAZA ESTO
+                projectId: "TU_PROJECT_ID", // REEMPLAZA ESTO
+                storageBucket: "TU_BUCKET.appspot.com", // REEMPLAZA ESTO
+                messagingSenderId: "1234567890", // REEMPLAZA ESTO
+                appId: "1:1234567890:web:abcdefghij", // REEMPLAZA ESTO
+                // Puedes eliminar cualquier otra clave que no uses, como measurementId
             };
-            // =========================================================================
+            // ====================================================================================
 
             let firebaseConfig = userFirebaseConfig; 
             let useCanvasAuth = false;
@@ -47,7 +48,7 @@
                     appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                     useCanvasAuth = true;
                     console.log("Usando configuración de Firebase del entorno Canvas.");
-                } else if (firebaseConfig.apiKey === "TU_API_KEY_AQUI") {
+                } else if (firebaseConfig.apiKey === "TU_API_KEY_DE_FIREBASE_AQUI") {
                     // 2. Fallo si no hay config de Canvas y el usuario no puso su API Key
                     console.error("¡ERROR! Falta la clave de API de Firebase. El guardado no funcionará. Por favor, edita la variable 'userFirebaseConfig'.");
                     document.getElementById('save-status').textContent = "ERROR: ¡Falta la configuración de Firebase! No se guardarán los datos.";
