@@ -21,44 +21,69 @@
 
         // Configuración y Inicialización de Firebase
         const initFirebase = async () => {
-            // setLogLevel('debug'); // Descomentar para ver logs detallados de Firebase
-            
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            let firebaseConfig;
+            // =========================================================================
+            //  --- ⚠️ ZONA DE CONFIGURACIÓN DE FIREBASE (IMPORTANTE PARA GITHUB) ⚠️ ---
+            //  Si estás ejecutando esto en GitHub, DEBES reemplazar el contenido de 
+            //  'userFirebaseConfig' con tu propia configuración de proyecto de Firebase.
+            // =========================================================================
+            const userFirebaseConfig = {
+                apiKey: "TU_API_KEY_AQUI", // <-- REEMPLAZA ESTO
+                authDomain: "TU_DOMINIO.firebaseapp.com",
+                projectId: "TU_PROJECT_ID",
+                storageBucket: "TU_BUCKET.appspot.com",
+                messagingSenderId: "1234567890",
+                appId: "1:1234567890:web:abcdefghij",
+            };
+            // =========================================================================
+
+            let firebaseConfig = userFirebaseConfig; 
+            let useCanvasAuth = false;
+            let appId = 'standalone-app';
+
             try {
-                firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                // 1. Intentar usar la configuración proporcionada por el Canvas si está disponible
+                if (typeof __firebase_config !== 'undefined' && JSON.parse(__firebase_config).projectId) {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                    appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                    useCanvasAuth = true;
+                    console.log("Usando configuración de Firebase del entorno Canvas.");
+                } else if (firebaseConfig.apiKey === "TU_API_KEY_AQUI") {
+                    // 2. Fallo si no hay config de Canvas y el usuario no puso su API Key
+                    console.error("¡ERROR! Falta la clave de API de Firebase. El guardado no funcionará. Por favor, edita la variable 'userFirebaseConfig'.");
+                    document.getElementById('save-status').textContent = "ERROR: ¡Falta la configuración de Firebase! No se guardarán los datos.";
+                    document.getElementById('save-status').className = `mt-3 text-center text-sm font-semibold h-4 text-red-400`;
+                    return;
+                }
             } catch (e) {
-                console.error("Error al parsear __firebase_config:", e);
-                return;
+                console.error("Error al obtener config, usando la configuración estática:", e);
             }
-
-            if (Object.keys(firebaseConfig).length === 0) {
-                console.error("La configuración de Firebase está vacía.");
-                return;
-            }
-
+            
             try {
                 window.firebaseApp = initializeApp(firebaseConfig);
                 window.db = getFirestore(window.firebaseApp);
                 window.auth = getAuth(window.firebaseApp);
                 
-                // Autenticación usando el token o anónima
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                if (initialAuthToken) {
-                    await signInWithCustomToken(window.auth, initialAuthToken);
+                // 3. Autenticación: Usar token de Canvas o Anónima como fallback
+                if (useCanvasAuth && typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(window.auth, __initial_auth_token);
+                    console.log("Autenticación con token de Canvas.");
                 } else {
                     await signInAnonymously(window.auth);
+                    console.log("Autenticación Anónima (para GitHub/Local).");
                 }
 
                 // Esperar a que el estado de autenticación cambie y obtener el userId
                 onAuthStateChanged(window.auth, (user) => {
                     if (user) {
                         window.currentUserId = user.uid;
-                        console.log("Usuario autenticado:", window.currentUserId);
                         
-                        // Definir la referencia del documento privado
-                        // Path: /artifacts/{appId}/users/{userId}/panes_inventory/current_data
-                        const collectionPath = `/artifacts/${appId}/users/${window.currentUserId}/panes_inventory`;
+                        // Definir la referencia del documento: 
+                        // Canvas Path: /artifacts/{appId}/users/{userId}/panes_inventory/current_data
+                        // GitHub Path (usando tu propia regla): users/{userId}/panes_inventory/current_data
+                        const collectionPath = useCanvasAuth 
+                            ? `/artifacts/${appId}/users/${window.currentUserId}/panes_inventory`
+                            : `users/${window.currentUserId}/panes_inventory`;
+                        
                         window.inventoryRef = doc(window.db, collectionPath, 'current_data');
 
                         // Iniciar la escucha en tiempo real (onSnapshot)
@@ -66,13 +91,15 @@
                             window.startRealtimeListener();
                         }
                     } else {
-                        // En caso de fallo en el token, usar un ID anónimo para poder guardar
-                        window.currentUserId = crypto.randomUUID();
+                        // Si falla la auth, usamos un ID temporal (pero no podemos guardar en DB sin un 'user')
+                        window.currentUserId = crypto.randomUUID(); 
                     }
                 });
 
             } catch (e) {
                 console.error("Error en la inicialización de Firebase:", e);
+                document.getElementById('save-status').textContent = `ERROR: Fallo al inicializar Firebase. (${e.message})`;
+                document.getElementById('save-status').className = `mt-3 text-center text-sm font-semibold h-4 text-red-400`;
             }
         };
 
@@ -209,8 +236,7 @@
                 </div>
             </div>
 
-            <!-- MENSAJE DE ESTADO DE GUARDADO (OCULTO) -->
-            <!-- Mantenemos el elemento, pero lo usaremos solo para mensajes de error o carga. -->
+            <!-- MENSAJE DE ESTADO DE GUARDADO -->
             <p id="save-status" class="mt-3 text-center text-sm font-semibold h-4"></p>
 
             <!-- Botones de Acción -->
@@ -404,7 +430,7 @@
         window.startRealtimeListener = () => {
             if (!window.inventoryRef) {
                 console.error("Referencia de inventario no disponible.");
-                showStatus("Error interno: No se pudo conectar a la DB.", 'red');
+                showStatus("Error interno: No se pudo conectar a la DB (ref. no lista).", 'red');
                 return; 
             }
 
@@ -443,7 +469,7 @@
                 calculateTotalItems();
             }, (error) => {
                 console.error("Error al escuchar la base de datos:", error);
-                showStatus("Error de conexión con Firestore. Revisa tu conexión.", 'red');
+                showStatus("Error de conexión con Firestore. Revisa tu configuración/conexión.", 'red');
                 // En caso de fallo, al menos renderizamos lo local
                 renderInventoryTable();
             });
@@ -471,8 +497,6 @@
                 // Usamos setDoc para sobrescribir el documento completo con el estado actual
                 await setDoc(window.inventoryRef, dataToSave);
                 console.log("Datos guardados en Firestore silenciosamente.");
-                // Si el guardado fue manual (desde la calculadora), podemos dar un feedback muy breve,
-                // pero por petición del usuario lo dejamos completamente silencioso.
             } catch (e) {
                 console.error("Error al guardar en Firestore:", e);
                 showStatus(`Error al guardar: ${e.message}`, 'red');
