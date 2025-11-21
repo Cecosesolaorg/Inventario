@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVENTARIO DE VIVERES - PERSISTENCIA FIRESTORE</title>
+    <title>INVENTARIO DE VIVERES PASILLO 3 PANES</title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Importaciones de Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, deleteDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Variables globales que serán inicializadas al inicio
         window.firebaseApp = null;
@@ -21,70 +21,41 @@
 
         // Configuración y Inicialización de Firebase
         const initFirebase = async () => {
-            // ====================================================================================
-            //  --- 🚨 ZONA DE CONFIGURACIÓN DE FIREBASE (¡MANDATORIO PARA GITHUB!) 🚨 ---
-            //  DEBES reemplazar el contenido de 'userFirebaseConfig' con tu propia configuración 
-            //  copiada de la Consola de Firebase para que funcione fuera de este entorno.
-            // ====================================================================================
-            const userFirebaseConfig = {
-                apiKey: "TU_API_KEY_DE_FIREBASE_AQUI", // REEMPLAZA ESTO
-                authDomain: "TU_DOMINIO.firebaseapp.com", // REEMPLAZA ESTO
-                projectId: "TU_PROJECT_ID", // REEMPLAZA ESTO
-                storageBucket: "TU_BUCKET.appspot.com", // REEMPLAZA ESTO
-                messagingSenderId: "1234567890", // REEMPLAZA ESTO
-                appId: "1:1234567890:web:abcdefghij", // REEMPLAZA ESTO
-                // Puedes eliminar cualquier otra clave que no uses, como measurementId
-            };
-            // ====================================================================================
-
-            let firebaseConfig = userFirebaseConfig; 
-            let useCanvasAuth = false;
-            let appId = 'standalone-app';
-
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            let firebaseConfig;
             try {
-                // 1. Intentar usar la configuración proporcionada por el Canvas si está disponible
-                if (typeof __firebase_config !== 'undefined' && JSON.parse(__firebase_config).projectId) {
-                    firebaseConfig = JSON.parse(__firebase_config);
-                    appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                    useCanvasAuth = true;
-                    console.log("Usando configuración de Firebase del entorno Canvas.");
-                } else if (firebaseConfig.apiKey === "TU_API_KEY_DE_FIREBASE_AQUI") {
-                    // 2. Fallo si no hay config de Canvas y el usuario no puso su API Key
-                    console.error("¡ERROR! Falta la clave de API de Firebase. El guardado no funcionará. Por favor, edita la variable 'userFirebaseConfig'.");
-                    document.getElementById('save-status').textContent = "ERROR: ¡Falta la configuración de Firebase! No se guardarán los datos.";
-                    document.getElementById('save-status').className = `mt-3 text-center text-sm font-semibold h-4 text-red-400`;
-                    return;
-                }
+                firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
             } catch (e) {
-                console.error("Error al obtener config, usando la configuración estática:", e);
+                console.error("Error al parsear __firebase_config:", e);
+                return;
             }
-            
+
+            if (Object.keys(firebaseConfig).length === 0) {
+                console.error("La configuración de Firebase está vacía.");
+                return;
+            }
+
             try {
                 window.firebaseApp = initializeApp(firebaseConfig);
                 window.db = getFirestore(window.firebaseApp);
                 window.auth = getAuth(window.firebaseApp);
                 
-                // 3. Autenticación: Usar token de Canvas o Anónima como fallback
-                if (useCanvasAuth && typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(window.auth, __initial_auth_token);
-                    console.log("Autenticación con token de Canvas.");
+                // Autenticación usando el token o anónima
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (initialAuthToken) {
+                    await signInWithCustomToken(window.auth, initialAuthToken);
                 } else {
                     await signInAnonymously(window.auth);
-                    console.log("Autenticación Anónima (para GitHub/Local).");
                 }
 
                 // Esperar a que el estado de autenticación cambie y obtener el userId
                 onAuthStateChanged(window.auth, (user) => {
                     if (user) {
                         window.currentUserId = user.uid;
+                        console.log("Usuario autenticado:", window.currentUserId);
                         
-                        // Definir la referencia del documento: 
-                        // Canvas Path: /artifacts/{appId}/users/{userId}/panes_inventory/current_data
-                        // GitHub Path (usando tu propia regla): users/{userId}/panes_inventory/current_data
-                        const collectionPath = useCanvasAuth 
-                            ? `/artifacts/${appId}/users/${window.currentUserId}/panes_inventory`
-                            : `users/${window.currentUserId}/panes_inventory`;
-                        
+                        // Definir la referencia del documento
+                        const collectionPath = `/artifacts/${appId}/users/${window.currentUserId}/panes_inventory`;
                         window.inventoryRef = doc(window.db, collectionPath, 'current_data');
 
                         // Iniciar la escucha en tiempo real (onSnapshot)
@@ -92,15 +63,12 @@
                             window.startRealtimeListener();
                         }
                     } else {
-                        // Si falla la auth, usamos un ID temporal (pero no podemos guardar en DB sin un 'user')
-                        window.currentUserId = crypto.randomUUID(); 
+                        window.currentUserId = crypto.randomUUID();
                     }
                 });
 
             } catch (e) {
                 console.error("Error en la inicialización de Firebase:", e);
-                document.getElementById('save-status').textContent = `ERROR: Fallo al inicializar Firebase. (${e.message})`;
-                document.getElementById('save-status').className = `mt-3 text-center text-sm font-semibold h-4 text-red-400`;
             }
         };
 
@@ -151,7 +119,7 @@
 
         .table-header {
             background-color: #1f2937;
-            color: var(--neon-cyan);
+            color: #22d3ee;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -173,7 +141,7 @@
         .qty-cell {
             text-align: center;
             font-weight: bold;
-            color: var(--neon-lime);
+            color: #a3e635;
             background-color: rgba(17, 24, 39, 0.5);
             cursor: pointer;
             transition: background-color 0.2s;
@@ -203,12 +171,6 @@
         /* Inputs y Footer Claro */
         .light-theme input[type="text"] { background-color: #ffffff; border-color: #94a3b8; color: #0f172a; }
         .light-theme .footer-container { background-color: #e2e8f0; border-color: #94a3b8; }
-
-        /* Estilos de Status (OCULTO AHORA, pero si se necesitara en el futuro) */
-        .text-lime-400 { color: var(--neon-lime); }
-        .text-red-400 { color: #f87171; }
-        .light-theme .text-lime-600 { color: #16a34a; }
-        .light-theme .text-red-600 { color: #dc2626; }
     </style>
 </head>
 <body class="p-2 md:p-6 min-h-screen">
@@ -216,17 +178,17 @@
     <div class="max-w-4xl mx-auto bg-gray-900 p-4 md:p-8 rounded-2xl shadow-2xl border border-cyan-900 main-container">
         <header class="mb-4">
             <!-- Cabecera tipo Reporte -->
-            <div class="border border-gray-700 p-4 rounded-xl mb-3 bg-gray-800/50 light-theme:bg-white light-theme:border-blue-200 transition-colors">
+            <div class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800/50 light-theme:bg-white light-theme:border-blue-200 transition-colors">
                 <!-- Fila 1: ORGANISMO Y FECHA -->
                 <div class="flex flex-col md:flex-row justify-between md:items-center border-b border-gray-700 pb-2 mb-2 light-theme:border-gray-200">
-                    <p class="text-xs font-bold text-cyan-400 light-theme:text-blue-600 tracking-wide mb-1 md:mb-0">ORGANISMO DE INTEGRACIÓN COOPERATIVA CECOSESOLA, R.L. J085030140</p>
+                    <p class="text-xs font-bold text-cyan-400 light-theme:text-blue-600 tracking-wide mb-1 md:mb-0">CECOSESOLA J085030140</p>
                     <p class="text-xs text-gray-400 light-theme:text-gray-500">FECHA: <span id="report-date" class="font-semibold text-gray-200 light-theme:text-gray-800"></span></p>
                 </div>
                 
                 <!-- Fila 2: PASILLO Y RESPONSABLES -->
                 <div class="flex flex-col md:flex-row justify-between items-start">
                     <div class="mb-2 md:mb-0">
-                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase">🍞 PASILLO PANES (PERSISTENTE) 🍞</h2>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase">🍞 PASILLO PANES 🍞</h2>
                         <h3 class="text-lg font-bold text-gray-300 light-theme:text-gray-600">FERIA DEL ESTE</h3>
                     </div>
                     
@@ -236,9 +198,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- MENSAJE DE ESTADO DE GUARDADO -->
-            <p id="save-status" class="mt-3 text-center text-sm font-semibold h-4"></p>
 
             <!-- Botones de Acción -->
             <div class="flex justify-end space-x-3 items-center sticky top-2 z-10 bg-gray-900/90 p-2 rounded-xl backdrop-blur-sm light-theme:bg-white/90">
@@ -395,25 +354,9 @@
         const productNames = [
             "CACHITOS ", "CATALINAS /NEGRAS* 10", "COCADAS", "GALLETA ARTESANAL ", 
             "PAN ARABE", "PAN CORTADITOS", "PAN DE GUAYABA", "PAN DE HAMBURGUESA X 08", 
-            "PAN DE SANDWICHE GRD", "PAN DE SANDWICHE INTEGRAL ", "PAN DE SANDWICHE PQ", "PAN DE SANDWIS NACIONAL 500GR", 
+            "PAN DE SANDWICHE  GRD", "PAN DE SANDWICHE  INTEGRAL ", "PAN DE SANDWICHE  PQ", "PAN DE SANDWIS NACIONAL 500GR", 
             "PAN DE TUNJA PEQ", "PANELA DULCE", "SOPA SOBRE MAGGY", 
         ];
-
-        // Referencia al elemento de estado (mantenido por si es necesario para debugging)
-        const saveStatusElement = document.getElementById('save-status');
-
-        // Función para mostrar mensajes de estado temporalmente (ahora solo para errores de DB)
-        function showStatus(message, color) {
-            if (!saveStatusElement) return;
-            
-            saveStatusElement.textContent = message;
-            saveStatusElement.className = `mt-3 text-center text-sm font-semibold h-4 text-${color}-400 light-theme:text-${color}-600`;
-            
-            setTimeout(() => {
-                saveStatusElement.textContent = '';
-                saveStatusElement.className = `mt-3 text-center text-sm font-semibold h-4`;
-            }, 5000); // Mostrar errores por 5 segundos
-        }
 
         // Función para generar la estructura de inventario inicial
         const getInitialInventoryData = () => productNames.map(name => ({
@@ -423,6 +366,7 @@
         }));
 
         // --- INICIALIZACIÓN INMEDIATA ---
+        // Inicializamos esto ANTES de cualquier llamada a la DB para que la tabla no esté vacía
         let inventoryData = getInitialInventoryData();
         let responsables = { resp1: "SIN NOMBRE", resp2: "SIN NOMBRE" };
 
@@ -431,76 +375,55 @@
         window.startRealtimeListener = () => {
             if (!window.inventoryRef) {
                 console.error("Referencia de inventario no disponible.");
-                showStatus("Error interno: No se pudo conectar a la DB (ref. no lista).", 'red');
-                return; 
+                return;
             }
 
             onSnapshot(window.inventoryRef, (docSnapshot) => {
                 let data = docSnapshot.data();
-                let shouldSaveInitial = false;
 
-                // VALIDACIÓN MEJORADA para evitar la sobreescritura de datos
+                // Validación extra: aseguramos que data.inventory no esté vacío
                 if (docSnapshot.exists() && data && Array.isArray(data.inventory) && data.inventory.length > 0) {
                     // Datos encontrados y válidos: Usar datos de Firestore
                     inventoryData = data.inventory;
                     responsables.resp1 = data.responsable1 || "SIN NOMBRE";
                     responsables.resp2 = data.responsable2 || "SIN NOMBRE";
-                    console.log("Datos de Firestore cargados exitosamente.");
-                    showStatus("Datos cargados. La persistencia está activa.", 'lime');
-                } else if (docSnapshot.exists() && data && data.inventory && data.inventory.length === 0) {
-                    // Documento existe pero la lista de inventario está vacía (posible borrado manual o error)
-                    console.warn("Documento existe pero inventario vacío. Reinicializando a cero.");
-                    inventoryData = getInitialInventoryData();
-                    shouldSaveInitial = true; // Guardar la estructura base con 0s
+                    console.log("Datos de Firestore cargados.");
                 } else {
-                    // Documento no existe: Inicializar a cero y guardar la estructura base
-                    console.warn("Documento de inventario inexistente. Inicializando a cero y creando estructura base.");
+                    // Datos no encontrados O array vacío: Inicializar y guardar en DB
+                    console.log("Datos no encontrados o vacíos, reinicializando.");
                     inventoryData = getInitialInventoryData();
-                    shouldSaveInitial = true; // Guardar la estructura base con 0s
-                }
-
-                // Si debe guardar la estructura inicial, lo hacemos aquí de forma asíncrona.
-                if (shouldSaveInitial) {
-                    window.saveInventoryData(false); 
+                    // Guardar la estructura inicial en la DB para corregir el problema persistente
+                    saveInventoryData(); 
                 }
                 
-                // 4. Actualizar toda la UI con los datos cargados o inicializados
+                // 4. Actualizar toda la UI
                 renderInventoryTable();
-                updateReportHeaders(false); // Cargar datos de responsables en los inputs
+                updateReportHeaders(false); 
                 calculateTotalItems();
             }, (error) => {
                 console.error("Error al escuchar la base de datos:", error);
-                showStatus("Error de conexión con Firestore. Revisa tu configuración/conexión.", 'red');
-                // En caso de fallo, al menos renderizamos lo local
+                // Incluso si falla, renderizamos lo local (que son ceros)
                 renderInventoryTable();
             });
         };
 
         // --- FIREBASE: ESCRITURA (setDoc) ---
-        window.saveInventoryData = async function(explicitSave = false) {
+        window.saveInventoryData = async function() {
             if (!window.inventoryRef) {
                 console.error("Referencia de inventario no disponible para guardar.");
-                showStatus("Error interno: No se pudo conectar a la DB para guardar.", 'red');
                 return;
             }
             try {
-                // Obtener los nombres de los responsables desde los inputs antes de guardar
-                const r1Value = document.getElementById('responsable-1').value || "SIN NOMBRE";
-                const r2Value = document.getElementById('responsable-2').value || "SIN NOMBRE";
-                
                 const dataToSave = {
                     inventory: inventoryData,
-                    responsable1: r1Value,
-                    responsable2: r2Value,
+                    responsable1: document.getElementById('responsable-1').value || "SIN NOMBRE",
+                    responsable2: document.getElementById('responsable-2').value || "SIN NOMBRE",
                     lastUpdated: new Date().toISOString()
                 };
-                
-                // Usamos setDoc para sobrescribir el documento completo con el estado actual
                 await setDoc(window.inventoryRef, dataToSave);
-                console.log("Datos guardados en Firestore silenciosamente.");
+                console.log("Datos guardados en Firestore.");
             } catch (e) {
                 console.error("Error al guardar en Firestore:", e);
-                showStatus(`Error al guardar: ${e.message}`, 'red');
             }
         }
 
@@ -509,18 +432,14 @@
             closeResetModal();
             if (!window.inventoryRef) {
                 console.error("Referencia de inventario no disponible para borrar.");
-                showStatus("Error: No se pudo borrar (DB no disponible).", 'red');
                 return;
             }
             try {
-                // Borrar el documento
                 await deleteDoc(window.inventoryRef);
-                console.log("Documento de inventario borrado. Reiniciando inventario.");
-                showStatus("Inventario borrado y reiniciado.", 'lime');
-                // onSnapshot se disparará y recreará el documento con ceros.
+                console.log("Documento de inventario borrado.");
+                // Al borrar, onSnapshot se disparará, no encontrará datos y ejecutará getInitialInventoryData() automáticamente
             } catch (e) {
                 console.error("Error al borrar el inventario:", e);
-                showStatus(`Error al borrar: ${e.message}`, 'red');
             }
         }
 
@@ -528,9 +447,6 @@
 
         // Inicialización de la aplicación
         document.addEventListener('DOMContentLoaded', () => {
-            // Cargar configuración local (Tema)
-            loadLocalConfig();
-
             // Renderizar INMEDIATAMENTE la tabla con ceros para que no se vea vacía mientras carga
             renderInventoryTable();
             
@@ -538,21 +454,6 @@
             document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
         });
 
-        // Función para cargar datos del LocalStorage (solo el tema, los responsables vienen de Firestore)
-        function loadLocalConfig() {
-            // Cargar Tema
-            const storedTheme = localStorage.getItem('app_theme');
-            const sun = document.getElementById('sun-icon');
-            const moon = document.getElementById('moon-icon');
-
-            if (storedTheme === 'light') {
-                document.documentElement.classList.add('light-theme');
-                moon.classList.add('hidden');
-                sun.classList.remove('hidden');
-            }
-            // NOTA: Los responsables y el inventario se cargan **siempre** desde Firestore, no desde localStorage.
-        }
-        
         window.renderInventoryTable = function() {
             const tbody = document.getElementById('inventory-list');
             if (!tbody) return;
@@ -561,16 +462,14 @@
             inventoryData.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.className = 'table-row';
-                // Asegurar que quantity sea un número o cero para la validación
-                const qtyValue = parseFloat(item.quantity) || 0;
-                const zeroClass = qtyValue === 0 ? 'zero-qty' : '';
+                const zeroClass = item.quantity === 0 ? 'zero-qty' : '';
 
                 tr.innerHTML = `
                     <td class="table-data product-cell">${item.name}</td>
                     <td class="table-data qty-cell ${zeroClass}" 
                         onclick="openCalculator(${index}, '${item.name.replace(/'/g, "\\'")}')"
                         id="qty-cell-${index}">
-                        <span id="qty-display-${index}" data-quantity="${qtyValue}" data-history="${item.history || String(qtyValue)}">${qtyValue}</span>
+                        <span id="qty-display-${index}" data-quantity="${item.quantity}" data-history="${item.history || '0'}">${item.quantity}</span>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -581,7 +480,7 @@
             const r1Input = document.getElementById('responsable-1');
             const r2Input = document.getElementById('responsable-2');
             
-            // Si cargamos de la DB (shouldSave=false), actualizar inputs desde la variable global 'responsables'
+            // Si cargamos de la DB, actualizar inputs primero
             if (!shouldSave) {
                 r1Input.value = responsables.resp1 === "SIN NOMBRE" ? "" : responsables.resp1;
                 r2Input.value = responsables.resp2 === "SIN NOMBRE" ? "" : responsables.resp2;
@@ -590,13 +489,11 @@
             const r1 = r1Input.value || "SIN NOMBRE";
             const r2 = r2Input.value || "SIN NOMBRE";
 
-            // Actualizar vista
             document.getElementById('resp1-display').textContent = r1.toUpperCase();
             document.getElementById('resp2-display').textContent = r2.toUpperCase();
             
             if (shouldSave) {
-                // Guardar cambios de responsables en DB (Guardado Silencioso)
-                saveInventoryData(false); 
+                saveInventoryData(); // Guardar cambios de responsables en DB
             }
         }
 
@@ -628,7 +525,7 @@
             calculator.displayValue = String(currentQty);
             calculator.fullExpression = currentHist;
             calculator.firstOperand = parseFloat(currentQty);
-            calculator.isResultCalculated = true; // Simula que el valor actual es el resultado de la última operación
+            calculator.isResultCalculated = true; 
 
             window.updateDisplay();
             document.getElementById('calculator-modal').style.display = 'flex';
@@ -643,19 +540,10 @@
             const display = document.getElementById('calc-display');
             const history = document.getElementById('calc-history');
             
-            // Asegura que displayValue sea un string
-            let displayStr = String(calculator.displayValue);
-
-            // Redondeo visual si es muy largo
-            if (displayStr.length > 15) {
-                displayStr = parseFloat(displayStr).toFixed(10);
-            }
-            
-            display.textContent = displayStr;
+            display.textContent = calculator.displayValue;
             history.textContent = calculator.fullExpression;
 
-            // Ajuste de tamaño de fuente para números largos
-            if(displayStr.length > 9) {
+            if(calculator.displayValue.length > 9) {
                 display.style.fontSize = '1.5rem';
             } else {
                 display.style.fontSize = '2.25rem';
@@ -677,277 +565,180 @@
                 calculator.firstOperand = null; 
                 calculator.operator = null;
                 calculator.waitingForSecondOperand = false; 
+
             } else if (digit === '.') {
                 if (displayValue.includes('.')) return;
                 if (waitingForSecondOperand) {
-                    calculator.displayValue = '0.';
-                    calculator.fullExpression += '0.';
-                    calculator.waitingForSecondOperand = false;
-                } else if (displayValue === '0' && calculator.operator) {
-                    calculator.displayValue = '0.';
-                    calculator.fullExpression += '0.';
+                     calculator.displayValue = '0.';
+                     calculator.fullExpression += '0.';
+                     calculator.waitingForSecondOperand = false;
                 } else {
-                    calculator.displayValue += digit;
+                    calculator.displayValue = displayValue + digit;
                     calculator.fullExpression += digit;
                 }
+            } else if (waitingForSecondOperand) {
+                calculator.displayValue = digit;
+                calculator.waitingForSecondOperand = false;
+                calculator.fullExpression += digit;
             } else {
-                if (waitingForSecondOperand) {
+                if (displayValue === '0' && digit !== '0') {
                     calculator.displayValue = digit;
-                    calculator.fullExpression += digit;
-                    calculator.waitingForSecondOperand = false;
-                } else {
-                    if (displayValue === '0' || displayValue === '-0') {
-                        calculator.displayValue = digit;
-                        // Lógica para reemplazar '0' al inicio de la expresión o después de un operador
-                        const lastOpIndex = calculator.fullExpression.search(/[+\-*/](?=\d+$)/);
-                        if (lastOpIndex !== -1 && calculator.fullExpression.slice(lastOpIndex + 1) === '0') {
-                            calculator.fullExpression = calculator.fullExpression.slice(0, -1) + digit;
-                        } else if (calculator.fullExpression === '0') {
-                            calculator.fullExpression = digit;
-                        } else {
-                            calculator.fullExpression += digit;
-                        }
+                    if (calculator.fullExpression.endsWith('0')) {
+                         calculator.fullExpression = calculator.fullExpression.slice(0, -1) + digit;
                     } else {
-                        calculator.fullExpression += digit;
+                         calculator.fullExpression += digit;
                     }
+                } else if (displayValue === '0' && digit === '0') {
+                    return;
+                } else {
+                    calculator.displayValue = displayValue + digit;
+                    calculator.fullExpression += digit;
                 }
             }
             updateDisplay();
         }
 
-
-        const performCalculation = {
-            '/': (firstOperand, secondOperand) => secondOperand === 0 ? NaN : firstOperand / secondOperand,
-            '*': (firstOperand, secondOperand) => firstOperand * secondOperand,
-            '+': (firstOperand, secondOperand) => firstOperand + secondOperand,
-            '-': (firstOperand, secondOperand) => firstOperand - secondOperand,
-        };
-
         window.handleOperator = function(nextOperator) {
-            const { firstOperand, displayValue, operator } = calculator;
-            const inputValue = parseFloat(displayValue);
-
             if (nextOperator === '=') {
-                if (operator === null) {
-                    // Si '=' es presionado sin un operador, la expresión es el display
-                    calculator.isResultCalculated = true;
-                    updateDisplay();
-                    return;
-                }
-                
-                // Si tenemos un operador, pero el segundo operando no ha sido escrito aún, no hacer nada.
-                if (calculator.waitingForSecondOperand) return;
-            }
-
-
-            if (firstOperand === null && !isNaN(inputValue)) {
-                calculator.firstOperand = inputValue;
-            } else if (operator) {
-                const result = performCalculation[operator](firstOperand, inputValue);
-                
-                // Usamos un redondeo simple para evitar problemas de precisión de JS
-                const roundedResult = Math.round(result * 100000) / 100000; 
-
-                calculator.displayValue = String(roundedResult);
-                calculator.firstOperand = roundedResult;
-                
-                if (nextOperator === '=') {
-                    // Cálculo de resultado final
-                    calculator.fullExpression += ' = ' + roundedResult;
+                if (calculator.operator && !calculator.waitingForSecondOperand) {
+                    const inputValue = parseFloat(calculator.displayValue);
+                    const result = calculate(calculator.firstOperand, inputValue, calculator.operator);
+                    
+                    calculator.displayValue = String(result);
+                    calculator.firstOperand = result;
                     calculator.operator = null;
                     calculator.waitingForSecondOperand = false;
                     calculator.isResultCalculated = true;
-                    updateDisplay();
-                    return;
                 }
+                updateDisplay();
+                return;
+            }
+
+            const inputValue = parseFloat(calculator.displayValue);
+
+            if (calculator.operator && calculator.waitingForSecondOperand) {
+                calculator.operator = nextOperator;
+                calculator.fullExpression = calculator.fullExpression.slice(0, -3) + ` ${nextOperator} `;
+                updateDisplay();
+                return;
+            }
+
+            if (calculator.firstOperand == null && !isNaN(inputValue)) {
+                calculator.firstOperand = inputValue;
+            } else if (calculator.operator) {
+                const result = calculate(calculator.firstOperand, inputValue, calculator.operator);
+                calculator.displayValue = String(result);
+                calculator.firstOperand = result;
             }
 
             calculator.waitingForSecondOperand = true;
             calculator.operator = nextOperator;
-            
-            if(nextOperator !== '=') {
-                // Prevenir agregar operador si ya es lo último en la cadena de expresión
-                if (!['+', '-', '*', '/'].includes(calculator.fullExpression.slice(-1))) {
-                    calculator.fullExpression += nextOperator;
-                } else {
-                    // Si ya hay un operador, reemplazarlo
-                    calculator.fullExpression = calculator.fullExpression.slice(0, -1) + nextOperator;
-                }
-            }
+            calculator.isResultCalculated = false;
+            calculator.fullExpression += ` ${nextOperator} `;
             
             updateDisplay();
         }
 
+        function calculate(first, second, operator) {
+            if (operator === '+') return first + second;
+            if (operator === '-') return first - second;
+            if (operator === '*') return first * second;
+            if (operator === '/') return second !== 0 ? parseFloat((first / second).toFixed(2)) : 'Error';
+            return second;
+        }
 
         window.clearCalculator = function(fullClear = true) {
+            calculator.displayValue = '0';
+            calculator.firstOperand = null;
+            calculator.waitingForSecondOperand = false;
+            calculator.operator = null;
+            
             if (fullClear) {
-                calculator.displayValue = '0';
-                calculator.fullExpression = '0';
-                calculator.firstOperand = null;
-                calculator.waitingForSecondOperand = false;
-                calculator.operator = null;
-                calculator.isResultCalculated = false;
-            } else {
-                // Limpiar solo la visualización, mantener la expresión/historial para contexto
-                calculator.displayValue = '0';
+                 calculator.fullExpression = '0';
+                 calculator.isResultCalculated = false;
             }
             updateDisplay();
         }
 
         window.backspaceCalculator = function() {
-            const { displayValue, fullExpression, isResultCalculated } = calculator;
+            if (calculator.isResultCalculated) return;
 
-            if (isResultCalculated) return; // No se puede borrar un resultado
-
-            // 1. Manejar Full Expression (más complejo, pero más importante)
-            let newFullExpression = fullExpression;
-
-            // Retroceder en la expresión completa
-            if (newFullExpression.length > 0) {
-                newFullExpression = newFullExpression.slice(0, -1);
-            }
-            if (newFullExpression === '') {
-                newFullExpression = '0';
-            }
-            calculator.fullExpression = newFullExpression;
-
-            // 2. Manejar Display Value
-            if (displayValue.length > 1 && displayValue !== '0') {
-                calculator.displayValue = displayValue.slice(0, -1);
-            } else if (displayValue.length === 1 || (displayValue.length === 2 && displayValue.startsWith('-'))) {
+            if (calculator.displayValue.length > 1) {
+                calculator.displayValue = calculator.displayValue.slice(0, -1);
+                calculator.fullExpression = calculator.fullExpression.slice(0, -1);
+            } else {
                 calculator.displayValue = '0';
-            }
-            
-            // 3. Revisar si borramos un operador y ajustar el estado
-            if (['+', '-', '*', '/'].includes(fullExpression.slice(-1)) && !['+', '-', '*', '/'].includes(newFullExpression.slice(-1))) {
-                calculator.operator = null;
-                calculator.waitingForSecondOperand = false;
-                // Intentar recalcular el firstOperand
-                const lastNumMatch = newFullExpression.match(/[\d.]+$/);
-                if(lastNumMatch) {
-                    calculator.firstOperand = parseFloat(lastNumMatch[0]);
-                    calculator.displayValue = lastNumMatch[0];
-                } else {
-                    calculator.firstOperand = parseFloat(newFullExpression) || 0;
+                if (calculator.fullExpression.length > 0) {
+                     calculator.fullExpression = calculator.fullExpression.slice(0, -1);
                 }
-            } else if (calculator.waitingForSecondOperand && !calculator.operator) {
-                 // Si borramos el display sin operador, ajustamos el waiting flag
-                 calculator.waitingForSecondOperand = false;
+                if (calculator.fullExpression === '') calculator.fullExpression = '0';
             }
-
-
             updateDisplay();
         }
 
         window.saveAndClose = function() {
-            if (calculator.currentProductIndex === null) {
-                closeCalculator();
-                return;
-            }
-            
-            // 1. Calcular el resultado final si hay una expresión pendiente
+            if (calculator.currentProductIndex === null) return;
             if (calculator.operator && !calculator.waitingForSecondOperand) {
-                 handleOperator('=');
+                 window.handleOperator('=');
             }
-
-            // 2. Obtener el valor final y el historial
-            const finalQuantity = parseFloat(calculator.displayValue) || 0;
-            // Remover ' = resultado' del historial si existe (resultado de handleOperator('='))
-            const finalHistory = calculator.fullExpression.replace(/ = .*$/, ''); 
-
-            // 3. Actualizar la estructura de datos local
-            inventoryData[calculator.currentProductIndex].quantity = finalQuantity;
+            const finalValue = parseFloat(calculator.displayValue);
+            const finalHistory = calculator.fullExpression;
+            inventoryData[calculator.currentProductIndex].quantity = finalValue;
             inventoryData[calculator.currentProductIndex].history = finalHistory;
-
-            // 4. Activar el guardado en DB (Guardado Silencioso)
-            saveInventoryData(true);
-
-            // 5. Actualizar UI localmente (onSnapshot también lo hará, pero esto da feedback instantáneo)
-            const qtyDisplay = document.getElementById(`qty-display-${calculator.currentProductIndex}`);
-            if (qtyDisplay) {
-                qtyDisplay.textContent = finalQuantity;
-                const parentCell = qtyDisplay.parentElement;
-                if (finalQuantity === 0) {
-                    parentCell.classList.add('zero-qty');
-                } else {
-                    parentCell.classList.remove('zero-qty');
-                }
-            }
-            calculateTotalItems();
-
-            // 6. Cerrar Modal
-            closeCalculator();
+            window.saveInventoryData();
+            window.renderInventoryTable();
+            window.calculateTotalItems();
+            window.closeCalculator();
         }
-
-        // --- UTILIDADES ---
+        
+        // --- OTRAS UTILIDADES ---
+        window.toggleTheme = function() {
+            document.documentElement.classList.toggle('light-theme');
+            const sun = document.getElementById('sun-icon');
+            const moon = document.getElementById('moon-icon');
+            if (document.documentElement.classList.contains('light-theme')) {
+                moon.classList.add('hidden');
+                sun.classList.remove('hidden');
+            } else {
+                sun.classList.add('hidden');
+                moon.classList.remove('hidden');
+            }
+        }
 
         window.openResetModal = function() {
             document.getElementById('reset-modal').style.display = 'flex';
         }
-
+        
         window.closeResetModal = function() {
             document.getElementById('reset-modal').style.display = 'none';
         }
 
-        window.toggleTheme = function() {
-            const isDark = !document.documentElement.classList.toggle('light-theme');
-            const sun = document.getElementById('sun-icon');
-            const moon = document.getElementById('moon-icon');
-
-            if (isDark) {
-                localStorage.setItem('app_theme', 'dark');
-                moon.classList.remove('hidden');
-                sun.classList.add('hidden');
-            } else {
-                localStorage.setItem('app_theme', 'light');
-                moon.classList.add('hidden');
-                sun.classList.remove('hidden');
-            }
-        }
-        
         window.downloadExcel = function() {
-            const dataToExport = inventoryData.map(item => ({
-                Producto: item.name,
-                Cantidad: item.quantity,
-                Formula: item.history || item.quantity.toString()
-            }));
-
-            // Agregar responsables y fecha al inicio del CSV
-            const date = new Date().toLocaleDateString('es-ES');
-            const r1 = document.getElementById('responsable-1').value || "SIN NOMBRE";
-            const r2 = document.getElementById('responsable-2').value || "SIN NOMBRE";
-
             let csvContent = "data:text/csv;charset=utf-8,";
             
-            // Metadatos
-            csvContent += `INVENTARIO PANES,FECHA,${date}\n`;
-            csvContent += `RESPONSABLE 1,${r1}\n`;
-            csvContent += `RESPONSABLE 2,${r2}\n\n`;
+            // Calcular cantidad de productos con stock (mayor a 0)
+            const stockedCount = inventoryData.filter(i => (parseFloat(i.quantity) || 0) > 0).length;
 
-            // Encabezados
-            const headers = Object.keys(dataToExport[0]);
-            csvContent += headers.join(',') + '\n';
-
-            // Filas de datos
-            dataToExport.forEach(item => {
-                const row = headers.map(header => {
-                    let value = item[header];
-                    // Sanitizar valores (eliminar comas, envolver strings con comillas si contienen comas)
-                    if (typeof value === 'string') {
-                        value = value.replace(/"/g, '""'); // Escapar comillas dobles
-                        if (value.includes(',')) {
-                            value = `"${value}"`;
-                        }
-                    }
-                    return value;
-                }).join(',');
-                csvContent += row + '\n';
+            // Header
+            csvContent += "RED CECOSESOLA - FERIA DEL ESTE\n";
+            csvContent += `FECHA: ${document.getElementById('report-date').textContent}\n`;
+            csvContent += `RESPONSABLE 1: ${document.getElementById('responsable-1').value}\n`;
+            csvContent += `RESPONSABLE 2: ${document.getElementById('responsable-2').value}\n`;
+            csvContent += `PRODUCTOS DE CONTADOS: ${stockedCount}\n\n`;
+            
+            // Table Header (HISTORIAL ANTES DE CANTIDAD)
+            csvContent += "PRODUCTO,HISTORIAL,CANTIDAD\n";
+            
+            // Data
+            inventoryData.forEach(row => {
+                const history = row.history ? `"${row.history}"` : "";
+                csvContent += `${row.name},${history},${row.quantity}\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `inventario_panes_${date.replace(/\//g, '-')}.csv`);
+            link.setAttribute("download", "inventario_panes.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
