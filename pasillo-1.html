@@ -244,7 +244,7 @@
                             <input type="text" id="responsable-2" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
                         </div>
                         <div>
-                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2 EA</label>
+                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 3 EB</label>
                             <input type="text" id="responsable-3" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
                         </div>
                         <div>
@@ -856,16 +856,26 @@
             const r4 = document.getElementById('responsable-4').value.trim();
             const date = document.getElementById('report-date').textContent;
             
-            // Construir texto de responsables de forma dinámica
-            const names = [r1, r2, r3, r4].filter(n => n && n !== "SIN NOMBRE" && n !== "");
-            const responsablesText = names.length > 0 ? names.join(" / ").toUpperCase() : "SIN ASIGNAR";
+            // Construir texto de Equipo 1 (Resp 1 y 2) para el reporte interno
+            const team1Names = [r1, r2].filter(n => n && n !== "SIN NOMBRE" && n !== "");
+            const team1Text = team1Names.length > 0 ? team1Names.join(" / ").toUpperCase() : "SIN ASIGNAR";
+
+            // Construir nombre para el ARCHIVO basado en Equipo 1 (Sanitizado: espacios -> guiones bajos)
+            const team1FileSuffix = team1Names.length > 0 
+                                    ? "_" + team1Names.join("-").toUpperCase().replace(/[^A-Z0-9\-]/g, '_') 
+                                    : "";
+
+            // Construir texto de Equipo 2 (Resp 3 y 4)
+            const team2Names = [r3, r4].filter(n => n && n !== "SIN NOMBRE" && n !== "");
+            const team2Text = team2Names.length > 0 ? team2Names.join(" / ").toUpperCase() : "SIN ASIGNAR";
 
             // 1. Crear matriz de datos para Excel
             const ws_data = [
                 ["Inventario F.E", "CECOSESOLA R.L J085030140"],
                 ["PASILLO", "PASTAS - FERIA DEL ESTE"],
                 ["FECHA", date],
-                ["RESPONSABLES:", responsablesText], // Fila destacada con todos los nombres
+                ["EQUIPO 1:", team1Text],
+                ["EQUIPO 2:", team2Text],
                 [], // Fila vacía
                 ["ESTADO", "PRODUCTO", "HISTORIAL", "CANTIDAD"] 
             ];
@@ -896,7 +906,8 @@
                 { wch: 15 }  // Cantidad
             ];
 
-            const fileName = `Inventario_Pastas_${date.replace(/\//g, '-')}.xlsx`;
+            // Nombre del archivo modificado para incluir el Equipo 1
+            const fileName = `Inventario_Pastas${team1FileSuffix}_${date.replace(/\//g, '-')}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
 
