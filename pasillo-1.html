@@ -2,38 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>INVENTARIO DE VIVERES PASILLO 3 PANES</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVENTARIO DE VIVERES PASILLO 1 PASTAS </title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de SheetJS para Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     
-    <!-- CRUCIAL: Configuración para que funcione 'light-theme:' -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        neon: {
-                            cyan: '#22d3ee',
-                            lime: '#a3e635',
-                        }
-                    }
-                }
-            },
-            plugins: [
-                function({ addVariant, e }) {
-                    addVariant('light-theme', ({ modifySelectors, separator }) => {
-                        modifySelectors(({ className }) => {
-                            return `.light-theme .${e(`light-theme${separator}${className}`)}`
-                        })
-                    })
-                }
-            ]
-        }
-    </script>
-
-    <!-- Carga de SheetJS para exportar a Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Configuración de fuente Inter -->
     <style>
         @import url('https://fonts.fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
@@ -50,7 +25,6 @@
             background-color: #0d0d0d;
             color: #e5e7eb;
             transition: background-color 0.3s, color 0.3s;
-            font-size: 14px; 
         }
 
         /* Utilidades */
@@ -66,20 +40,19 @@
 
         .neon-title { text-shadow: 0 0 5px rgba(34, 211, 238, 0.8); }
         
-        /* --- ESTILOS DE TABLA COMPACTA --- */
+        /* --- ESTILOS DE TABLA (Simulación Excel) --- */
         #inventory-table {
             border-collapse: separate; 
             border-spacing: 0;
             width: 100%;
             border: 1px solid #374151;
-            border-radius: 0.5rem;
+            border-radius: 0.75rem; /* rounded-xl */
             overflow: hidden;
         }
         
         .table-header, .table-data {
-            padding: 8px 10px;
+            padding: 12px 16px;
             border-bottom: 1px solid #374151;
-            line-height: 1.2;
         }
 
         .table-header {
@@ -89,31 +62,25 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             text-align: center;
-            font-size: 0.8rem;
         }
 
         .table-row { transition: background-color 0.2s; }
         .table-row:last-child .table-data { border-bottom: none; }
         
+        /* Modo Oscuro (Default) */
         .table-row:hover { background-color: #1f2937; }
         
         .product-cell {
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             color: #e5e7eb;
             border-right: 1px solid #374151;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .product-cell:hover {
-            background-color: #1f2937;
-            text-decoration: underline;
+            cursor: pointer; /* Indicar que es clickeable para el checklist */
+            user-select: none; /* Evitar selección de texto al hacer clic rápido */
         }
 
         .qty-cell {
             text-align: center;
             font-weight: bold;
-            font-size: 1rem;
             color: #a3e635;
             background-color: rgba(17, 24, 39, 0.5);
             cursor: pointer;
@@ -123,11 +90,15 @@
             background-color: #374151;
             text-decoration: underline;
         }
-        .zero-qty { color: #6b7280 !important; }
+        .zero-qty { color: #9ca3af !important; }
+
+        /* Estilos de Estado Checklist */
+        .status-ok { background-color: rgba(6, 78, 59, 0.4) !important; color: #4ade80 !important; } /* Verde oscuro */
+        .status-error { background-color: rgba(127, 29, 29, 0.4) !important; color: #f87171 !important; } /* Rojo oscuro */
 
         /* --- TEMA CLARO --- */
         .light-theme body { background-color: #f3f4f6; color: #1f2937; }
-        .light-theme .main-container { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .light-theme .main-container { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         .light-theme .neon-title { color: #2563eb; text-shadow: none; }
         .light-theme .accent-text { color: #2563eb; }
         
@@ -139,229 +110,108 @@
         .light-theme .table-row:hover { background-color: #f0f9ff; }
         .light-theme .qty-cell { background-color: #ecfdf5; color: #059669; }
         .light-theme .qty-cell:hover { background-color: #d1fae5; }
-        .light-theme .zero-qty { color: #9ca3af !important; }
-        .light-theme .product-cell:hover { background-color: #f0f9ff; }
+        .light-theme .zero-qty { color: #6b7280 !important; }
 
+        /* Estados Checklist Claro */
+        .light-theme .status-ok { background-color: #dcfce7 !important; color: #166534 !important; }
+        .light-theme .status-error { background-color: #fee2e2 !important; color: #991b1b !important; }
 
         /* Inputs y Footer Claro */
         .light-theme input[type="text"] { background-color: #ffffff; border-color: #94a3b8; color: #0f172a; }
         .light-theme .footer-container { background-color: #e2e8f0; border-color: #94a3b8; }
-        
-        /* Estilos del Item de Historial (Ahora es Lote Item) */
-        .lote-item {
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            background-color: #1f2937;
-            border-left: 4px solid #06b6d4;
-            transition: background-color 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .lote-item:hover {
-            background-color: #374151;
-        }
-        .light-theme .lote-item {
-            background-color: #f1f5f9;
-            border-left: 4px solid #3b82f6;
-        }
-        .light-theme .lote-item:hover {
-            background-color: #e0f2fe;
-        }
-        
-        /* Estilo para el input dentro del modal de editar lotes en modo claro */
-        .light-theme .lote-input {
-            background-color: #ffffff !important;
-            color: #1f2937 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-
-        /* --- ESTILOS AUTOCOMPLETADO --- */
-        .autocomplete-wrapper {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-        .autocomplete-items {
-            position: absolute;
-            border: 1px solid #4b5563;
-            border-bottom: none;
-            border-top: none;
-            z-index: 99;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background-color: #1f2937; /* Dark bg */
-            max-height: 150px;
-            overflow-y: auto;
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .autocomplete-items div {
-            padding: 8px 10px;
-            cursor: pointer;
-            background-color: #1f2937; 
-            border-bottom: 1px solid #374151;
-            color: #e5e7eb;
-            font-size: 0.75rem; /* text-xs */
-        }
-        .autocomplete-items div:hover {
-            background-color: #374151; 
-            color: #22d3ee;
-        }
-        .autocomplete-active {
-            background-color: #22d3ee !important; 
-            color: #000000 !important;
-        }
-        
-        /* Autocompletado Tema Claro */
-        .light-theme .autocomplete-items {
-            background-color: #ffffff;
-            border-color: #cbd5e1;
-        }
-        .light-theme .autocomplete-items div {
-            background-color: #ffffff;
-            color: #1f2937;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .light-theme .autocomplete-items div:hover {
-            background-color: #eff6ff;
-            color: #2563eb;
-        }
-        .light-theme .autocomplete-active {
-            background-color: #2563eb !important; 
-            color: #ffffff !important;
-        }
-
     </style>
 </head>
-<body class="p-1 md:p-6 min-h-screen">
+<body class="p-2 md:p-6 min-h-screen">
 
-    <div class="max-w-4xl mx-auto bg-gray-900 p-3 md:p-8 rounded-xl shadow-2xl border border-cyan-900 main-container">
-        <header class="mb-3">
+    <div class="max-w-4xl mx-auto bg-gray-900 p-4 md:p-8 rounded-2xl shadow-2xl border border-cyan-900 main-container">
+        <header class="mb-4">
             <!-- Cabecera tipo Reporte -->
-            <div class="border border-gray-700 p-3 rounded-lg mb-4 bg-gray-800/50 light-theme:bg-white light-theme:border-blue-200 transition-colors">
+            <div class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800/50 light-theme:bg-white light-theme:border-blue-200 transition-colors">
                 <!-- Fila 1: ORGANISMO Y FECHA -->
                 <div class="flex flex-col md:flex-row justify-between md:items-center border-b border-gray-700 pb-2 mb-2 light-theme:border-gray-200">
-                    <p class="text-[10px] md:text-xs font-bold text-cyan-400 light-theme:text-blue-600 tracking-wide mb-1 md:mb-0">CECOSESOLA J085030140</p>
-                    <p class="text-[10px] md:text-xs text-gray-400 light-theme:text-gray-500">FECHA: <span id="report-date" class="font-semibold text-gray-200 light-theme:text-gray-800"></span></p>
+                    <p class="text-xs font-bold text-cyan-400 light-theme:text-blue-600 tracking-wide mb-1 md:mb-0">CECOSESOLA J085030140</p>
+                    <p class="text-xs text-gray-400 light-theme:text-gray-500">FECHA: <span id="report-date" class="font-semibold text-gray-200 light-theme:text-gray-800"></span></p>
                 </div>
                 
-                <!-- TÍTULO -->
-                <div class="mb-4 text-center md:text-left">
-                    <h2 class="text-xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase">🍞 PASILLO PANES 🍞</h2>
-                    <h3 class="text-xs md:text-sm font-bold text-gray-300 light-theme:text-gray-600 tracking-wider">---FERIA DEL ESTE---</h3>
-                </div>
-
-                <!-- SECCIÓN DE EQUIPO (RESPONSABLES) - CON AUTOCOMPLETADO -->
-                <div class="bg-gray-900/50 p-3 rounded-lg border border-gray-700/50 light-theme:bg-blue-50 light-theme:border-blue-100">
-                    <p class="text-[10px] font-bold text-gray-400 light-theme:text-blue-500 uppercase mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                        </svg>
-                        Equipo de Inventario
-                    </p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <!-- Resp 1 -->
-                        <div class="autocomplete-wrapper">
-                            <input type="text" id="responsable-1" placeholder="Responsable 1" class="w-full p-1.5 text-xs rounded border border-gray-600 bg-gray-800 text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-colors light-theme:bg-white light-theme:text-gray-900 light-theme:border-gray-300 light-theme:placeholder-gray-400" oninput="saveResponsables(true)">
-                        </div>
-                        <!-- Resp 2 -->
-                        <div class="autocomplete-wrapper">
-                            <input type="text" id="responsable-2" placeholder="Responsable 2" class="w-full p-1.5 text-xs rounded border border-gray-600 bg-gray-800 text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-colors light-theme:bg-white light-theme:text-gray-900 light-theme:border-gray-300 light-theme:placeholder-gray-400" oninput="saveResponsables(true)">
-                        </div>
-                        <!-- Ayudante 1 -->
-                        <div class="autocomplete-wrapper">
-                            <input type="text" id="responsable-3" placeholder="Responsable 1 (Opc)" class="w-full p-1.5 text-xs rounded border border-gray-600 bg-gray-800/60 text-gray-300 placeholder-gray-600 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors light-theme:bg-white/80 light-theme:text-gray-700 light-theme:border-gray-200" oninput="saveResponsables(true)">
-                        </div>
-                        <!-- Ayudante 2 -->
-                        <div class="autocomplete-wrapper">
-                            <input type="text" id="responsable-4" placeholder="Responsable 2 (Opc)" class="w-full p-1.5 text-xs rounded border border-gray-600 bg-gray-800/60 text-gray-300 placeholder-gray-600 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors light-theme:bg-white/80 light-theme:text-gray-700 light-theme:border-gray-200" oninput="saveResponsables(true)">
-                        </div>
+                <!-- Fila 2: PASILLO Y RESPONSABLES -->
+                <div class="flex flex-col md:flex-row justify-between items-start">
+                    <div class="mb-2 md:mb-0">
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase"> PASILLO PASTAS </h2>
+                        <h3 class="text-lg font-bold text-gray-300 light-theme:text-gray-600">FERIA DEL ESTE</h3>
+                    </div>
+                    
+                    <div class="text-sm w-full md:w-auto bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 grid grid-cols-1 gap-1">
+                        <p class="text-gray-400 light-theme:text-gray-500">RESP 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
+                        <p class="text-gray-400 light-theme:text-gray-500">RESP 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
+                        <p class="text-gray-400 light-theme:text-gray-500">RESP 3: <span id="resp3-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
+                        <p class="text-gray-400 light-theme:text-gray-500">RESP 4: <span id="resp4-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
                     </div>
                 </div>
             </div>
 
             <!-- Botones de Acción -->
-            <div class="flex justify-between items-center sticky top-1 z-10 bg-gray-900/90 p-2 rounded-lg backdrop-blur-sm light-theme:bg-white/90">
-                <!-- Grupo Izquierdo: Historial y Tema -->
-                <div class="flex space-x-2">
-                    <!-- NUEVO BOTÓN: Ver Lotes/Historial -->
-                    <button 
-                        id="view-data-btn"
-                        onclick="openHistoryModal()"
-                        class="p-2 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200 border border-transparent hover:border-gray-600 light-theme:hover:bg-blue-100 light-theme:text-blue-600"
-                        title="Ver Lotes de Productos Surtidos"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 1.1.9 2 2 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-3m-3 0V5a2 2 0 00-2-2H8a2 2 0 00-2 2v2m11 7l-5 5m0 0l-5-5m5 5V9" />
-                        </svg>
-                    </button>
-                    
-                    <!-- Botón de Cambio de Tema -->
+            <div class="flex justify-end space-x-3 items-center sticky top-2 z-10 bg-gray-900/90 p-2 rounded-xl backdrop-blur-sm light-theme:bg-white/90">
+                <div class="flex space-x-3">
                     <button 
                         id="toggle-theme-btn"
                         onclick="toggleTheme()"
                         class="p-2 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200 border border-transparent hover:border-gray-600 light-theme:hover:bg-blue-100 light-theme:text-blue-600"
+                        aria-label="Cambiar tema"
                     >
                         <!-- Luna -->
-                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12.001 12.001 0 0012 21a12.001 12.001 0 008.354-5.646z" />
                         </svg>
                         <!-- Sol -->
-                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                     </button>
-                </div>
 
-                <!-- Grupo Derecho: Reset y Excel -->
-                <div class="flex space-x-2">
-                    <!-- Botón Reset -->
+                    <!-- Botón Reset (Borrar Todo) -->
                     <button 
                         onclick="openResetModal()"
-                        class="bg-red-600/80 hover:bg-red-500 text-white p-2 rounded-lg shadow transition duration-200"
+                        class="bg-red-600/80 hover:bg-red-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95"
+                        title="Borrar todos los datos y empezar de nuevo"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                     </button>
                     
+                     <!-- Botón Agregar Producto -->
+                     <button 
+                     onclick="openAddProductModal()"
+                     class="bg-purple-600 hover:bg-purple-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95 font-bold flex items-center"
+                     title="Agregar un producto nuevo a la lista"
+                 >
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                     </svg>
+                     <span class="hidden md:inline">Agregar</span>
+                 </button>
+
                     <button 
                         onclick="downloadExcel()"
-                        class="bg-green-600 hover:bg-green-500 text-white font-bold py-1.5 px-3 rounded-lg shadow transition duration-200 flex items-center text-xs md:text-base"
-                        title="Descargar Excel (.xlsx)"
+                        class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm md:text-base"
+                        title="Descargar datos en formato Excel (.xlsx)"
                     >
-                        <!-- Icono Excel Simple -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
-                        Excel
+                        Descargar Excel
                     </button>
                 </div>
             </div>
         </header>
 
         <!-- Tabla de Inventario -->
-        <div class="mt-2 overflow-x-auto">
+        <div class="mt-4 overflow-x-auto">
             <table id="inventory-table">
                 <thead>
                     <tr>
-                        <th class="table-header text-left w-[75%] md:w-[80%] pl-3 sticky left-0 z-10">
-                            <div class="flex items-center justify-between">
-                                <span>PRODUCTO</span>
-                                <!-- Botón para agregar producto -->
-                                <button onclick="openAddProductModal()" 
-                                        class="ml-2 p-1 bg-cyan-600 hover:bg-cyan-500 rounded-full text-white transition duration-200"
-                                        title="Agregar Producto">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </th>
-                        <th class="table-header w-[25%] md:w-[20%]">CANT</th>
+                        <th class="table-header text-left w-[75%] md:w-[80%] pl-4 sticky left-0 z-10">PRODUCTO / CHECKLIST</th>
+                        <th class="table-header w-[25%] md:w-[20%]">CANTIDAD</th>
                     </tr>
                 </thead>
                 <tbody id="inventory-list">
@@ -371,538 +221,209 @@
         </div>
 
         <!-- Footer / Resumen -->
-        <footer class="mt-6 pt-4 border-t-2 border-cyan-600 bg-gray-800 rounded-lg p-3 shadow-xl footer-container transition-colors">
-            <div class="flex items-center justify-between gap-4">
+        <footer class="mt-8 pt-6 border-t-4 border-cyan-600 bg-gray-800 rounded-lg p-4 shadow-xl footer-container transition-colors">
+            <div class="flex flex-col sm:flex-row items-start sm:items-stretch justify-between gap-6">
                 
                 <!-- Contador -->
-                <div class="w-full flex flex-col items-center"> 
-                    <p class="text-sm font-bold text-cyan-400 mb-1 accent-text uppercase">ITEMS SELECCIONADO :</p>
-                    <div class="w-full max-w-[200px] bg-cyan-600/20 border border-cyan-600/50 rounded-lg p-2 flex items-center justify-center">
-                        <span id="stocked-products-count" class="text-3xl font-extrabold text-cyan-400 light-theme:text-blue-600">0</span>
+                <div class="w-full sm:w-1/2 flex flex-col"> 
+                    <p class="text-lg font-bold text-cyan-400 mb-2 accent-text uppercase">CANTIDAD DE PRODUCTOS :</p>
+                    <div class="flex-grow bg-cyan-600/20 border border-cyan-600/50 rounded-xl p-4 flex items-center justify-center">
+                        <span id="stocked-products-count" class="text-5xl font-extrabold text-cyan-400 light-theme:text-blue-600">0</span>
+                    </div>
+                </div>
+                
+                <!-- Inputs Responsables -->
+                <div class="w-full sm:w-1/2 flex flex-col space-y-3 sm:pl-4 sm:border-l border-gray-600 light-theme:border-gray-300">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 1 EA</label>
+                            <input type="text" id="responsable-1" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2 EB</label>
+                            <input type="text" id="responsable-2" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2 EA</label>
+                            <input type="text" id="responsable-3" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 4 EB</label>
+                            <input type="text" id="responsable-4" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+                        </div>
                     </div>
                 </div>
             </div>
             
             <!-- Estado de LocalStorage -->
-            <div class="mt-3 pt-2 border-t border-gray-700 text-[10px] text-gray-500 flex justify-between items-center">
-                <span>Versión 3.3 (Con Exportación)</span>
-                
-                <!-- Botón de Exportar Datos para GitHub -->
-                <button onclick="openExportConfigModal()" class="text-xs bg-gray-700 hover:bg-gray-600 text-cyan-400 px-2 py-1 rounded border border-gray-600 flex items-center gap-1 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                    Admin / GitHub
-                </button>
-
-                <span>Estado: <span id="connection-status" class="font-semibold text-lime-400">Guardado Local</span></span>
+            <div class="mt-4 pt-4 border-t border-gray-700 text-xs text-gray-500">
+                <p>Estado de Guardado: <span id="connection-status" class="font-semibold text-lime-400">Guardado Localmente (localStorage)</span></p>
+                <p class="mt-1 text-gray-500">💡 Tip: Haz clic en el nombre del producto para marcarlo como <span class="text-green-400">Verificado</span> o <span class="text-red-400">Discrepancia</span>.</p>
             </div>
         </footer>
     </div>
 
     <!-- Modal Calculadora -->
     <div id="calculator-modal" class="modal-overlay" onclick="if(event.target === this) closeCalculator()">
-        <!-- Ajuste para tema claro: light-theme:bg-white light-theme:border-gray-300 -->
-        <div class="bg-gray-800 light-theme:bg-white light-theme:border-gray-300 p-5 rounded-2xl shadow-2xl w-full max-w-[300px] mx-4 transform transition-all border border-cyan-700 relative">
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-xs mx-4 transform transition-all border border-cyan-700 relative">
             <!-- Header Calc -->
-            <div class="mb-2 text-center">
-                <!-- Título light-theme:text-blue-600 -->
-                <h2 class="text-sm font-bold text-cyan-400 light-theme:text-blue-600 leading-tight truncate px-2 mb-1" id="calc-product-name">Producto</h2>
-                <!-- NUEVO: Mostrar cantidad ACTUAL (SUMA DE LOTES) -->
-                <div class="bg-gray-700/50 light-theme:bg-gray-200 rounded p-1 inline-block px-3">
-                    <span class="text-xs text-gray-300 light-theme:text-gray-600">CANTIDAD TOTAL: </span>
-                    <span class="text-base font-bold text-lime-400 light-theme:text-green-600" id="calc-base-qty">0</span>
-                </div>
+            <div class="mb-4 text-center">
+                <h2 class="text-lg font-bold text-cyan-400 leading-tight truncate px-2" id="calc-product-name">Producto</h2>
             </div>
 
             <!-- Pantalla -->
-            <div class="bg-gray-900 light-theme:bg-gray-100 p-3 mb-3 rounded-lg text-right border border-gray-700 light-theme:border-gray-300 shadow-inner">
+            <div class="bg-gray-900 p-3 mb-4 rounded-lg text-right border border-gray-700 shadow-inner">
                 <div class="text-gray-500 text-xs h-4 mb-1 truncate" id="calc-history"></div>
-                <div id="calc-display" class="text-white light-theme:text-gray-900 text-4xl font-mono font-bold truncate tracking-widest">0</div>
+                <div id="calc-display" class="text-white text-4xl font-mono font-bold truncate tracking-widest">0</div>
             </div>
 
             <!-- Teclado -->
             <div class="grid grid-cols-4 gap-2 mb-4">
-                <button onclick="clearCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800 light-theme:bg-red-200 light-theme:text-red-700 light-theme:hover:bg-red-300">C</button>
-                <button onclick="backspaceCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800 light-theme:bg-red-200 light-theme:text-red-700 light-theme:hover:bg-red-300">⌫</button>
-                <button onclick="handleOperator('/')" class="bg-gray-700 text-cyan-400 light-theme:bg-gray-200 light-theme:text-blue-600 rounded-lg p-3 font-bold hover:bg-gray-600 light-theme:hover:bg-gray-300">÷</button>
-                <button onclick="handleOperator('*')" class="bg-gray-700 text-cyan-400 light-theme:bg-gray-200 light-theme:text-blue-600 rounded-lg p-3 font-bold hover:bg-gray-600 light-theme:hover:bg-gray-300">×</button>
+                <button onclick="clearCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800">C</button>
+                <button onclick="backspaceCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800">⌫</button>
+                <button onclick="handleOperator('/')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">÷</button>
+                <button onclick="handleOperator('*')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">×</button>
 
-                <button onclick="inputDigit('7')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-500 light-theme:hover:bg-gray-100">7</button>
-                <button onclick="inputDigit('8')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-500 light-theme:hover:bg-gray-100">8</button>
-                <button onclick="inputDigit('9')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-600 light-theme:hover:bg-gray-100">9</button>
-                <button onclick="handleOperator('-')" class="bg-gray-700 text-cyan-400 light-theme:bg-gray-200 light-theme:text-blue-600 rounded-lg p-3 font-bold hover:bg-gray-600 light-theme:hover:bg-gray-300">-</button>
+                <button onclick="inputDigit('7')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">7</button>
+                <button onclick="inputDigit('8')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">8</button>
+                <button onclick="inputDigit('9')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">9</button>
+                <button onclick="handleOperator('-')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">-</button>
 
-                <button onclick="inputDigit('4')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-500 light-theme:hover:bg-gray-100">4</button>
-                <button onclick="inputDigit('5')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-600 light-theme:hover:bg-gray-100">5</button>
-                <button onclick="inputDigit('6')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-600 light-theme:hover:bg-gray-100">6</button>
-                <button onclick="handleOperator('+')" class="bg-gray-700 text-cyan-400 light-theme:bg-gray-200 light-theme:text-blue-600 rounded-lg p-3 font-bold hover:bg-gray-600 light-theme:hover:bg-gray-300">+</button>
+                <button onclick="inputDigit('4')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">4</button>
+                <button onclick="inputDigit('5')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">5</button>
+                <button onclick="inputDigit('6')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">6</button>
+                <button onclick="handleOperator('+')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">+</button>
 
-                <button onclick="inputDigit('1')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-500 light-theme:hover:bg-gray-100">1</button>
-                <button onclick="inputDigit('2')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-600 light-theme:hover:bg-gray-100">2</button>
-                <button onclick="inputDigit('3')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-600 light-theme:hover:bg-gray-100">3</button>
-                <!-- Botón igual -->
-                <button onclick="handleOperator('=')" class="row-span-2 bg-cyan-700 text-white rounded-lg p-3 font-bold hover:bg-cyan-600 shadow-lg flex items-center justify-center text-xl light-theme:bg-blue-600 light-theme:hover:bg-blue-500"> =</button>
+                <button onclick="inputDigit('1')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">1</button>
+                <button onclick="inputDigit('2')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">2</button>
+                <button onclick="inputDigit('3')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">3</button>
+                <button onclick="handleOperator('=')" class="row-span-2 bg-cyan-600 text-white rounded-lg p-3 font-bold hover:bg-cyan-500 shadow-lg flex items-center justify-center text-xl">=</button>
 
-                <button onclick="inputDigit('0')" class="col-span-2 bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-500 light-theme:hover:bg-gray-100">0</button>
-                <button onclick="inputDigit('.')" class="bg-gray-600 text-white light-theme:bg-white light-theme:text-gray-800 light-theme:border light-theme:border-gray-300 rounded-lg p-3 font-bold hover:bg-gray-500 light-theme:hover:bg-gray-100">.</button>
+                <button onclick="inputDigit('0')" class="col-span-2 bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">0</button>
+                <button onclick="inputDigit('.')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">.</button>
             </div>
 
             <!-- Botones Control -->
             <div class="flex space-x-2">
-                <button onclick="closeCalculator()" class="flex-1 py-3 bg-gray-700 text-gray-300 light-theme:bg-gray-200 light-theme:text-gray-700 rounded-xl font-semibold hover:bg-gray-600 text-sm">Cancelar</button>
-                <!-- Botón de Guardar ahora dice GUARDAR -->
-                <button onclick="saveAndClose()" class="flex-1 py-3 bg-lime-600 text-white rounded-xl font-bold hover:bg-lime-500 shadow-lg shadow-lime-900/20 text-sm uppercase light-theme:bg-green-600 light-theme:hover:bg-green-500">
-                    GUARDAR
-                </button>
+                <button onclick="closeCalculator()" class="flex-1 py-3 bg-gray-700 text-gray-300 rounded-xl font-semibold hover:bg-gray-600">Cancelar</button>
+                <button onclick="saveAndClose()" class="flex-1 py-3 bg-lime-600 text-white rounded-xl font-bold hover:bg-lime-500 shadow-lg shadow-lime-900/20">GUARDAR</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Confirmación para Borrar TODO -->
-    <div id="reset-modal" class="modal-overlay" onclick="if(event.target === this) closeResetModal()">
-        <div class="bg-gray-800 light-theme:bg-white light-theme:border-gray-300 p-6 rounded-2xl shadow-2xl w-full max-w-xs mx-4 transform transition-all border border-red-700">
-            <h3 class="text-lg font-bold text-red-400 mb-2 light-theme:text-red-600">⚠️ Borrar Todo</h3>
-            <p class="text-gray-300 light-theme:text-gray-600 text-sm mb-4">Se eliminará todo el inventario guardado.</p>
-            <div class="flex justify-end space-x-3">
-                <button onclick="closeResetModal()" class="py-2 px-3 bg-gray-700 light-theme:bg-gray-200 light-theme:text-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm">Cancelar</button>
-                <button onclick="resetAllDataConfirmed()" class="py-2 px-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 text-sm">Sí, Borrar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para Agregar Producto -->
+    <!-- Modal Agregar Producto -->
     <div id="add-product-modal" class="modal-overlay" onclick="if(event.target === this) closeAddProductModal()">
-        <div class="bg-gray-800 light-theme:bg-white light-theme:border-gray-300 p-6 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-cyan-700">
-            <h3 class="text-lg font-bold text-cyan-400 light-theme:text-blue-600 mb-4">➕ Agregar Nuevo Producto</h3>
-            <label for="new-product-name" class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-2">Nombre del Producto</label>
-            <input type="text" id="new-product-name" placeholder="Ej: PAN DE JAMON" 
-                   class="w-full p-2 text-base rounded border border-gray-600 bg-gray-900 text-white focus:ring-1 focus:ring-cyan-500 outline-none transition-colors mb-4 light-theme:bg-white light-theme:text-gray-900 light-theme:border-gray-300" 
-                   onkeyup="if(event.key === 'Enter') addProduct()">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-purple-500">
+            <h3 class="text-xl font-bold text-purple-400 mb-4 uppercase">➕ Nuevo Producto</h3>
+            <p class="text-gray-300 mb-4 text-sm">Ingresa el nombre del producto que deseas añadir a la lista.</p>
             
-            <p id="add-product-error" class="text-red-400 text-xs hidden mb-3"></p>
+            <input type="text" id="new-product-name" placeholder="Ej: Pan de Molde Integral" class="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 text-white mb-6 focus:ring-2 focus:ring-purple-500 outline-none">
             
-            <div class="flex justify-end space-x-3">
-                <button onclick="closeAddProductModal()" class="py-2 px-3 bg-gray-700 light-theme:bg-gray-200 light-theme:text-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm">Cancelar</button>
-                <button onclick="addProduct()" class="py-2 px-3 bg-lime-600 text-white font-bold rounded-lg hover:bg-lime-500 text-sm light-theme:bg-green-600 light-theme:hover:bg-green-500">Agregar a Lista</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal para Ver Historial/Detalle de Productos -->
-    <div id="history-modal" class="modal-overlay" onclick="if(event.target === this) closeHistoryModal()">
-        <div class="bg-gray-800 light-theme:bg-white light-theme:border-gray-300 p-6 rounded-2xl shadow-2xl w-full max-w-lg mx-4 h-[80vh] flex flex-col transform transition-all border border-cyan-700">
-            <h3 class="text-xl font-bold text-cyan-400 light-theme:text-blue-600 mb-4 border-b border-gray-700 light-theme:border-gray-300 pb-2">📋 Detalle del Inventario (Lotes)</h3>
-            
-            <!-- Cabecera de la tabla del historial -->
-            <div class="flex justify-between items-center text-xs font-semibold text-gray-400 light-theme:text-gray-600 mb-3 uppercase tracking-wider">
-                <span>Productos </span>
-                <span>Cantidad Total</span>
-            </div>
-            
-            <div id="history-list" class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                <!-- Los items del historial se cargarán aquí -->
-            </div>
-            
-            <div class="mt-4 pt-4 border-t border-gray-700 light-theme:border-gray-300 flex justify-end">
-                <button onclick="closeHistoryModal()" class="py-2 px-4 bg-gray-700 light-theme:bg-gray-200 light-theme:text-gray-700 text-white rounded-xl font-semibold hover:bg-gray-600 text-sm">Cerrar</button>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeAddProductModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="confirmAddProduct()" class="py-2 px-4 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition shadow-lg">Agregar</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de GESTIÓN DE LOTES -->
-    <div id="edit-lotes-modal" class="modal-overlay" onclick="if(event.target === this) closeEditLotesModal()">
-        <div class="bg-gray-800 light-theme:bg-white light-theme:border-gray-300 p-6 rounded-2xl shadow-2xl w-full max-w-sm mx-4 h-[80vh] flex flex-col transform transition-all border border-cyan-700">
-            <h3 class="text-lg font-bold text-cyan-400 light-theme:text-blue-600 mb-2 border-b border-gray-700 light-theme:border-gray-300 pb-2">✏️ Gestionar Lotes</h3>
-            <h4 id="edit-lotes-product-name" class="text-sm font-semibold text-gray-300 light-theme:text-gray-600 uppercase mb-4 break-words"></h4>
-            
-            <p class="text-xs text-gray-400 light-theme:text-gray-500 mb-2">Ajusta o elimina cada entrada individual.</p>
-            
-            <div id="lotes-list-container" class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                <!-- Los lotes individuales se cargarán aquí -->
-            </div>
-            
-            <div class="mt-4 pt-4 border-t border-gray-700 light-theme:border-gray-300 flex justify-end">
-                <button onclick="closeEditLotesModal(true)" class="py-2 px-4 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-500 text-sm uppercase light-theme:bg-green-600 light-theme:hover:bg-green-500">
-                    Cerrar y Recalcular
-                </button>
+    <!-- Modal de Confirmación para Borrar -->
+    <div id="reset-modal" class="modal-overlay" onclick="if(event.target === this) closeResetModal()">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-red-700">
+            <h3 class="text-xl font-bold text-red-400 mb-4">⚠️ Confirmar Borrado Total</h3>
+            <p class="text-gray-300 mb-6">Estás a punto de **eliminar todo el inventario** del almacenamiento local de tu navegador. Esta acción no se puede deshacer.</p>
+            <p class="text-white font-semibold mb-6">¿Estás absolutamente seguro de que deseas continuar?</p>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeResetModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="resetAllDataConfirmed()" class="py-2 px-4 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 transition shadow-lg">Sí, Borrar Todo</button>
             </div>
         </div>
     </div>
-
-    <!-- Modal de CONFIRMACIÓN DE ELIMINACIÓN DE LOTE -->
-    <div id="delete-lote-confirm-modal" class="modal-overlay" onclick="if(event.target === this) closeDeleteLoteConfirmModal()">
-        <div class="bg-gray-800 light-theme:bg-white light-theme:border-gray-300 p-6 rounded-2xl shadow-2xl w-full max-w-xs mx-4 transform transition-all border border-red-700">
-            <h3 class="text-lg font-bold text-red-400 mb-2 light-theme:text-red-600">🗑️ Confirmar Eliminación</h3>
-            <p class="text-gray-300 light-theme:text-gray-600 text-sm mb-4">¿Estás seguro de eliminar esta cantidad?</p>
-            
-            <input type="hidden" id="lote-to-delete-id">
-
-            <div class="flex justify-end space-x-3">
-                <button onclick="closeDeleteLoteConfirmModal()" class="py-2 px-3 bg-gray-700 light-theme:bg-gray-200 light-theme:text-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm">Cancelar</button>
-                <button onclick="deleteLoteConfirmed()" class="py-2 px-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 text-sm">Sí, Eliminar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal EXPORTAR CONFIGURACIÓN (PARA GITHUB) -->
-    <div id="export-config-modal" class="modal-overlay" onclick="if(event.target === this) closeExportConfigModal()">
-        <div class="bg-gray-800 light-theme:bg-white light-theme:border-gray-300 p-6 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all border border-cyan-700 flex flex-col max-h-[90vh]">
-            <h3 class="text-xl font-bold text-cyan-400 light-theme:text-blue-600 mb-2 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Datos para GitHub / Respaldo
-            </h3>
-            
-            <p class="text-sm text-gray-300 light-theme:text-gray-600 mb-4">
-                Aquí puedes obtener el código actualizado con los <strong>nuevos productos y nombres</strong> que has agregado, para pegarlo en tu repositorio de GitHub y hacerlo permanente.
-            </p>
-
-            <div class="flex space-x-2 mb-2 border-b border-gray-600">
-                <button onclick="showTab('code')" id="tab-btn-code" class="px-4 py-2 text-sm font-bold border-b-2 border-cyan-400 text-cyan-400">Código JS (Para GitHub)</button>
-                <button onclick="showTab('json')" id="tab-btn-json" class="px-4 py-2 text-sm font-bold text-gray-400 hover:text-white border-b-2 border-transparent">Respaldo JSON</button>
-            </div>
-
-            <!-- TAB CODIGO -->
-            <div id="tab-code" class="flex-1 flex flex-col min-h-0">
-                <p class="text-xs text-yellow-400 mb-1">Copia esto y reemplaza la "ZONA EDITABLE" en tu archivo HTML:</p>
-                <textarea id="export-code-area" class="w-full flex-1 bg-gray-900 text-green-400 font-mono text-xs p-3 rounded border border-gray-600 outline-none resize-none mb-3 custom-scrollbar" readonly></textarea>
-                <button onclick="copyToClipboard('export-code-area')" class="bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded w-full mb-2">
-                    Copiar Código al Portapapeles
-                </button>
-            </div>
-
-            <!-- TAB JSON -->
-            <div id="tab-json" class="flex-1 flex flex-col min-h-0 hidden">
-                <p class="text-xs text-gray-400 mb-1">Copia de seguridad completa del estado actual (Cantidades + Lotes).</p>
-                <textarea id="export-json-area" class="w-full flex-1 bg-gray-900 text-gray-300 font-mono text-xs p-3 rounded border border-gray-600 outline-none resize-none mb-3 custom-scrollbar" readonly></textarea>
-                <button onclick="downloadBackupJSON()" class="bg-green-700 hover:bg-green-600 text-white font-bold py-2 px-4 rounded w-full mb-2">
-                    Descargar Archivo .json
-                </button>
-            </div>
-
-            <div class="flex justify-end pt-2">
-                <button onclick="closeExportConfigModal()" class="py-2 px-4 bg-gray-700 light-theme:bg-gray-200 light-theme:text-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
 
     <script>
         // --- CONSTANTES Y ESTRUCTURA DE DATOS ---
-        const LOCAL_STORAGE_KEY = 'panesInventoryData_v3.2'; // Versión actualizada
-        const LOCAL_STORAGE_CUSTOM_PERSONNEL = 'panesCustomPersonnel_v1'; // Nueva llave para nombres personalizados
-
-        // =========================================================================================
-        // --- ZONA EDITABLE: AGREGUE AQUÍ SUS PRODUCTOS Y NOMBRES PERMANENTES PARA SIEMPRE ---
-        // =========================================================================================
+        const LOCAL_STORAGE_KEY = 'pastasInventoryData_v2'; 
         
-        // 1. LISTA DE PERSONAL (Solo nombres fijos)
-        // Puedes agregar más nombres entre comillas, separados por coma.
-        const STATIC_PERSONNEL_LIST = [
-            "AGUILAR MORENO LEYLA LIZETH", "ALMAO BARRERA YOHANNA BETZABE", "ALVARADO DURAN JOSE DANIEL", "ALVARADO NERWIN ANTONIO",
-            "ALVARADO RODRIGUEZ ROSA ELENA", "ALVAREZ CRESPO MEURYS DEL ROSARIO", "ALVAREZ DE MORILLO JUANA ELISA", "ANGULO GALLARDO JOSE MOISES",
-            "APONCIO SUAREZ JONNAYKER ENRIQUE", "APONCIO SUAREZ JORGELYS ANNERYS", "ARANGURE TORREALBA YEFERSON DANIEL", "ARANQUE PEREZ FELIX DANIEL",
-            "ARAUJO RIVERO OMAR ALBERTO", "BARRETO LOPEZ DASCHA MARYEILY", "BARRETO LOPEZ ESTREILI KATIUSKA", "BETANCOURT ANTIQUE LUIS CARLOS",
-            "BORJAS LOYO GRICENY CAROLINA", "BRAVO ANGULO YOLBER RAMON", "CAMACARO ALVAREZ EDUARDO LUIS", "CAMERO CAMACHO MARIAXIS",
-            "CAMERO CAMACHO SANTIAGO JOSE", "CAMERO NELO JAVIER DE JESUS", "CAMERO NELO JOSE GREGORIO", "CAMERO NELO YORDANO RAFAEL",
-            "CARRILLO OMAIRA DEL CARMEN", "CASTILLO VASQUEZ ANTONY ERIBERTH", "CHARACO LINARES RICHARD DANIEL", "COLMENARES PALACIOS DANIELA ALEJANDRA",
-            "COLMENAREZ LUCENA SABINA DEL CARMEN", "COLMENAREZ PEROZO JOSE MANUEL", "CORDERO ALVAREZ MINERVA PASTORA", "CORDERO JHONNY ANTONIO",
-            "CORDERO PIÑANGO GREYMARI", "CORDOVA JOSE RAFAEL", "DAZA ARIAS MARIA DANIELA", "DE LEON LOPEZ DIAGNERY STHELA",
-            "DELGADO COLMENAREZ WILIMAR JOSE", "DELGADO ELIAS MANUEL ANTONIO", "DELGADO ROMERO LIZETH KARINA", "DIAZ SUAREZ KELUHY ELIASIB",
-            "DOMINGUEZ TORRELBA ADELYS ALEXANDER", "DURAN COLMENAREZ CARLOS ALEJANDRO", "DURAN DE PARADA CARMEN LIJIA", "DURAN PEREZ ROSA ALVIRA",
-            "ESCALONA GLENDA CAROLINA", "ESCALONA PERERA ANA PASTORA", "ESCOBAR BRACHO JESUS ANTONIO", "ESCOBAR YOLEIDA PASTORA",
-            "FERNANDEZ FERNANDEZ FRANYE", "GAMBOA SANCHEZ CRISTIAN EDUARDO", "GARCIA GONZALEZ LUIS ALFONSO", "GARCIA MENDOZA JHONNIER JOSE",
-            "GARCIA RODRIGUEZ SAMUEL JOSE", "GARRIDO PEREZ MARIBEL DEL CARMEN", "GIL RODRIGUEZ WILMER ALEJANDRO", "GOLLO MEDINA PABLO DAVID",
-            "GOMEZ VALE ANGIE PAOLA", "GONZALEZ RODRIGUEZ YASGREINY GABRIELA", "GOYO SONIA BEATRIZ", "GUEDEZ RODRIGUEZ JACKELINE DEL CARMEN",
-            "GUEVARA ROJAS JERAIN COROMOTO", "GUTIERREZ ANGULO DANNY JOSE", "HERRERA GOYO JOSE GREGORIO", "HERNANDEZ HERNANDEZ LEODANNY JOSE",
-            "HERNANDEZ RODRIGUEZ GAUDY DEL CARMEN", "IZARRA VIANA ERISBEL YOHANA", "JIMENEZ LUCENA CESAR DANIEL", "JIMENEZ MEDINA RONNY ALBERTO",
-            "LANZAETA LOYO ANGELES DEL CARMEN", "LINAREZ GONZALEZ DILDIANA", "LINAREZ RONCEL SUYIN NAYIBETH", "LOPEZ VALERO ROSY CAROLINA",
-            "MARCHAN MARCHAN ELIECER JOSUE", "MARCHAN MARCHAN ELIZAUL ELIAS", "MARCHAN OVIEDO HEILYN FABIOLA", "MARCHAN SIRA MARIANO EDUARD",
-            "MARTINES TORRELAS LUIS DANIEL", "MEDINA LEAL JOSUE ENMANUIL", "MEDINA NIXON GREGORIO", "MEDIOMUNDO EDUARDO ENRIQUE",
-            "MELENDEZ PIÑA YOTXER DAVID", "MENDOZA GIL NAYGEL COROMOTO", "MENDOZA PEREZ ANDREA VALENTINA", "MENDOZA PEREZ ELIAS RAFAEL",
-            "MENDOZA SANCHEZ DANIERTH ANTONIO", "MERCADO GIMENEZ KEIBER ANTONIO", "MERCADO GIMENEZ YOMNATHAN", "MOGOLON CASTRO PUBLIO RAMON",
-            "MONTILLA ANGULO VICTOR MANUEL", "MONTILLA ESPINOZA DOUGLAS ALEJANDRO", "MORALES APOSTOL BRAYAN ADOLFO", "MORENO ESLY ANTONIO",
-            "MORILLO OLARTE JOSE MIGUEL", "NAVAS MARAPATE DIEGO JOSE", "NELO EMILIO ANTONIO", "NELO LOPEZ CESAR ANTONIO",
-            "PADRON RODRIGUEZ BRANDO ALEXANDER", "PALACIOS PEREZ MILAGRO DEL CARMEN", "PARADAS ROJAS FRIGOBERTO", "PERAZA VAZQUEZ JOSE ARMANDO",
-            "PEREIRA RODRIGUEZ ADRIANNY", "PEREZ ALMAO ALEXIS JOSÉ", "PEREZ GRATEROL DANIEL JAVIER", "PEREZ GRATEROL MARIEL ALEJANDRO",
-            "PEREZ OLIVERA ANDY DE JESUS YALIS", "PETTAQUERO RODRIGUEZ DIANA CAROLINA", "PINEDA SOTO LINDA COROMOTO", "PIÑA FUENTES EMILY RAICELYS",
-            "QUERALES COLMENAREZ JOSÉ MOISES", "QUIJADA LUBIANEZTA JANETH DEL CARMEN", "RAMOS SALERO GERSON ELIEZER", "RAMOS SALERO JOSUE ELIUD",
-            "RIOS PALACIOS EYKARIS MILANYERITH", "RODRIGUEZ RODRIGUEZ NERLINAR JOSÉ", "RODRIGUEZ ALVARADO NERLINAR COROMOTO", "RODRIGUEZ ALVARADO NERCY PASTORA",
-            "RODRIGUEZ ALVARADO DILEXI JOSÉ", "RODRIGUEZ ALVAREZ DINEIXIS JOSEFINA", "RODRIGUEZ CAMACARO HENRY RAMON", "RODRIGUEZ GONZALEZ ALEXANDER OLIVER",
-            "RODRIGUEZ SUAREZ ISMAEL ANTONIO", "RODRIGUEZ LOPEZ MARIELIS ALEXELIS", "RODRIGUEZ MORENO ABISAI DAVID", "RODRIGUEZ PIRE JOSSEANNYS YOHANDRELIS",
-            "RODRIGUEZ RAMOS DARNYD TAHITI", "RODRIGUEZ ROJAS WILMER ANTONIO", "ROJAS RANGEL JHONNAR ANDRE ZAIAS", "ROJAS RANGEL YOSBELYS LILIANA",
-            "ROJAS VARGAS JIMMY SEGUNDO", "ROJAS YEPEZ JIMMY JOSE (HIJO)", "ROMERO CAMACARO EVA PATRICIA", "ROMERO URBINA YER JAVIER",
-            "ROMERO URBINA RONALD EFRAIN", "SALAS CALDERA FRANCISCO JOSÉ", "SANCHEZ PEÑA JUAN DOMINGO", "SANCHEZ REYES SOL EDUARDO",
-            "SANTANA ANGULO JOSÉ ÁNGEL", "SEQUERA VILLALOBOS MONICA ELISENA", "SILVA PERAZA WILDER ALEXANDER", "SIRA SÁNCHEZ LEYDA MACRINA",
-            "SUAREZ PEDROMO YEFERSON JUANNERYS", "SUAREZ PINEDA JORGE AURELIO", "SUAREZ YETZABETH PATRICIA", "TIMAURE GUEDEZ JONIER SKEN",
-            "TIMAURE TORRES NORMARIS YANETH", "TORREALBA AZUAJE DOMINGO ANTONIO", "TORREALBA SUAREZ OMARLYS PASTORA", "TORRES MEDINA ANDERSON JOSÉ",
-            "TORRES DE CALLES MARY LUZ", "TORRES MELENDEZ LUIMAR VANESSA", "TORRES MELENDEZ LISIMAR VANESSA", "TOVAR VÁSQUEZ FRANYIMAR PASTORA",
-            "VALDERRAMA ROJAS YENNY ORIANA", "VALERO GARCIA RAIMON JOSÉ", "VALERO GARCIA ANA", "VALLES MONTERO CARLOS ALCIDES", "VARGAS CAMACARO LIZETH CAROLINA",
-            "VARGAS CECILIO RAMÓN", "VASQUEZ GONZALEZ JOSE RAFAEL", "VASQUEZ VARGAS NAYIBE PASTORA", "VILLANUEVA MAGALY JOSEFINA",
-            "VILORIA GOMEZ FRANCISCO JAVIER", "ZAMBRANO MORENO MIGUEL ANGEL", "MEDINA VALDERRAMA EVELIN NATHALY", "ROJAS CAMERO ARANXA DEL CARMEN",
-            "ANGULO GARCES EMELYN MOISELYN", "CASTAÑEDA ORELLANA ISNAILY DEL CARMEN", "SAHAVEDRA VARGAS ROBERTH JOSE", "PUERTA MANZANO JOHAN JAVIER",
-            "MUJICA URBINA FERNANDO ANTONIO", "SANTORO ANGULO GIANFRANCO", "SOTO ALEXANDER", "PERAZA SANCHEZ ROSELYN PASTORA",
-            "TORREZ COLMENAREZ ISAMAR BEATRIZ", "CAMACHO GUEDEZ JESUS DANIEL", "CASTRO LAGUNA GREIMAR DUSLEYVIS", "MEDINA DE PEREZ CARMEN COROMOTO",
-            "MARQUEZ YEPEZ WILMER RAFAEL", "CASTILLO PERALTA KLEIBER ADRIAN", "GUANIPA GONZALEZ VANESSA DEL CARMEN", 
-            "LINAREZ RIVERO JEISON  JOSE  TORREALBA LEAL JESUS HUMBERTO","VARGAS BETANCOURT FRANKLIN ORLANDO", "SOTO GARCIA ANTONIO JOSE", "PIÑA RODRIGUEZ JESUS DAVID","DURAN COLMENAREZ THAIS VANESA", "SALAS PETAQUERO DARWIN JOSE",  
-            "ANGULO PEREZ  JOSE DANIEL", "VEGA DOMOROMO ENYER JOSE","GIL BOCOURT VILMARI COROMOTO", "BRAVO BARRADA YOELYS FABIOLA"," BARRETO MENDOZA ERICK SANTIAGO",
-            "GARCIA SEGUERI RUBEN ALFONSO","HECTOR MARIN","JOSUE ALVAREZ","ANA VALERO ESCOBAR", "YOEL LINAREZ","GOMEZ ANGELIS",
-            "RODRIGUEZ NAIBETH","RAMOS MONTILLA SEBASTIAN","HANDERSON PEREZ","PEREZ GIMENEZ RUBEN JAVIER","JESUS DURAN", "JESUS DURAN","LISBEMAR RODRIGUEZ",
-            "ZAVIER MENDOZA","CINTIA OLMO" 
+        const defaultProductNames = [
+            "ACEITE DE OLIVA 250ML ", "ACEITE DE OLIVA 500ML", "ALIÑOS SAN MIGUEL GRANDE ", "ALIÑOS SAN MIGUEL PEQUEÑO ", 
+            "ALUMINIO ROLLO", "FIDEOS CAPRI", "PANELA DULCE", "PASTA CAPRI CORTA", 
+            "PASTA ESPECIAL LARGA", "PASTA CAPRI LARGA ", "PASTA INTEGRAL", "PASTA PRIMOR NEGRA LARGA Y CORTA", 
+            "PASTA PRIMOR ROJA EXTRA ESPECIAL LARGA", "PASTA PRIMOR ROJA EXTRA ESPECIAL CORTA", "PASTA RONCO",  "PEPITO CHEEZ PECK", "PEPITO OSTIS",
+             "TALLARINES ESPECIAL", 
         ];
 
-        // 2. LISTA DE PRODUCTOS (Solo productos fijos)
-        const STATIC_PRODUCT_NAMES = [
-            "ADOBO MEL BUEN","AFRECHO","ALIÑOS CURCUCA", "CACHITOS ", "CATALINAS /NEGRAS* 10","CATALINA BLANCA","CHOCOLATE ARTESANAL", "COCADAS","FORORO MEL BUEN", "GALLETA ARTESANAL ", 
-            "PAN ARABE", "PAN CORTADITOS", "PAN DE GUAYABA", "PAN DE HAMBURGUESA X 08","MERMELADA","MIEL CAMPO REAL","MIEL SAN CARLOS", 
-            "PAN DE SANDWICHE GRD", "PAN DE SANDWICHE INTEGRAL ", "PAN DE SANDWICHE PQ", "PAN DE SANDWIS NACIONAL 500GR", 
-            "PAN DE TUNJA PEQ", "PAN DE DIOS","PASTELITOS", "SOPA SOBRE MAGGY","TAMARINDO ETNA","VAINILLA", 
-        ];
+        // Función para generar la estructura de inventario inicial
+        const getInitialInventoryData = () => ({
+            inventory: defaultProductNames.map(name => ({
+                name: name,
+                quantity: 0,
+                history: "0",
+                status: null // Nuevo campo para checklist (null | 'ok' | 'error')
+            })),
+            responsable1: "SIN NOMBRE",
+            responsable2: "SIN NOMBRE",
+            responsable3: "SIN NOMBRE",
+            responsable4: "SIN NOMBRE"
+        });
 
-        // =========================================================================================
-        // --- FIN DE ZONA EDITABLE ---
-        // =========================================================================================
+        // --- MANEJO DE LOCALSTORAGE ---
 
         let inventoryData = [];
-        let combinedPersonnelList = []; // Lista combinada (Fijos + Nuevos guardados)
-
-        let responsables = { 
-            resp1: "", 
-            resp2: "",
-            resp3: "", // Ayudante 1
-            resp4: ""  // Ayudante 2
-        };
-
-        // --- FUNCIONES AUXILIARES ---
-        
-        function generateId() {
-            return Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-        }
-
-        function calculateTotalQuantity(lotes) {
-            return lotes.reduce((sum, lote) => sum + (parseFloat(lote.value) || 0), 0);
-        }
-
-        // --- MANEJO DE AUTOCOMPLETADO ---
-        
-        function autocomplete(inp) {
-            let currentFocus;
-            
-            inp.addEventListener("input", function(e) {
-                // Usamos la lista combinada global que tiene los nombres guardados
-                const arr = combinedPersonnelList; 
-
-                let a, b, i, val = this.value;
-                closeAllLists();
-                if (!val) { return false;}
-                currentFocus = -1;
-                
-                a = document.createElement("DIV");
-                a.setAttribute("id", this.id + "autocomplete-list");
-                a.setAttribute("class", "autocomplete-items");
-                
-                // Append al parent del input (que debe ser .autocomplete-wrapper)
-                this.parentNode.appendChild(a);
-                
-                let matches = 0;
-                for (i = 0; i < arr.length; i++) {
-                    // Limite de resultados para rendimiento (max 10)
-                    if (matches >= 10) break;
-
-                    if (arr[i].toUpperCase().includes(val.toUpperCase())) {
-                        matches++;
-                        b = document.createElement("DIV");
-                        // Resaltar la coincidencia (simple)
-                        b.innerHTML = arr[i];
-                        b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
-                        
-                        b.addEventListener("click", function(e) {
-                            inp.value = this.getElementsByTagName("input")[0].value;
-                            closeAllLists();
-                            saveResponsables(true); // Guardar al seleccionar
-                        });
-                        a.appendChild(b);
-                    }
-                }
-            });
-            
-            inp.addEventListener("keydown", function(e) {
-                let x = document.getElementById(this.id + "autocomplete-list");
-                if (x) x = x.getElementsByTagName("div");
-                if (e.keyCode == 40) { // Arrow DOWN
-                    currentFocus++;
-                    addActive(x);
-                } else if (e.keyCode == 38) { // Arrow UP
-                    currentFocus--;
-                    addActive(x);
-                } else if (e.keyCode == 13) { // ENTER
-                    e.preventDefault();
-                    if (currentFocus > -1) {
-                        if (x) x[currentFocus].click();
-                    }
-                }
-            });
-            
-            function addActive(x) {
-                if (!x) return false;
-                removeActive(x);
-                if (currentFocus >= x.length) currentFocus = 0;
-                if (currentFocus < 0) currentFocus = (x.length - 1);
-                x[currentFocus].classList.add("autocomplete-active");
-                // Scroll into view logic simple
-                x[currentFocus].scrollIntoView({block: 'nearest'});
-            }
-            
-            function removeActive(x) {
-                for (let i = 0; i < x.length; i++) {
-                    x[i].classList.remove("autocomplete-active");
-                }
-            }
-            
-            function closeAllLists(elmnt) {
-                const x = document.getElementsByClassName("autocomplete-items");
-                for (let i = 0; i < x.length; i++) {
-                    if (elmnt != x[i] && elmnt != inp) {
-                        x[i].parentNode.removeChild(x[i]);
-                    }
-                }
-            }
-            
-            document.addEventListener("click", function (e) {
-                closeAllLists(e.target);
-            });
-        }
-
-        // --- MANEJO DE LOCALSTORAGE (CARGA DE DATOS) ---
-
-        window.loadPersonnelData = function() {
-            // Cargar nombres personalizados guardados anteriormente
-            let customPersonnel = [];
-            try {
-                const storedCustom = localStorage.getItem(LOCAL_STORAGE_CUSTOM_PERSONNEL);
-                if (storedCustom) {
-                    customPersonnel = JSON.parse(storedCustom);
-                }
-            } catch (e) { console.error("Error loading custom personnel", e); }
-
-            // Combinar fijos con personalizados y eliminar duplicados
-            const uniqueSet = new Set([...STATIC_PERSONNEL_LIST, ...customPersonnel]);
-            combinedPersonnelList = Array.from(uniqueSet).sort();
-        }
+        let responsables = { resp1: "SIN NOMBRE", resp2: "SIN NOMBRE", resp3: "SIN NOMBRE", resp4: "SIN NOMBRE" };
 
         window.loadInventoryDataFromLocal = function() {
             try {
-                let storedDataJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+                const storedDataJson = localStorage.getItem(LOCAL_STORAGE_KEY);
                 
-                // Si no hay V3.1, intentar cargar versiones anteriores
-                if (!storedDataJson) {
-                    storedDataJson = localStorage.getItem('panesInventoryData_v3.1');
-                }
-                if (!storedDataJson) {
-                    storedDataJson = localStorage.getItem('panesInventoryData_v3');
-                }
+                if (storedDataJson) {
+                    const storedData = JSON.parse(storedDataJson);
+                    
+                    responsables.resp1 = storedData.responsable1 || "SIN NOMBRE";
+                    responsables.resp2 = storedData.responsable2 || "SIN NOMBRE";
+                    responsables.resp3 = storedData.responsable3 || "SIN NOMBRE";
+                    responsables.resp4 = storedData.responsable4 || "SIN NOMBRE";
 
-                if (!storedDataJson) {
-                    // Inicialización limpia
-                    inventoryData = STATIC_PRODUCT_NAMES.map(name => ({
-                        name: name.trim().toUpperCase(),
-                        lotes: []
-                    }));
-                    window.saveInventoryData(false);
-                    return;
-                }
-
-                const storedData = JSON.parse(storedDataJson);
-
-                // Cargar responsables
-                responsables.resp1 = storedData.responsable1 || "";
-                responsables.resp2 = storedData.responsable2 || "";
-                responsables.resp3 = storedData.responsable3 || "";
-                responsables.resp4 = storedData.responsable4 || "";
-
-                document.getElementById('responsable-1').value = responsables.resp1;
-                document.getElementById('responsable-2').value = responsables.resp2;
-                document.getElementById('responsable-3').value = responsables.resp3;
-                document.getElementById('responsable-4').value = responsables.resp4;
-
-                const loadedInventoryMap = new Map();
-
-                storedData.inventory.forEach(item => {
-                    const cleanName = item.name.trim().toUpperCase();
-                    let lotesArray = item.lotes || [];
-                    loadedInventoryMap.set(cleanName, {
-                        name: cleanName,
-                        lotes: lotesArray 
-                    });
-                });
-
-                // Asegurar que los productos fijos (STATIC_PRODUCT_NAMES) estén presentes
-                STATIC_PRODUCT_NAMES.forEach(name => {
-                    const cleanName = name.trim().toUpperCase();
-                    if (!loadedInventoryMap.has(cleanName)) {
-                        loadedInventoryMap.set(cleanName, {
-                            name: cleanName,
-                            lotes: []
-                        });
+                    if (storedData.inventory && Array.isArray(storedData.inventory)) {
+                        inventoryData = storedData.inventory;
+                        console.log("LocalStorage: Datos cargados.");
+                        return;
                     }
-                });
+                }
 
-                inventoryData = Array.from(loadedInventoryMap.values());
-                inventoryData.sort((a, b) => a.name.localeCompare(b.name));
+                console.log("LocalStorage: No encontrado o vacío. Cargando defaults.");
+                const initial = getInitialInventoryData();
+                inventoryData = initial.inventory;
+                responsables.resp1 = initial.responsable1;
+                responsables.resp2 = initial.responsable2;
+                responsables.resp3 = initial.responsable3;
+                responsables.resp4 = initial.responsable4;
+                window.saveInventoryData(false);
 
             } catch (e) {
                 console.error("Error al cargar localStorage.", e);
-                inventoryData = STATIC_PRODUCT_NAMES.map(name => ({ name: name.trim().toUpperCase(), lotes: [] }));
-                window.saveInventoryData(false);
+                const initial = getInitialInventoryData();
+                inventoryData = initial.inventory;
+                responsables.resp1 = initial.responsable1;
+                responsables.resp2 = initial.responsable2;
+                responsables.resp3 = initial.responsable3;
+                responsables.resp4 = initial.responsable4;
             }
-        }
-
-        window.saveResponsables = function(updateStatus) {
-            const r1 = document.getElementById('responsable-1').value.trim();
-            const r2 = document.getElementById('responsable-2').value.trim();
-            const r3 = document.getElementById('responsable-3').value.trim();
-            const r4 = document.getElementById('responsable-4').value.trim();
-
-            responsables.resp1 = r1;
-            responsables.resp2 = r2;
-            responsables.resp3 = r3;
-            responsables.resp4 = r4;
-            
-            // --- LOGICA DE GUARDADO DE NUEVOS NOMBRES ---
-            let customPersonnel = [];
-            try {
-                 const stored = localStorage.getItem(LOCAL_STORAGE_CUSTOM_PERSONNEL);
-                 if (stored) customPersonnel = JSON.parse(stored);
-            } catch(e) {}
-
-            let addedNew = false;
-            [r1, r2, r3, r4].forEach(name => {
-                if (name && name.length > 2) { // Solo guardar si tiene longitud lógica
-                    const upperName = name.toUpperCase();
-                    // Si no está en la lista estática NI en la personalizada actual
-                    if (!STATIC_PERSONNEL_LIST.includes(upperName) && !customPersonnel.includes(upperName)) {
-                        customPersonnel.push(upperName);
-                        addedNew = true;
-                    }
-                }
-            });
-
-            if (addedNew) {
-                localStorage.setItem(LOCAL_STORAGE_CUSTOM_PERSONNEL, JSON.stringify(customPersonnel));
-                window.loadPersonnelData(); // Recargar la lista combinada para que el autocomplete se actualice
-            }
-            // ---------------------------------------------
-
-            clearTimeout(window.saveTimeout);
-            window.saveTimeout = setTimeout(() => {
-                window.saveInventoryData(updateStatus);
-            }, 500);
         }
 
         window.saveInventoryData = function(updateStatus = true) {
-            inventoryData.sort((a, b) => a.name.localeCompare(b.name));
+            const r1Input = document.getElementById('responsable-1');
+            const r2Input = document.getElementById('responsable-2');
+            const r3Input = document.getElementById('responsable-3');
+            const r4Input = document.getElementById('responsable-4');
+            
+            const responsable1 = r1Input ? r1Input.value : responsables.resp1;
+            const responsable2 = r2Input ? r2Input.value : responsables.resp2;
+            const responsable3 = r3Input ? r3Input.value : responsables.resp3;
+            const responsable4 = r4Input ? r4Input.value : responsables.resp4;
+            
+            responsables.resp1 = responsable1 || "SIN NOMBRE";
+            responsables.resp2 = responsable2 || "SIN NOMBRE";
+            responsables.resp3 = responsable3 || "SIN NOMBRE";
+            responsables.resp4 = responsable4 || "SIN NOMBRE";
 
             const dataToSave = {
                 inventory: inventoryData,
@@ -915,9 +436,10 @@
 
             try {
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
-                if (updateStatus) console.log("Guardado OK");
+                if (updateStatus) console.log("LocalStorage: Datos guardados.");
+                
             } catch (e) {
-                console.error("Fallo guardar", e);
+                console.error("ERROR: Fallo al guardar.", e);
             }
             
             window.renderInventoryTable();
@@ -928,78 +450,178 @@
             window.closeResetModal();
             try {
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
-                // No borramos LOCAL_STORAGE_CUSTOM_PERSONNEL para mantener los nombres aprendidos
+                const initial = getInitialInventoryData();
+                inventoryData = initial.inventory;
+                responsables = { resp1: "SIN NOMBRE", resp2: "SIN NOMBRE", resp3: "SIN NOMBRE", resp4: "SIN NOMBRE" };
                 
-                // Resetear inputs
                 document.getElementById('responsable-1').value = "";
                 document.getElementById('responsable-2').value = "";
                 document.getElementById('responsable-3').value = "";
                 document.getElementById('responsable-4').value = "";
                 
-                window.loadInventoryDataFromLocal();
+                window.updateReportHeaders(false); 
+                window.saveInventoryData(false);
                 window.renderInventoryTable();
                 window.calculateTotalItems();
+                
             } catch (e) {
-                console.error("Error borrar", e);
+                console.error("ERROR: Fallo al borrar localStorage.", e);
             }
         }
 
+        // --- GESTIÓN DE PRODUCTOS NUEVOS ---
+        window.openAddProductModal = function() {
+            document.getElementById('new-product-name').value = "";
+            document.getElementById('add-product-modal').style.display = 'flex';
+            document.getElementById('new-product-name').focus();
+        }
+
+        window.closeAddProductModal = function() {
+            document.getElementById('add-product-modal').style.display = 'none';
+        }
+
+        window.confirmAddProduct = function() {
+            const nameInput = document.getElementById('new-product-name');
+            const newName = nameInput.value.trim().toUpperCase();
+
+            if (!newName) {
+                alert("Por favor escribe un nombre para el producto.");
+                return;
+            }
+
+            inventoryData.push({
+                name: newName,
+                quantity: 0,
+                history: "0",
+                status: null
+            });
+
+            window.saveInventoryData(true);
+            window.closeAddProductModal();
+            
+            setTimeout(() => {
+                const tableContainer = document.querySelector('.overflow-x-auto');
+                if (tableContainer) {
+                    tableContainer.scrollTop = tableContainer.scrollHeight;
+                }
+                const newRow = document.getElementById('inventory-list').lastElementChild;
+                if(newRow) {
+                    newRow.classList.add('bg-purple-900/30');
+                    setTimeout(() => newRow.classList.remove('bg-purple-900/30'), 1000);
+                }
+            }, 100);
+        }
+
+        // --- LÓGICA DE CHECKLIST (NUEVO) ---
+        window.toggleStatus = function(index) {
+            const item = inventoryData[index];
+            // Ciclo: Null -> OK (Verde) -> Error (Rojo) -> Null
+            if (!item.status) {
+                item.status = 'ok';
+            } else if (item.status === 'ok') {
+                item.status = 'error';
+            } else {
+                item.status = null;
+            }
+            window.saveInventoryData(true);
+        }
+
+        // --- INICIALIZACIÓN ---
         document.addEventListener('DOMContentLoaded', () => {
-            window.loadPersonnelData(); // Cargar nombres primero
             window.loadInventoryDataFromLocal();
             window.renderInventoryTable();
+            window.updateReportHeaders(false);
             document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            
-            const savedTheme = localStorage.getItem('theme');
-             if (savedTheme === 'light') {
-                 document.body.classList.add('light-theme');
-                 document.getElementById('sun-icon').classList.remove('hidden');
-                 document.getElementById('moon-icon').classList.add('hidden');
-             }
-
-             // INICIALIZAR AUTOCOMPLETADO
-             autocomplete(document.getElementById("responsable-1"));
-             autocomplete(document.getElementById("responsable-2"));
-             autocomplete(document.getElementById("responsable-3"));
-             autocomplete(document.getElementById("responsable-4"));
         });
 
-        // --- RENDERIZADO ---
-
+        // --- UI Y RENDERIZADO ---
         window.renderInventoryTable = function() {
             const tbody = document.getElementById('inventory-list');
             if (!tbody) return;
             tbody.innerHTML = ''; 
 
             inventoryData.forEach((item, index) => {
-                const qtyValue = calculateTotalQuantity(item.lotes);
-                const zeroClass = qtyValue === 0 ? 'zero-qty' : '';
-                const clickHandler = `window.openCalculator(${index}, '${item.name.replace(/'/g, "\\'")}', ${qtyValue})`;
-
-                tr = document.createElement('tr');
+                const tr = document.createElement('tr');
                 tr.className = 'table-row';
+                const qtyValue = parseFloat(item.quantity) || 0;
+                const zeroClass = qtyValue === 0 ? 'zero-qty' : '';
+
+                // Determinar clases e iconos según el estado
+                let statusClass = '';
+                let statusIcon = '<div class="w-5 h-5 rounded border border-gray-500 mr-3 flex items-center justify-center"></div>'; // Checkbox vacío
+                
+                if (item.status === 'ok') {
+                    statusClass = 'status-ok'; // Definido en CSS
+                    statusIcon = `
+                        <div class="w-5 h-5 rounded bg-green-500 mr-3 flex items-center justify-center text-white shadow-lg shadow-green-500/50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </div>`;
+                } else if (item.status === 'error') {
+                    statusClass = 'status-error'; // Definido en CSS
+                    statusIcon = `
+                        <div class="w-5 h-5 rounded bg-red-500 mr-3 flex items-center justify-center text-white shadow-lg shadow-red-500/50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </div>`;
+                }
 
                 tr.innerHTML = `
-                    <td class="table-data product-cell" onclick="${clickHandler}">
-                        ${item.name}
+                    <td class="table-data product-cell ${statusClass}" onclick="window.toggleStatus(${index})">
+                        <div class="flex items-center">
+                            ${statusIcon}
+                            <span class="flex-1">${item.name}</span>
+                        </div>
                     </td>
                     <td class="table-data qty-cell ${zeroClass}" 
-                        onclick="${clickHandler}"
+                        onclick="event.stopPropagation(); window.openCalculator(${index}, '${item.name.replace(/'/g, "\\'")}')"
                         id="qty-cell-${index}">
-                        ${qtyValue.toFixed(0)}
+                        <span id="qty-display-${index}" data-quantity="${qtyValue}" data-history="${item.history || '0'}">${qtyValue}</span>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        window.calculateTotalItems = function() {
-            const count = inventoryData.filter(i => calculateTotalQuantity(i.lotes) > 0).length;
-            document.getElementById('stocked-products-count').textContent = count;
-            return count;
+        window.updateReportHeaders = function(shouldSave) {
+            const r1Input = document.getElementById('responsable-1');
+            const r2Input = document.getElementById('responsable-2');
+            const r3Input = document.getElementById('responsable-3');
+            const r4Input = document.getElementById('responsable-4');
+            
+            if (!shouldSave) {
+                r1Input.value = responsables.resp1 === "SIN NOMBRE" ? "" : responsables.resp1;
+                r2Input.value = responsables.resp2 === "SIN NOMBRE" ? "" : responsables.resp2;
+                r3Input.value = responsables.resp3 === "SIN NOMBRE" ? "" : responsables.resp3;
+                r4Input.value = responsables.resp4 === "SIN NOMBRE" ? "" : responsables.resp4;
+            }
+
+            const r1 = r1Input.value || "SIN NOMBRE";
+            const r2 = r2Input.value || "SIN NOMBRE";
+            const r3 = r3Input.value || "SIN NOMBRE";
+            const r4 = r4Input.value || "SIN NOMBRE";
+
+            document.getElementById('resp1-display').textContent = r1.toUpperCase();
+            document.getElementById('resp2-display').textContent = r2.toUpperCase();
+            document.getElementById('resp3-display').textContent = r3.toUpperCase();
+            document.getElementById('resp4-display').textContent = r4.toUpperCase();
+            
+            clearTimeout(window.saveTimeout);
+            if (shouldSave) {
+                 window.saveTimeout = setTimeout(() => {
+                    window.saveInventoryData(true);
+                }, 500);
+            }
         }
 
-        // --- LÓGICA DE CALCULADORA ---
+        window.calculateTotalItems = function() {
+            const count = inventoryData.filter(i => (parseFloat(i.quantity) || 0) > 0).length;
+            document.getElementById('stocked-products-count').textContent = count;
+        }
+
+        // --- CALCULADORA ---
         const calculator = {
             displayValue: '0',
             firstOperand: null,
@@ -1008,15 +630,23 @@
             currentProductIndex: null,
             fullExpression: '0',
             isResultCalculated: false,
-            totalValue: 0 
         };
 
-        window.openCalculator = function(index, productName, totalQty) {
+        window.openCalculator = function(index, productName) {
             calculator.currentProductIndex = index;
-            calculator.totalValue = totalQty;
             document.getElementById('calc-product-name').innerText = productName;
-            document.getElementById('calc-base-qty').innerText = totalQty.toFixed(0);
-            window.clearCalculator(true); 
+            
+            const currentQty = inventoryData[index].quantity;
+            const currentHist = inventoryData[index].history || String(currentQty); 
+            
+            window.clearCalculator(false);
+
+            calculator.displayValue = String(currentQty);
+            calculator.fullExpression = currentHist;
+            calculator.firstOperand = parseFloat(currentQty) || 0;
+            calculator.isResultCalculated = true;
+
+            window.updateDisplay();
             document.getElementById('calculator-modal').style.display = 'flex';
         }
 
@@ -1029,17 +659,17 @@
             const display = document.getElementById('calc-display');
             const history = document.getElementById('calc-history');
             
-            const formattedDisplay = calculator.displayValue.length > 10 ? 
+            const formattedDisplay = calculator.displayValue.length > 12 ? 
                                      parseFloat(calculator.displayValue).toExponential(3) : 
                                      calculator.displayValue;
             
             display.textContent = formattedDisplay;
-            history.textContent = calculator.fullExpression === '0' ? '' : calculator.fullExpression;
+            history.textContent = calculator.fullExpression;
 
-            if(calculator.displayValue.length > 7) {
-                display.style.fontSize = '2rem';
+            if(calculator.displayValue.length > 9) {
+                display.style.fontSize = '1.5rem';
             } else {
-                display.style.fontSize = '2.5rem';
+                display.style.fontSize = '2.25rem';
             }
         }
         
@@ -1049,15 +679,26 @@
             calculator.waitingForSecondOperand = false;
             calculator.operator = null;
             calculator.isResultCalculated = false;
-            calculator.fullExpression = '0';
+            if (fullReset) {
+                 calculator.fullExpression = '0';
+            } else if (calculator.currentProductIndex !== null) {
+                calculator.fullExpression = inventoryData[calculator.currentProductIndex].history || '0';
+            }
             window.updateDisplay();
         }
 
         window.backspaceCalculator = function() {
-            const { displayValue } = calculator;
-            if (calculator.waitingForSecondOperand || calculator.isResultCalculated) return;
+            const { displayValue, fullExpression, waitingForSecondOperand } = calculator;
+            if (waitingForSecondOperand || calculator.isResultCalculated) return;
+
             calculator.displayValue = displayValue.length === 1 ? '0' : displayValue.slice(0, -1);
-            calculator.fullExpression = calculator.displayValue;
+            
+            if (fullExpression.length > 0) {
+                 calculator.fullExpression = fullExpression.slice(0, -1).trim();
+            }
+            if (calculator.fullExpression.length === 0) {
+                 calculator.fullExpression = '0';
+            }
             window.updateDisplay();
         }
         
@@ -1065,16 +706,20 @@
             const num1 = parseFloat(firstOperand);
             const num2 = parseFloat(secondOperand);
             if (isNaN(num1) || isNaN(num2)) return secondOperand;
+
             let result = 0;
             if (operator === '+') result = num1 + num2;
             else if (operator === '-') result = num1 - num2;
             else if (operator === '*') result = num1 * num2;
-            else if (operator === '/') result = num2 === 0 ? 0 : num1 / num2;
+            else if (operator === '/') {
+                if (num2 === 0) return 0; 
+                result = num1 / num2;
+            }
             return Math.round(result * 1000) / 1000;
         }
 
         window.inputDigit = function(digit) {
-            const { displayValue, waitingForSecondOperand, isResultCalculated } = calculator;
+            const { displayValue, waitingForSecondOperand, isResultCalculated, fullExpression } = calculator;
 
             if (isResultCalculated) {
                 calculator.displayValue = digit === '.' ? '0.' : digit;
@@ -1085,324 +730,174 @@
                 calculator.waitingForSecondOperand = false; 
             } else if (digit === '.') {
                 if (displayValue.includes('.')) return;
+                
                 if (waitingForSecondOperand) {
                      calculator.displayValue = '0.';
+                     calculator.fullExpression = fullExpression.trim() + ' 0.';
                      calculator.waitingForSecondOperand = false;
                 } else {
                     calculator.displayValue = displayValue + digit;
+                    calculator.fullExpression += digit;
                 }
             } else if (waitingForSecondOperand) {
                 calculator.displayValue = digit;
                 calculator.waitingForSecondOperand = false;
+                calculator.fullExpression = fullExpression.trim() + ' ' + digit;
             } else {
-                calculator.displayValue = displayValue === '0' ? digit : displayValue + digit;
+                if (displayValue === '0' && digit !== '0') {
+                    calculator.displayValue = digit;
+                    if (fullExpression === '0') {
+                         calculator.fullExpression = digit;
+                    } else if (fullExpression.endsWith('0') && fullExpression.length > 1) {
+                         const lastCharIndex = fullExpression.trim().length - 1;
+                         if (fullExpression.trim().charAt(lastCharIndex) === '0' && fullExpression.trim().length > 1) {
+                             calculator.fullExpression = fullExpression.slice(0, lastCharIndex) + digit;
+                         } else {
+                             calculator.fullExpression += digit;
+                         }
+                    } else {
+                        calculator.fullExpression += digit;
+                    }
+                } else if (displayValue === '0' && digit === '0') {
+                    return; 
+                } else {
+                    calculator.displayValue = displayValue + digit;
+                    calculator.fullExpression += digit;
+                }
             }
-            if (!calculator.operator) calculator.fullExpression = calculator.displayValue;
-            
             window.updateDisplay();
         }
 
         window.handleOperator = function(nextOperator) {
-            const { firstOperand, displayValue, operator } = calculator;
+            const { firstOperand, displayValue, operator, waitingForSecondOperand, isResultCalculated, fullExpression } = calculator;
             const inputValue = parseFloat(displayValue);
 
-            if (operator && calculator.waitingForSecondOperand) {
+            if (isResultCalculated) {
+                if (nextOperator === '=') return; 
+                calculator.fullExpression = fullExpression.trim() + ` ${nextOperator} `;
+                calculator.firstOperand = inputValue;
                 calculator.operator = nextOperator;
+                calculator.waitingForSecondOperand = true;
+                calculator.isResultCalculated = false;
+                window.updateDisplay();
+                return;
+            }
+            if (waitingForSecondOperand && nextOperator !== '=') {
+                calculator.fullExpression = fullExpression.slice(0, -2).trim() + ` ${nextOperator} `;
+                calculator.operator = nextOperator;
+                window.updateDisplay();
                 return; 
             }
-            
-            if (firstOperand == null && !isNaN(inputValue)) {
-                calculator.firstOperand = inputValue;
-            } else if (operator) {
-                const result = window.calculate(firstOperand, inputValue, operator);
+            if (nextOperator === '=') {
+                if (operator === null) return;
+                const secondOperand = waitingForSecondOperand ? firstOperand : inputValue;
+                const result = window.calculate(firstOperand, secondOperand, operator);
                 calculator.displayValue = String(result);
                 calculator.firstOperand = result;
+                calculator.operator = null; 
+                calculator.waitingForSecondOperand = false;
+                if (waitingForSecondOperand) {
+                    calculator.fullExpression += `${secondOperand} = ${result}`;
+                } else {
+                    calculator.fullExpression += ` = ${result}`;
+                }
+                calculator.isResultCalculated = true;
+                window.updateDisplay();
+                return;
             }
-            
+            if (firstOperand !== null && operator) {
+                const result = window.calculate(firstOperand, inputValue, operator);
+                calculator.displayValue = String(result);
+                calculator.firstOperand = result; 
+            } else if (firstOperand === null) {
+                calculator.firstOperand = inputValue;
+            }
             calculator.waitingForSecondOperand = true;
             calculator.operator = nextOperator;
             calculator.isResultCalculated = false;
+            calculator.fullExpression += ` ${nextOperator} `; 
             window.updateDisplay();
         }
-        
+
         window.saveAndClose = function() {
             if (calculator.currentProductIndex === null) {
                 window.closeCalculator();
                 return;
             }
-            
             if (calculator.operator && !calculator.waitingForSecondOperand) {
+                 window.handleOperator('=');
+            } else if (calculator.operator && calculator.waitingForSecondOperand) {
                  window.handleOperator('=');
             }
 
-            const valueToAdd = parseFloat(calculator.displayValue);
-            
-            if (!isNaN(valueToAdd) && valueToAdd !== 0) {
-                const currentItem = inventoryData[calculator.currentProductIndex];
-                
-                currentItem.lotes.push({
-                    id: generateId(), 
-                    value: valueToAdd
-                });
+            const finalValue = parseFloat(calculator.displayValue);
+            let finalHistory = calculator.fullExpression;
+
+            if (finalValue >= 0 && !isNaN(finalValue)) {
+                inventoryData[calculator.currentProductIndex].quantity = finalValue;
+                inventoryData[calculator.currentProductIndex].history = finalHistory;
+            } else {
+                inventoryData[calculator.currentProductIndex].quantity = 0;
+                inventoryData[calculator.currentProductIndex].history = "0";
             }
-            
             window.saveInventoryData();
             window.closeCalculator();
         }
-
-        // --- LÓGICA DE AGREGAR PRODUCTO ---
-        window.openAddProductModal = function() {
-            document.getElementById('new-product-name').value = '';
-            document.getElementById('add-product-error').classList.add('hidden');
-            document.getElementById('add-product-modal').style.display = 'flex';
-            document.getElementById('new-product-name').focus();
-        }
-
-        window.closeAddProductModal = function() {
-            document.getElementById('add-product-modal').style.display = 'none';
-        }
-
-        window.addProduct = function() {
-            const inputElement = document.getElementById('new-product-name');
-            const errorElement = document.getElementById('add-product-error');
-            
-            let newProductName = inputElement.value.trim().toUpperCase();
-            
-            if (!newProductName) {
-                errorElement.textContent = "El nombre del producto no puede estar vacío.";
-                errorElement.classList.remove('hidden');
-                return;
-            }
-
-            const isDuplicate = inventoryData.some(item => item.name.trim().toUpperCase() === newProductName);
-
-            if (isDuplicate) {
-                errorElement.textContent = `"${newProductName}" ya existe en la lista.`;
-                errorElement.classList.remove('hidden');
-                return;
-            }
-            
-            const newItem = {
-                name: newProductName,
-                lotes: []
-            };
-            inventoryData.push(newItem);
-            window.saveInventoryData(); 
-            window.closeAddProductModal();
-        }
         
-        // --- LÓGICA DE HISTORIAL/LOTES ---
-        window.openHistoryModal = function() {
-            const historyList = document.getElementById('history-list');
-            historyList.innerHTML = '';
-            
-            const stockedItems = inventoryData.filter(i => i.lotes && i.lotes.length > 0);
-
-            if (stockedItems.length === 0) {
-                historyList.innerHTML = '<p class="text-center text-gray-500 light-theme:text-gray-600 mt-8">No hay productos surtidos con lotes registrados.</p>';
-            } else {
-                stockedItems.forEach(item => {
-                    const originalIndex = inventoryData.indexOf(item);
-                    const safeName = item.name.replace(/'/g, "\\'");
-                    const totalQty = calculateTotalQuantity(item.lotes);
-
-                    const div = document.createElement('div');
-                    div.className = 'history-item lote-item'; 
-
-                    div.innerHTML = `
-                        <div class="flex items-center gap-2 w-[70%]">
-                            <span class="font-medium text-white text-sm leading-tight light-theme:text-gray-900 break-words">${item.name} (${item.lotes.length} Cant)</span>
-                            <button onclick="closeHistoryAndEditLotes(${originalIndex}, '${safeName}')" class="flex-shrink-0 text-cyan-400 hover:text-white p-1 rounded-full hover:bg-cyan-700 transition" title="Editar lotes individuales">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                            </button>
-                        </div>
-                        <span class="font-extrabold text-lime-400 text-lg light-theme:text-green-700">${totalQty.toFixed(0)}</span>
-                    `;
-                    historyList.appendChild(div);
-                });
-            }
-            
-            document.getElementById('history-modal').style.display = 'flex';
-        }
-
-        // --- LÓGICA DE EDICIÓN DE LOTES ---
-        let editingProductIndex = null;
-
-        window.openEditLotesModal = function(index, name) {
-            editingProductIndex = index;
-            document.getElementById('edit-lotes-product-name').innerText = name;
-            window.renderLotesList();
-            document.getElementById('edit-lotes-modal').style.display = 'flex';
-        }
-
-        window.closeEditLotesModal = function(shouldSave) {
-            document.getElementById('edit-lotes-modal').style.display = 'none';
-            if (shouldSave) {
-                 window.saveInventoryData();
-            }
-            editingProductIndex = null;
-        }
-
-        window.renderLotesList = function() {
-            if (editingProductIndex === null) return;
-            
-            const listContainer = document.getElementById('lotes-list-container');
-            listContainer.innerHTML = '';
-            
-            const product = inventoryData[editingProductIndex];
-
-            if (product.lotes.length === 0) {
-                 listContainer.innerHTML = '<p class="text-center text-gray-500 light-theme:text-gray-600 mt-8 text-sm">No hay lotes individuales para este producto.</p>';
-                 return;
-            }
-
-            product.lotes.forEach((lote) => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center space-x-2 bg-gray-700/50 light-theme:bg-gray-100 p-2 rounded-lg';
-                
-                div.innerHTML = `
-                    <label class="text-xs text-gray-400 light-theme:text-gray-600 flex-shrink-0">TOTAL:</label>
-                    <input type="number" 
-                           id="lote-input-${lote.id}" 
-                           value="${lote.value}" 
-                           data-lote-id="${lote.id}"
-                           onchange="updateLoteValue(this.dataset.loteId, this.value)"
-                           class="flex-grow p-1 text-sm font-bold rounded border border-gray-600 bg-gray-900 text-lime-400 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors text-center w-full lote-input" 
-                           title="Editar cantidad del lote">
-                    
-                    <button onclick="openDeleteLoteConfirmModal('${lote.id}')" 
-                            class="p-1 text-red-400 hover:text-white rounded hover:bg-red-600 transition flex-shrink-0"
-                            title="Eliminar este lote">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
-                `;
-                listContainer.appendChild(div);
-            });
-        }
-
-        window.updateLoteValue = function(loteId, newValue) {
-            if (editingProductIndex === null) return;
-            const product = inventoryData[editingProductIndex];
-            const numValue = parseFloat(newValue) || 0;
-            const lote = product.lotes.find(l => l.id === loteId);
-            if (lote) {
-                lote.value = numValue;
-            }
-            window.saveInventoryData();
-        }
-        
-        window.openDeleteLoteConfirmModal = function(loteId) {
-            document.getElementById('lote-to-delete-id').value = loteId;
-            document.getElementById('delete-lote-confirm-modal').style.display = 'flex';
-        }
-
-        window.closeDeleteLoteConfirmModal = function() {
-            document.getElementById('lote-to-delete-id').value = '';
-            document.getElementById('delete-lote-confirm-modal').style.display = 'none';
-        }
-
-        window.deleteLoteConfirmed = function() {
-            const loteId = document.getElementById('lote-to-delete-id').value;
-            window.closeDeleteLoteConfirmModal();
-
-            if (editingProductIndex === null || !loteId) return;
-            
-            let product = inventoryData[editingProductIndex];
-            product.lotes = product.lotes.filter(l => l.id !== loteId);
-            
-            window.saveInventoryData();
-            window.renderLotesList();
-        }
-
-        window.closeHistoryAndEditLotes = function(index, name) {
-            window.closeHistoryModal();
-            window.openEditLotesModal(index, name);
-        }
-
-        window.closeHistoryModal = function() {
-            document.getElementById('history-modal').style.display = 'none';
-        }
-
-        // --- MODALES GENERALES ---
+        // --- MODALES ---
         window.openResetModal = function() { document.getElementById('reset-modal').style.display = 'flex'; }
         window.closeResetModal = function() { document.getElementById('reset-modal').style.display = 'none'; }
 
         // --- EXPORTAR EXCEL (.XLSX) ---
         window.downloadExcel = function() {
-            // Capturar los 4 nombres
-            const r1 = document.getElementById('responsable-1').value || "";
-            const r2 = document.getElementById('responsable-2').value || "";
-            const r3 = document.getElementById('responsable-3').value || "";
-            const r4 = document.getElementById('responsable-4').value || "";
-            
+            const r1 = document.getElementById('responsable-1').value.trim();
+            const r2 = document.getElementById('responsable-2').value.trim();
+            const r3 = document.getElementById('responsable-3').value.trim();
+            const r4 = document.getElementById('responsable-4').value.trim();
             const date = document.getElementById('report-date').textContent;
             
-            let maxLotes = 0;
-            inventoryData.forEach(item => {
-                if (item.lotes.length > maxLotes) {
-                    maxLotes = item.lotes.length;
-                }
-            });
-            if (maxLotes === 0) maxLotes = 1;
+            // Construir texto de responsables de forma dinámica
+            const names = [r1, r2, r3, r4].filter(n => n && n !== "SIN NOMBRE" && n !== "");
+            const responsablesText = names.length > 0 ? names.join(" / ").toUpperCase() : "SIN ASIGNAR";
 
-            const tableHeader = ["PRODUCTO"];
-            for (let i = 1; i <= maxLotes; i++) {
-                const numStr = i.toString().padStart(2, '0');
-                tableHeader.push(`CANT ${numStr}`);
-            }
-            tableHeader.push("TOTAL");
-
-            const data = [
-                ["ORGANISMO", "CECOSESOLA J085030140"],
-                ["PASILLO", "PANES - FERIA DEL ESTE"],
+            // 1. Crear matriz de datos para Excel
+            const ws_data = [
+                ["Inventario F.E", "CECOSESOLA R.L J085030140"],
+                ["PASILLO", "PASTAS - FERIA DEL ESTE"],
                 ["FECHA", date],
-                ["RESPONSABLE 1", r1],
-                ["RESPONSABLE 2", r2],
-                ["RESPONSABLE 1", r3], // Agregado
-                ["RESPONSABLE 2", r4], // Agregado
-                [], 
-                tableHeader 
+                ["RESPONSABLES:", responsablesText], // Fila destacada con todos los nombres
+                [], // Fila vacía
+                ["ESTADO", "PRODUCTO", "HISTORIAL", "CANTIDAD"] 
             ];
-            
+
+            // 2. Agregar los datos del inventario con su estado
             inventoryData.forEach(item => {
-                const totalQty = calculateTotalQuantity(item.lotes);
-                const baseName = item.name.trim();
-                const dashedName = baseName + " " + "-".repeat(Math.max(0, 60 - baseName.length));
+                let estadoTexto = "PENDIENTE";
+                if(item.status === 'ok') estadoTexto = "CORRECTO";
+                if(item.status === 'error') estadoTexto = "DIFERENCIA";
 
-                const row = [dashedName];
-
-                for (let i = 0; i < maxLotes; i++) {
-                    if (i < item.lotes.length) {
-                        row.push(Number(item.lotes[i].value) || 0);
-                    } else {
-                        row.push(0);
-                    }
-                }
-                row.push(totalQty);
-                data.push(row);
+                ws_data.push([
+                    estadoTexto,
+                    item.name,
+                    item.history || "0",
+                    parseFloat(item.quantity)
+                ]);
             });
 
-            const stockedCount = window.calculateTotalItems();
-
-            data.push([]); 
-            data.push(["CANTIDAD DE PRODUCTOS SURTIDOS", "", "", stockedCount]);
-
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            
-            const wscols = [{wch: 50}]; 
-            for(let i=0; i <= maxLotes; i++) {
-                wscols.push({wch: 10});
-            }
-            ws['!cols'] = wscols;
-
+            // 3. Crear hoja de trabajo y libro
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Inventario Detallado");
+            XLSX.utils.book_append_sheet(wb, ws, "Inventario Pastas");
 
-            XLSX.writeFile(wb, `inventario_panes_equipo_${date.replace(/\//g, '-')}.xlsx`);
+            ws['!cols'] = [
+                { wch: 15 }, // Estado
+                { wch: 40 }, // Producto
+                { wch: 30 }, // Historial
+                { wch: 15 }  // Cantidad
+            ];
+
+            const fileName = `Inventario_Pastas_${date.replace(/\//g, '-')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
         }
 
         // --- CAMBIO DE TEMA ---
@@ -1412,111 +907,19 @@
             document.getElementById('sun-icon').classList.toggle('hidden', !isLight);
             localStorage.setItem('theme', isLight ? 'light' : 'dark');
         }
-
-        // --- FUNCIONALIDAD DE EXPORTACIÓN (NUEVA) ---
-
-        window.openExportConfigModal = function() {
-            document.getElementById('export-config-modal').style.display = 'flex';
-            window.showTab('code'); // Default tab
-        }
-
-        window.closeExportConfigModal = function() {
-            document.getElementById('export-config-modal').style.display = 'none';
-        }
-
-        window.showTab = function(tabName) {
-            const codeTab = document.getElementById('tab-code');
-            const jsonTab = document.getElementById('tab-json');
-            const btnCode = document.getElementById('tab-btn-code');
-            const btnJson = document.getElementById('tab-btn-json');
-
-            if (tabName === 'code') {
-                codeTab.classList.remove('hidden');
-                jsonTab.classList.add('hidden');
-                
-                btnCode.classList.add('text-cyan-400', 'border-cyan-400');
-                btnCode.classList.remove('text-gray-400', 'border-transparent');
-                
-                btnJson.classList.add('text-gray-400', 'border-transparent');
-                btnJson.classList.remove('text-cyan-400', 'border-cyan-400');
-                
-                window.generateCodeExport();
-            } else {
-                codeTab.classList.add('hidden');
-                jsonTab.classList.remove('hidden');
-                
-                btnJson.classList.add('text-cyan-400', 'border-cyan-400');
-                btnJson.classList.remove('text-gray-400', 'border-transparent');
-                
-                btnCode.classList.add('text-gray-400', 'border-transparent');
-                btnCode.classList.remove('text-cyan-400', 'border-cyan-400');
-                
-                window.generateJSONExport();
-            }
-        }
-
-        window.generateCodeExport = function() {
-            // Combinar y limpiar lista de personal
-            // combinedPersonnelList ya tiene todo, pero asegurémonos de tener lo último
-            const personnel = [...combinedPersonnelList].sort();
-            
-            // Obtener lista de productos actual (incluye nuevos)
-            const products = inventoryData.map(i => i.name).sort();
-
-            const codeString = `
-        // =========================================================================================
-        // --- ZONA EDITABLE: AGREGUE AQUÍ SUS PRODUCTOS Y NOMBRES PERMANENTES PARA SIEMPRE ---
-        // =========================================================================================
         
-        // 1. LISTA DE PERSONAL (Solo nombres fijos)
-        const STATIC_PERSONNEL_LIST = [
-            ${personnel.map(p => `"${p}"`).join(',\n            ')}
-        ];
-
-        // 2. LISTA DE PRODUCTOS (Solo productos fijos)
-        const STATIC_PRODUCT_NAMES = [
-            ${products.map(p => `"${p}"`).join(',\n            ')}
-        ];
-
-        // =========================================================================================
-        // --- FIN DE ZONA EDITABLE ---
-        // =========================================================================================
-            `.trim();
-
-            document.getElementById('export-code-area').value = codeString;
-        }
-
-        window.generateJSONExport = function() {
-            const backupData = {
-                timestamp: new Date().toISOString(),
-                responsables: responsables,
-                inventory: inventoryData
-            };
-            document.getElementById('export-json-area').value = JSON.stringify(backupData, null, 2);
-        }
-
-        window.copyToClipboard = function(elementId) {
-            const copyText = document.getElementById(elementId);
-            copyText.select();
-            copyText.setSelectionRange(0, 99999); /* For mobile devices */
-            navigator.clipboard.writeText(copyText.value).then(() => {
-                alert("Copiado al portapapeles. ¡Ahora puedes pegarlo en tu código en GitHub!");
-            });
-        }
-
-        window.downloadBackupJSON = function() {
-            const text = document.getElementById('export-json-area').value;
-            const blob = new Blob([text], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const date = new Date().toISOString().slice(0,10);
-            a.href = url;
-            a.download = `backup_inventario_${date}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
+        document.addEventListener('DOMContentLoaded', () => {
+             const savedTheme = localStorage.getItem('theme');
+             if (savedTheme === 'light') {
+                 document.body.classList.add('light-theme');
+                 if(document.getElementById('sun-icon')) document.getElementById('sun-icon').classList.remove('hidden');
+                 if(document.getElementById('moon-icon')) document.getElementById('moon-icon').classList.add('hidden');
+             } else {
+                 if(document.getElementById('sun-icon')) document.getElementById('sun-icon').classList.add('hidden');
+                 if(document.getElementById('moon-icon')) document.getElementById('moon-icon').classList.remove('hidden');
+             }
+        });
+        
     </script>
 </body>
 </html>
