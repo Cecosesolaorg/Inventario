@@ -1,0 +1,965 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVENTARIO DE VIVERES PASILLO 2 CAFE </title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de SheetJS para Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- Configuración de fuente Inter -->
+    <style>
+        @import url('https://fonts.fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+    </style>
+    <style>
+        /* --- CONFIGURACIÓN DE VARIABLES Y TEMA --- */
+        :root {
+            --neon-cyan: #22d3ee;
+            --neon-lime: #a3e635;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0d0d;
+            color: #e5e7eb;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Utilidades */
+        input[type="number"] { -moz-appearance: textfield; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .neon-title { text-shadow: 0 0 5px rgba(34, 211, 238, 0.8); }
+        
+        /* --- ESTILOS DE TABLA (Simulación Excel) --- */
+        #inventory-table {
+            border-collapse: separate; 
+            border-spacing: 0;
+            width: 100%;
+            border: 1px solid #374151;
+            border-radius: 0.75rem; /* rounded-xl */
+            overflow: hidden;
+        }
+        
+        .table-header, .table-data {
+            padding: 12px 16px;
+            border-bottom: 1px solid #374151;
+        }
+
+        .table-header {
+            background-color: #1f2937;
+            color: #22d3ee;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
+        }
+
+        .table-row { transition: background-color 0.2s; }
+        .table-row:last-child .table-data { border-bottom: none; }
+        
+        /* Modo Oscuro (Default) */
+        .table-row:hover { background-color: #1f2937; }
+        
+        .product-cell {
+            font-size: 0.95rem;
+            color: #e5e7eb;
+            border-right: 1px solid #374151;
+            cursor: pointer; /* Indicar que es clickeable para el checklist */
+            user-select: none; /* Evitar selección de texto al hacer clic rápido */
+        }
+
+        .qty-cell {
+            text-align: center;
+            font-weight: bold;
+            color: #a3e635;
+            background-color: rgba(17, 24, 39, 0.5);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .qty-cell:hover {
+            background-color: #374151;
+            text-decoration: underline;
+        }
+        .zero-qty { color: #9ca3af !important; }
+
+        /* Estilos de Estado Checklist */
+        .status-ok { background-color: rgba(6, 78, 59, 0.4) !important; color: #4ade80 !important; } /* Verde oscuro */
+        .status-error { background-color: rgba(127, 29, 29, 0.4) !important; color: #f87171 !important; } /* Rojo oscuro */
+
+        /* --- TEMA CLARO --- */
+        .light-theme body { background-color: #f3f4f6; color: #1f2937; }
+        .light-theme .main-container { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .light-theme .neon-title { color: #2563eb; text-shadow: none; }
+        .light-theme .accent-text { color: #2563eb; }
+        
+        /* Tabla Claro */
+        .light-theme #inventory-table { border-color: #e5e7eb; }
+        .light-theme .table-header { background-color: #bfdbfe; color: #1e40af; border-bottom: 1px solid #93c5fd; }
+        .light-theme .table-data { border-bottom: 1px solid #e5e7eb; }
+        .light-theme .product-cell { color: #1f2937; border-right: 1px solid #e5e7eb; }
+        .light-theme .table-row:hover { background-color: #f0f9ff; }
+        .light-theme .qty-cell { background-color: #ecfdf5; color: #059669; }
+        .light-theme .qty-cell:hover { background-color: #d1fae5; }
+        .light-theme .zero-qty { color: #6b7280 !important; }
+
+        /* Estados Checklist Claro */
+        .light-theme .status-ok { background-color: #dcfce7 !important; color: #166534 !important; }
+        .light-theme .status-error { background-color: #fee2e2 !important; color: #991b1b !important; }
+
+        /* Inputs y Footer Claro */
+        .light-theme input[type="text"] { background-color: #ffffff; border-color: #94a3b8; color: #0f172a; }
+        .light-theme .footer-container { background-color: #e2e8f0; border-color: #94a3b8; }
+    </style>
+</head>
+<body class="p-2 md:p-6 min-h-screen">
+
+    <div class="max-w-4xl mx-auto bg-gray-900 p-4 md:p-8 rounded-2xl shadow-2xl border border-cyan-900 main-container">
+        <header class="mb-4">
+            <!-- Cabecera tipo Reporte -->
+            <div class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800/50 light-theme:bg-white light-theme:border-blue-200 transition-colors">
+                <!-- Fila 1: ORGANISMO Y FECHA -->
+                <div class="flex flex-col md:flex-row justify-between md:items-center border-b border-gray-700 pb-2 mb-2 light-theme:border-gray-200">
+                    <p class="text-xs font-bold text-cyan-400 light-theme:text-blue-600 tracking-wide mb-1 md:mb-0">CECOSESOLA J085030140</p>
+                    <p class="text-xs text-gray-400 light-theme:text-gray-500">FECHA: <span id="report-date" class="font-semibold text-gray-200 light-theme:text-gray-800"></span></p>
+                </div>
+                
+                <!-- Fila 2: PASILLO Y RESPONSABLES -->
+                <div class="flex flex-col md:flex-row justify-between items-start">
+                    <div class="mb-2 md:mb-0">
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase"> PASILLO CAFE </h2>
+                        <h3 class="text-lg font-bold text-gray-300 light-theme:text-gray-600">FERIA DEL ESTE</h3>
+                    </div>
+                    
+                    <div class="text-sm w-full md:w-auto bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 grid grid-cols-1 gap-1">
+                        <p class="text-gray-400 light-theme:text-gray-500">RESP 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
+                        <p class="text-gray-400 light-theme:text-gray-500">RESP 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
+                        <p class="text-gray-400 light-theme:text-gray-500">RESP 3: <span id="resp3-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
+                        <p class="text-gray-400 light-theme:text-gray-500">RESP 4: <span id="resp4-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex justify-end space-x-3 items-center sticky top-2 z-10 bg-gray-900/90 p-2 rounded-xl backdrop-blur-sm light-theme:bg-white/90">
+                <div class="flex space-x-3">
+                    <button 
+                        id="toggle-theme-btn"
+                        onclick="toggleTheme()"
+                        class="p-2 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200 border border-transparent hover:border-gray-600 light-theme:hover:bg-blue-100 light-theme:text-blue-600"
+                        aria-label="Cambiar tema"
+                    >
+                        <!-- Luna -->
+                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12.001 12.001 0 0012 21a12.001 12.001 0 008.354-5.646z" />
+                        </svg>
+                        <!-- Sol -->
+                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+
+                    <!-- Botón Reset (Borrar Todo) -->
+                    <button 
+                        onclick="openResetModal()"
+                        class="bg-red-600/80 hover:bg-red-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95"
+                        title="Borrar todos los datos y empezar de nuevo"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                    
+                     <!-- Botón Agregar Producto -->
+                     <button 
+                     onclick="openAddProductModal()"
+                     class="bg-purple-600 hover:bg-purple-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95 font-bold flex items-center"
+                     title="Agregar un producto nuevo a la lista"
+                 >
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                     </svg>
+                     <span class="hidden md:inline">Agregar</span>
+                 </button>
+
+                    <button 
+                        onclick="downloadExcel()"
+                        class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm md:text-base"
+                        title="Descargar datos en formato Excel (.xlsx)"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Descargar Excel
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tabla de Inventario -->
+        <div class="mt-4 overflow-x-auto">
+            <table id="inventory-table">
+                <thead>
+                    <tr>
+                        <th class="table-header text-left w-[75%] md:w-[80%] pl-4 sticky left-0 z-10">PRODUCTO / CHECKLIST</th>
+                        <th class="table-header w-[25%] md:w-[20%]">CANTIDAD</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-list">
+                    <!-- Filas generadas por JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer / Resumen -->
+        <footer class="mt-8 pt-6 border-t-4 border-cyan-600 bg-gray-800 rounded-lg p-4 shadow-xl footer-container transition-colors">
+            <div class="flex flex-col sm:flex-row items-start sm:items-stretch justify-between gap-6">
+                
+                <!-- Contador -->
+                <div class="w-full sm:w-1/2 flex flex-col"> 
+                    <p class="text-lg font-bold text-cyan-400 mb-2 accent-text uppercase">CANTIDAD DE PRODUCTOS :</p>
+                    <div class="flex-grow bg-cyan-600/20 border border-cyan-600/50 rounded-xl p-4 flex items-center justify-center">
+                        <span id="stocked-products-count" class="text-5xl font-extrabold text-cyan-400 light-theme:text-blue-600">0</span>
+                    </div>
+                </div>
+                
+                <!-- Inputs Responsables -->
+                <div class="w-full sm:w-1/2 flex flex-col space-y-3 sm:pl-4 sm:border-l border-gray-600 light-theme:border-gray-300">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 1 EA</label>
+                            <input type="text" id="responsable-1" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 1 EA</label>
+                            <input type="text" id="responsable-2" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2 EB</label>
+                            <input type="text" id="responsable-3" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+                        </div>
+                        <div>
+                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2 EB</label>
+                            <input type="text" id="responsable-4" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Estado de LocalStorage -->
+            <div class="mt-4 pt-4 border-t border-gray-700 text-xs text-gray-500">
+                <p>Estado de Guardado: <span id="connection-status" class="font-semibold text-lime-400">Guardado Automaticamente</span></p>
+                <p class="mt-1 text-gray-500">💡 Tip: Haz clic en el nombre del producto para marcarlo como <span class="text-green-400">Verificado</span> o <span class="text-red-400">Discrepancia</span>.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal Calculadora -->
+    <div id="calculator-modal" class="modal-overlay" onclick="if(event.target === this) closeCalculator()">
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-xs mx-4 transform transition-all border border-cyan-700 relative">
+            <!-- Header Calc -->
+            <div class="mb-4 text-center">
+                <h2 class="text-lg font-bold text-cyan-400 leading-tight truncate px-2" id="calc-product-name">Producto</h2>
+            </div>
+
+            <!-- Pantalla -->
+            <div class="bg-gray-900 p-3 mb-4 rounded-lg text-right border border-gray-700 shadow-inner">
+                <div class="text-gray-500 text-xs h-4 mb-1 truncate" id="calc-history"></div>
+                <div id="calc-display" class="text-white text-4xl font-mono font-bold truncate tracking-widest">0</div>
+            </div>
+
+            <!-- Teclado -->
+            <div class="grid grid-cols-4 gap-2 mb-4">
+                <button onclick="clearCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800">C</button>
+                <button onclick="backspaceCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800">⌫</button>
+                <button onclick="handleOperator('/')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">÷</button>
+                <button onclick="handleOperator('*')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">×</button>
+
+                <button onclick="inputDigit('7')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">7</button>
+                <button onclick="inputDigit('8')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">8</button>
+                <button onclick="inputDigit('9')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">9</button>
+                <button onclick="handleOperator('-')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">-</button>
+
+                <button onclick="inputDigit('4')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">4</button>
+                <button onclick="inputDigit('5')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">5</button>
+                <button onclick="inputDigit('6')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">6</button>
+                <button onclick="handleOperator('+')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">+</button>
+
+                <button onclick="inputDigit('1')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">1</button>
+                <button onclick="inputDigit('2')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">2</button>
+                <button onclick="inputDigit('3')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">3</button>
+                <button onclick="handleOperator('=')" class="row-span-2 bg-cyan-600 text-white rounded-lg p-3 font-bold hover:bg-cyan-500 shadow-lg flex items-center justify-center text-xl">=</button>
+
+                <button onclick="inputDigit('0')" class="col-span-2 bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">0</button>
+                <button onclick="inputDigit('.')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">.</button>
+            </div>
+
+            <!-- Botones Control -->
+            <div class="flex space-x-2">
+                <button onclick="closeCalculator()" class="flex-1 py-3 bg-gray-700 text-gray-300 rounded-xl font-semibold hover:bg-gray-600">Cancelar</button>
+                <button onclick="saveAndClose()" class="flex-1 py-3 bg-lime-600 text-white rounded-xl font-bold hover:bg-lime-500 shadow-lg shadow-lime-900/20">GUARDAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Producto -->
+    <div id="add-product-modal" class="modal-overlay" onclick="if(event.target === this) closeAddProductModal()">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-purple-500">
+            <h3 class="text-xl font-bold text-purple-400 mb-4 uppercase">➕ Nuevo Producto</h3>
+            <p class="text-gray-300 mb-4 text-sm">Ingresa el nombre del producto que deseas añadir a la lista.</p>
+            
+            <input type="text" id="new-product-name" placeholder="Ej: Pan de Molde Integral" class="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 text-white mb-6 focus:ring-2 focus:ring-purple-500 outline-none">
+            
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeAddProductModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="confirmAddProduct()" class="py-2 px-4 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition shadow-lg">Agregar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación para Borrar -->
+    <div id="reset-modal" class="modal-overlay" onclick="if(event.target === this) closeResetModal()">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-red-700">
+            <h3 class="text-xl font-bold text-red-400 mb-4">⚠️ Confirmar Borrado Total</h3>
+            <p class="text-gray-300 mb-6">Estás a punto de **eliminar todo el inventario** del almacenamiento local de tu navegador. Esta acción no se puede deshacer.</p>
+            <p class="text-white font-semibold mb-6">¿Estás absolutamente seguro de que deseas continuar?</p>
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeResetModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="resetAllDataConfirmed()" class="py-2 px-4 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 transition shadow-lg">Sí, Borrar Todo</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTES Y ESTRUCTURA DE DATOS ---
+        const LOCAL_STORAGE_KEY = 'cafeInventoryData_v2'; 
+        
+        const defaultProductNames = [
+            "ACEITE AGROIL*12",
+  "ACEITE MI ACEITE*12",
+  "ACEITE NATUROIL",
+  "ACEITE PORTUMESA",
+  "ACEITE VATEL DE LITRO*12",
+  "ATUN DIPOLATICO*48",
+  "ATUN PACIFICO *48",
+  "ATUN PEÑERO VERDE *12",
+  "AVENA DE VITA",
+  "AVENA DON JORGE",
+  "AVENA QUAKER",
+  "CAFÉ CORDILLERA 200GRMS",
+  "CAFÉ CORDILLERA 500 GRMS",
+  "CAFÉ EN GRANO 250GR DULCE AMAR",
+  "CAFÉ EN GRANO 400GRMS",
+  "CAFÉ EN GRANO COROMOTANA",
+  "CAFÉ LO NUESTRO",
+  "CAFÉ MATILDE",
+  "CAFÉ VARINA",
+  "CARNE DE SOYA",
+  "FORORO VALLE HONDO",
+  "HARINA DE AVENE QUAKER",
+  "HARINA DE TRIGO ESPECIAL LEUDANTE",
+  "HARINA DE TRIGO ESPECIAL TODO USO",
+  "HARINA TRIGO DULC MAR",
+  "LECHE LA CAMPIÑA",
+  "LECHE MONTAÑA FRESCA",
+  "LECHE VALLELAC",
+  "SARDINA",
+  "SARDINA INCOSA",
+  "SARDINA VEMPOR",
+  "TAMARINDO EL ESFUERZO"
+        ];
+
+        // Función para generar la estructura de inventario inicial
+        const getInitialInventoryData = () => ({
+            inventory: defaultProductNames.map(name => ({
+                name: name,
+                quantity: 0,
+                history: "0",
+                status: null // Nuevo campo para checklist (null | 'ok' | 'error')
+            })),
+            responsable1: "SIN NOMBRE",
+            responsable2: "SIN NOMBRE",
+            responsable3: "SIN NOMBRE",
+            responsable4: "SIN NOMBRE"
+        });
+
+        // --- MANEJO DE LOCALSTORAGE ---
+
+        let inventoryData = [];
+        let responsables = { resp1: "SIN NOMBRE", resp2: "SIN NOMBRE", resp3: "SIN NOMBRE", resp4: "SIN NOMBRE" };
+
+        window.loadInventoryDataFromLocal = function() {
+            try {
+                const storedDataJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+                
+                if (storedDataJson) {
+                    const storedData = JSON.parse(storedDataJson);
+                    
+                    responsables.resp1 = storedData.responsable1 || "SIN NOMBRE";
+                    responsables.resp2 = storedData.responsable2 || "SIN NOMBRE";
+                    responsables.resp3 = storedData.responsable3 || "SIN NOMBRE";
+                    responsables.resp4 = storedData.responsable4 || "SIN NOMBRE";
+
+                    if (storedData.inventory && Array.isArray(storedData.inventory)) {
+                        inventoryData = storedData.inventory;
+                        console.log("LocalStorage: Datos cargados.");
+                        return;
+                    }
+                }
+
+                console.log("LocalStorage: No encontrado o vacío. Cargando defaults.");
+                const initial = getInitialInventoryData();
+                inventoryData = initial.inventory;
+                responsables.resp1 = initial.responsable1;
+                responsables.resp2 = initial.responsable2;
+                responsables.resp3 = initial.responsable3;
+                responsables.resp4 = initial.responsable4;
+                window.saveInventoryData(false);
+
+            } catch (e) {
+                console.error("Error al cargar localStorage.", e);
+                const initial = getInitialInventoryData();
+                inventoryData = initial.inventory;
+                responsables.resp1 = initial.responsable1;
+                responsables.resp2 = initial.responsable2;
+                responsables.resp3 = initial.responsable3;
+                responsables.resp4 = initial.responsable4;
+            }
+        }
+
+        window.saveInventoryData = function(updateStatus = true) {
+            const r1Input = document.getElementById('responsable-1');
+            const r2Input = document.getElementById('responsable-2');
+            const r3Input = document.getElementById('responsable-3');
+            const r4Input = document.getElementById('responsable-4');
+            
+            const responsable1 = r1Input ? r1Input.value : responsables.resp1;
+            const responsable2 = r2Input ? r2Input.value : responsables.resp2;
+            const responsable3 = r3Input ? r3Input.value : responsables.resp3;
+            const responsable4 = r4Input ? r4Input.value : responsables.resp4;
+            
+            responsables.resp1 = responsable1 || "SIN NOMBRE";
+            responsables.resp2 = responsable2 || "SIN NOMBRE";
+            responsables.resp3 = responsable3 || "SIN NOMBRE";
+            responsables.resp4 = responsable4 || "SIN NOMBRE";
+
+            const dataToSave = {
+                inventory: inventoryData,
+                responsable1: responsables.resp1,
+                responsable2: responsables.resp2,
+                responsable3: responsables.resp3,
+                responsable4: responsables.resp4,
+                lastUpdated: new Date().toISOString()
+            };
+
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
+                if (updateStatus) console.log("LocalStorage: Datos guardados.");
+                
+            } catch (e) {
+                console.error("ERROR: Fallo al guardar.", e);
+            }
+            
+            window.renderInventoryTable();
+            window.calculateTotalItems();
+        }
+
+        window.resetAllDataConfirmed = function() {
+            window.closeResetModal();
+            try {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                const initial = getInitialInventoryData();
+                inventoryData = initial.inventory;
+                responsables = { resp1: "SIN NOMBRE", resp2: "SIN NOMBRE", resp3: "SIN NOMBRE", resp4: "SIN NOMBRE" };
+                
+                document.getElementById('responsable-1').value = "";
+                document.getElementById('responsable-2').value = "";
+                document.getElementById('responsable-3').value = "";
+                document.getElementById('responsable-4').value = "";
+                
+                window.updateReportHeaders(false); 
+                window.saveInventoryData(false);
+                window.renderInventoryTable();
+                window.calculateTotalItems();
+                
+            } catch (e) {
+                console.error("ERROR: Fallo al borrar localStorage.", e);
+            }
+        }
+
+        // --- GESTIÓN DE PRODUCTOS NUEVOS ---
+        window.openAddProductModal = function() {
+            document.getElementById('new-product-name').value = "";
+            document.getElementById('add-product-modal').style.display = 'flex';
+            document.getElementById('new-product-name').focus();
+        }
+
+        window.closeAddProductModal = function() {
+            document.getElementById('add-product-modal').style.display = 'none';
+        }
+
+        window.confirmAddProduct = function() {
+            const nameInput = document.getElementById('new-product-name');
+            const newName = nameInput.value.trim().toUpperCase();
+
+            if (!newName) {
+                alert("Por favor escribe un nombre para el producto.");
+                return;
+            }
+
+            inventoryData.push({
+                name: newName,
+                quantity: 0,
+                history: "0",
+                status: null
+            });
+
+            window.saveInventoryData(true);
+            window.closeAddProductModal();
+            
+            setTimeout(() => {
+                const tableContainer = document.querySelector('.overflow-x-auto');
+                if (tableContainer) {
+                    tableContainer.scrollTop = tableContainer.scrollHeight;
+                }
+                const newRow = document.getElementById('inventory-list').lastElementChild;
+                if(newRow) {
+                    newRow.classList.add('bg-purple-900/30');
+                    setTimeout(() => newRow.classList.remove('bg-purple-900/30'), 1000);
+                }
+            }, 100);
+        }
+
+        // --- LÓGICA DE CHECKLIST (NUEVO) ---
+        window.toggleStatus = function(index) {
+            const item = inventoryData[index];
+            // Ciclo: Null -> OK (Verde) -> Error (Rojo) -> Null
+            if (!item.status) {
+                item.status = 'ok';
+            } else if (item.status === 'ok') {
+                item.status = 'error';
+            } else {
+                item.status = null;
+            }
+            window.saveInventoryData(true);
+        }
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            window.loadInventoryDataFromLocal();
+            window.renderInventoryTable();
+            window.updateReportHeaders(false);
+            document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        });
+
+        // --- UI Y RENDERIZADO ---
+        window.renderInventoryTable = function() {
+            const tbody = document.getElementById('inventory-list');
+            if (!tbody) return;
+            tbody.innerHTML = ''; 
+
+            inventoryData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'table-row';
+                const qtyValue = parseFloat(item.quantity) || 0;
+                const zeroClass = qtyValue === 0 ? 'zero-qty' : '';
+
+                // Determinar clases e iconos según el estado
+                let statusClass = '';
+                let statusIcon = '<div class="w-5 h-5 rounded border border-gray-500 mr-3 flex items-center justify-center"></div>'; // Checkbox vacío
+                
+                if (item.status === 'ok') {
+                    statusClass = 'status-ok'; // Definido en CSS
+                    statusIcon = `
+                        <div class="w-5 h-5 rounded bg-green-500 mr-3 flex items-center justify-center text-white shadow-lg shadow-green-500/50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </div>`;
+                } else if (item.status === 'error') {
+                    statusClass = 'status-error'; // Definido en CSS
+                    statusIcon = `
+                        <div class="w-5 h-5 rounded bg-red-500 mr-3 flex items-center justify-center text-white shadow-lg shadow-red-500/50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </div>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="table-data product-cell ${statusClass}" onclick="window.toggleStatus(${index})">
+                        <div class="flex items-center">
+                            ${statusIcon}
+                            <span class="flex-1">${item.name}</span>
+                        </div>
+                    </td>
+                    <td class="table-data qty-cell ${zeroClass}" 
+                        onclick="event.stopPropagation(); window.openCalculator(${index}, '${item.name.replace(/'/g, "\\'")}')"
+                        id="qty-cell-${index}">
+                        <span id="qty-display-${index}" data-quantity="${qtyValue}" data-history="${item.history || '0'}">${qtyValue}</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.updateReportHeaders = function(shouldSave) {
+            const r1Input = document.getElementById('responsable-1');
+            const r2Input = document.getElementById('responsable-2');
+            const r3Input = document.getElementById('responsable-3');
+            const r4Input = document.getElementById('responsable-4');
+            
+            if (!shouldSave) {
+                r1Input.value = responsables.resp1 === "SIN NOMBRE" ? "" : responsables.resp1;
+                r2Input.value = responsables.resp2 === "SIN NOMBRE" ? "" : responsables.resp2;
+                r3Input.value = responsables.resp3 === "SIN NOMBRE" ? "" : responsables.resp3;
+                r4Input.value = responsables.resp4 === "SIN NOMBRE" ? "" : responsables.resp4;
+            }
+
+            const r1 = r1Input.value || "SIN NOMBRE";
+            const r2 = r2Input.value || "SIN NOMBRE";
+            const r3 = r3Input.value || "SIN NOMBRE";
+            const r4 = r4Input.value || "SIN NOMBRE";
+
+            document.getElementById('resp1-display').textContent = r1.toUpperCase();
+            document.getElementById('resp2-display').textContent = r2.toUpperCase();
+            document.getElementById('resp3-display').textContent = r3.toUpperCase();
+            document.getElementById('resp4-display').textContent = r4.toUpperCase();
+            
+            clearTimeout(window.saveTimeout);
+            if (shouldSave) {
+                 window.saveTimeout = setTimeout(() => {
+                    window.saveInventoryData(true);
+                }, 500);
+            }
+        }
+
+        window.calculateTotalItems = function() {
+            const count = inventoryData.filter(i => (parseFloat(i.quantity) || 0) > 0).length;
+            document.getElementById('stocked-products-count').textContent = count;
+        }
+
+        // --- CALCULADORA ---
+        const calculator = {
+            displayValue: '0',
+            firstOperand: null,
+            waitingForSecondOperand: false,
+            operator: null,
+            currentProductIndex: null,
+            fullExpression: '0',
+            isResultCalculated: false,
+        };
+
+        window.openCalculator = function(index, productName) {
+            calculator.currentProductIndex = index;
+            document.getElementById('calc-product-name').innerText = productName;
+            
+            const currentQty = inventoryData[index].quantity;
+            const currentHist = inventoryData[index].history || String(currentQty); 
+            
+            window.clearCalculator(false);
+
+            calculator.displayValue = String(currentQty);
+            calculator.fullExpression = currentHist;
+            calculator.firstOperand = parseFloat(currentQty) || 0;
+            calculator.isResultCalculated = true;
+
+            window.updateDisplay();
+            document.getElementById('calculator-modal').style.display = 'flex';
+        }
+
+        window.closeCalculator = function() {
+            document.getElementById('calculator-modal').style.display = 'none';
+            calculator.currentProductIndex = null;
+        }
+
+        window.updateDisplay = function() {
+            const display = document.getElementById('calc-display');
+            const history = document.getElementById('calc-history');
+            
+            const formattedDisplay = calculator.displayValue.length > 12 ? 
+                                     parseFloat(calculator.displayValue).toExponential(3) : 
+                                     calculator.displayValue;
+            
+            display.textContent = formattedDisplay;
+            history.textContent = calculator.fullExpression;
+
+            if(calculator.displayValue.length > 9) {
+                display.style.fontSize = '1.5rem';
+            } else {
+                display.style.fontSize = '2.25rem';
+            }
+        }
+        
+        window.clearCalculator = function(fullReset = true) {
+            calculator.displayValue = '0';
+            calculator.firstOperand = null;
+            calculator.waitingForSecondOperand = false;
+            calculator.operator = null;
+            calculator.isResultCalculated = false;
+            if (fullReset) {
+                 calculator.fullExpression = '0';
+            } else if (calculator.currentProductIndex !== null) {
+                calculator.fullExpression = inventoryData[calculator.currentProductIndex].history || '0';
+            }
+            window.updateDisplay();
+        }
+
+        window.backspaceCalculator = function() {
+            const { displayValue, fullExpression, waitingForSecondOperand } = calculator;
+            if (waitingForSecondOperand || calculator.isResultCalculated) return;
+
+            calculator.displayValue = displayValue.length === 1 ? '0' : displayValue.slice(0, -1);
+            
+            if (fullExpression.length > 0) {
+                 calculator.fullExpression = fullExpression.slice(0, -1).trim();
+            }
+            if (calculator.fullExpression.length === 0) {
+                 calculator.fullExpression = '0';
+            }
+            window.updateDisplay();
+        }
+        
+        window.calculate = function(firstOperand, secondOperand, operator) {
+            const num1 = parseFloat(firstOperand);
+            const num2 = parseFloat(secondOperand);
+            if (isNaN(num1) || isNaN(num2)) return secondOperand;
+
+            let result = 0;
+            if (operator === '+') result = num1 + num2;
+            else if (operator === '-') result = num1 - num2;
+            else if (operator === '*') result = num1 * num2;
+            else if (operator === '/') {
+                if (num2 === 0) return 0; 
+                result = num1 / num2;
+            }
+            return Math.round(result * 1000) / 1000;
+        }
+
+        window.inputDigit = function(digit) {
+            const { displayValue, waitingForSecondOperand, isResultCalculated, fullExpression } = calculator;
+
+            if (isResultCalculated) {
+                calculator.displayValue = digit === '.' ? '0.' : digit;
+                calculator.fullExpression = calculator.displayValue;
+                calculator.isResultCalculated = false;
+                calculator.firstOperand = null; 
+                calculator.operator = null;
+                calculator.waitingForSecondOperand = false; 
+            } else if (digit === '.') {
+                if (displayValue.includes('.')) return;
+                
+                if (waitingForSecondOperand) {
+                     calculator.displayValue = '0.';
+                     calculator.fullExpression = fullExpression.trim() + ' 0.';
+                     calculator.waitingForSecondOperand = false;
+                } else {
+                    calculator.displayValue = displayValue + digit;
+                    calculator.fullExpression += digit;
+                }
+            } else if (waitingForSecondOperand) {
+                calculator.displayValue = digit;
+                calculator.waitingForSecondOperand = false;
+                calculator.fullExpression = fullExpression.trim() + ' ' + digit;
+            } else {
+                if (displayValue === '0' && digit !== '0') {
+                    calculator.displayValue = digit;
+                    if (fullExpression === '0') {
+                         calculator.fullExpression = digit;
+                    } else if (fullExpression.endsWith('0') && fullExpression.length > 1) {
+                         const lastCharIndex = fullExpression.trim().length - 1;
+                         if (fullExpression.trim().charAt(lastCharIndex) === '0' && fullExpression.trim().length > 1) {
+                             calculator.fullExpression = fullExpression.slice(0, lastCharIndex) + digit;
+                         } else {
+                             calculator.fullExpression += digit;
+                         }
+                    } else {
+                        calculator.fullExpression += digit;
+                    }
+                } else if (displayValue === '0' && digit === '0') {
+                    return; 
+                } else {
+                    calculator.displayValue = displayValue + digit;
+                    calculator.fullExpression += digit;
+                }
+            }
+            window.updateDisplay();
+        }
+
+        window.handleOperator = function(nextOperator) {
+            const { firstOperand, displayValue, operator, waitingForSecondOperand, isResultCalculated, fullExpression } = calculator;
+            const inputValue = parseFloat(displayValue);
+
+            if (isResultCalculated) {
+                if (nextOperator === '=') return; 
+                calculator.fullExpression = fullExpression.trim() + ` ${nextOperator} `;
+                calculator.firstOperand = inputValue;
+                calculator.operator = nextOperator;
+                calculator.waitingForSecondOperand = true;
+                calculator.isResultCalculated = false;
+                window.updateDisplay();
+                return;
+            }
+            if (waitingForSecondOperand && nextOperator !== '=') {
+                calculator.fullExpression = fullExpression.slice(0, -2).trim() + ` ${nextOperator} `;
+                calculator.operator = nextOperator;
+                window.updateDisplay();
+                return; 
+            }
+            if (nextOperator === '=') {
+                if (operator === null) return;
+                const secondOperand = waitingForSecondOperand ? firstOperand : inputValue;
+                const result = window.calculate(firstOperand, secondOperand, operator);
+                calculator.displayValue = String(result);
+                calculator.firstOperand = result;
+                calculator.operator = null; 
+                calculator.waitingForSecondOperand = false;
+                if (waitingForSecondOperand) {
+                    calculator.fullExpression += `${secondOperand} = ${result}`;
+                } else {
+                    calculator.fullExpression += ` = ${result}`;
+                }
+                calculator.isResultCalculated = true;
+                window.updateDisplay();
+                return;
+            }
+            if (firstOperand !== null && operator) {
+                const result = window.calculate(firstOperand, inputValue, operator);
+                calculator.displayValue = String(result);
+                calculator.firstOperand = result; 
+            } else if (firstOperand === null) {
+                calculator.firstOperand = inputValue;
+            }
+            calculator.waitingForSecondOperand = true;
+            calculator.operator = nextOperator;
+            calculator.isResultCalculated = false;
+            calculator.fullExpression += ` ${nextOperator} `; 
+            window.updateDisplay();
+        }
+
+        window.saveAndClose = function() {
+            if (calculator.currentProductIndex === null) {
+                window.closeCalculator();
+                return;
+            }
+            if (calculator.operator && !calculator.waitingForSecondOperand) {
+                 window.handleOperator('=');
+            } else if (calculator.operator && calculator.waitingForSecondOperand) {
+                 window.handleOperator('=');
+            }
+
+            const finalValue = parseFloat(calculator.displayValue);
+            let finalHistory = calculator.fullExpression;
+
+            if (finalValue >= 0 && !isNaN(finalValue)) {
+                inventoryData[calculator.currentProductIndex].quantity = finalValue;
+                inventoryData[calculator.currentProductIndex].history = finalHistory;
+            } else {
+                inventoryData[calculator.currentProductIndex].quantity = 0;
+                inventoryData[calculator.currentProductIndex].history = "0";
+            }
+            window.saveInventoryData();
+            window.closeCalculator();
+        }
+        
+        // --- MODALES ---
+        window.openResetModal = function() { document.getElementById('reset-modal').style.display = 'flex'; }
+        window.closeResetModal = function() { document.getElementById('reset-modal').style.display = 'none'; }
+
+        // --- EXPORTAR EXCEL (.XLSX) ---
+        window.downloadExcel = function() {
+            const r1 = document.getElementById('responsable-1').value.trim();
+            const r2 = document.getElementById('responsable-2').value.trim();
+            const r3 = document.getElementById('responsable-3').value.trim();
+            const r4 = document.getElementById('responsable-4').value.trim();
+            const date = document.getElementById('report-date').textContent;
+            
+            // Construir texto de Equipo 1 (Resp 1 y 2) para el reporte interno
+            const team1Names = [r1, r2].filter(n => n && n !== "SIN NOMBRE" && n !== "");
+            const team1Text = team1Names.length > 0 ? team1Names.join(" / ").toUpperCase() : "SIN ASIGNAR";
+
+            // Construir nombre para el ARCHIVO basado en Equipo 1 (Sanitizado: espacios -> guiones bajos)
+            const team1FileSuffix = team1Names.length > 0 
+                                    ? "_" + team1Names.join("-").toUpperCase().replace(/[^A-Z0-9\-]/g, '_') 
+                                    : "";
+
+            // Construir texto de Equipo 2 (Resp 3 y 4)
+            const team2Names = [r3, r4].filter(n => n && n !== "SIN NOMBRE" && n !== "");
+            const team2Text = team2Names.length > 0 ? team2Names.join(" / ").toUpperCase() : "SIN ASIGNAR";
+
+            // 1. Crear matriz de datos para Excel
+            const ws_data = [
+                ["Inventario F.E", "CECOSESOLA R.L J085030140"],
+                ["PASILLO", "CAFE - FERIA DEL ESTE"],
+                ["FECHA", date],
+                ["RESPONSABLES 1:", team1Text],
+                ["RESPONSABLES 2:", team2Text],
+                [], // Fila vacía
+                ["ESTADO", "PRODUCTO", "HISTORIAL", "CANTIDAD"] 
+            ];
+
+            // 2. Agregar los datos del inventario con su estado
+            inventoryData.forEach(item => {
+                let estadoTexto = "PENDIENTE";
+                if(item.status === 'ok') estadoTexto = "CORRECTO";
+                if(item.status === 'error') estadoTexto = "DIFERENCIA";
+
+                ws_data.push([
+                    estadoTexto,
+                    item.name,
+                    item.history || "0",
+                    parseFloat(item.quantity)
+                ]);
+            });
+
+            // 3. Crear hoja de trabajo y libro
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Inventario Cafe");
+
+            ws['!cols'] = [
+                { wch: 15 }, // Estado
+                { wch: 40 }, // Producto
+                { wch: 30 }, // Historial
+                { wch: 15 }  // Cantidad
+            ];
+
+            // Nombre del archivo modificado para incluir el Equipo 1
+            const fileName = `Inventario_Cafe${team1FileSuffix}_${date.replace(/\//g, '-')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // --- CAMBIO DE TEMA ---
+        window.toggleTheme = function() {
+            const isLight = document.body.classList.toggle('light-theme');
+            document.getElementById('moon-icon').classList.toggle('hidden', isLight);
+            document.getElementById('sun-icon').classList.toggle('hidden', !isLight);
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+             const savedTheme = localStorage.getItem('theme');
+             if (savedTheme === 'light') {
+                 document.body.classList.add('light-theme');
+                 if(document.getElementById('sun-icon')) document.getElementById('sun-icon').classList.remove('hidden');
+                 if(document.getElementById('moon-icon')) document.getElementById('moon-icon').classList.add('hidden');
+             } else {
+                 if(document.getElementById('sun-icon')) document.getElementById('sun-icon').classList.add('hidden');
+                 if(document.getElementById('moon-icon')) document.getElementById('moon-icon').classList.remove('hidden');
+             }
+        });
+        
+    </script>
+</body>
+</html>
+
