@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cecosesola | Inventario | Feria del Este</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; 
+            color: #c9d1d9; 
+            overflow-x: hidden;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+
+        .gradient-text {
+            background-image: linear-gradient(90deg, #58a6ff 0%, #bc8cff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* --- Estilos Login --- */
+        #login-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(13, 17, 23, 0.98);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .login-card {
+            background: linear-gradient(145deg, #161b22, #0d1117);
+            border: 1px solid #30363d;
+            box-shadow: 0 0 50px rgba(88, 166, 255, 0.15);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            width: 95%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        /* Buscador de nombres */
+        .select-container {
+            position: relative;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+
+        .input-field {
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            color: white;
+            padding: 0.85rem 1rem;
+            border-radius: 0.75rem;
+            width: 100%;
+            outline: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .input-field:focus {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+        }
+
+        #name-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 0.75rem;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1100;
+            margin-top: 5px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .name-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #21262d;
+            font-size: 0.85rem;
+            color: #8b949e;
+            transition: background 0.2s;
+        }
+
+        .name-item:hover {
+            background-color: #1f242c;
+            color: #58a6ff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #238636, #2ea043);
+            color: white;
+            font-weight: bold;
+            padding: 0.85rem 2rem;
+            border-radius: 0.75rem;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 160, 67, 0.4);
+        }
+
+        /* Custom Scrollbar */
+        #name-list::-webkit-scrollbar { width: 6px; }
+        #name-list::-webkit-scrollbar-track { background: #0d1117; }
+        #name-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+
+        /* --- Estilos Mapa y Nodos --- */
+        .aisle-node {
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(188, 140, 255, 0.1);
+            border: 1px solid #30363d;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 120px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background-color: #0d1117;
+            border-radius: 0.75rem;
+        }
+
+        .aisle-node:hover {
+            transform: scale(1.03);
+            border-color: transparent;
+            background-color: #161b22;
+        }
+        
+        .aisle-node > div {
+            position: relative;
+            z-index: 12;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes rotate-border {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes neon-glow {
+            0% { box-shadow: 0 0 5px #58a6ff, 0 0 10px #58a6ff, 0 0 20px #bc8cff; opacity: 0.9; }
+            100% { box-shadow: 0 0 10px #bc8cff, 0 0 20px #bc8cff, 0 0 40px #58a6ff; opacity: 1; }
+        }
+
+        .aisle-node::before {
+            content: '';
+            position: absolute;
+            width: 200%; height: 200%;
+            top: -50%; left: -50%;
+            background: conic-gradient(from 0deg at 50% 50%, #FF00D4 0%, #00CCFF 25%, #FF00D4 50%, #00CCFF 75%, #FF00D4 100%);
+            animation: rotate-border 4s linear infinite;
+            z-index: 11;
+        }
+
+        .aisle-node::after {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px; right: 3px; bottom: 3px;
+            background-color: #0d1117;
+            border-radius: 0.75rem;
+            z-index: 11;
+        }
+
+        .aisle-node:hover { animation: neon-glow 1.5s ease-in-out infinite alternate; }
+
+        #central-node { background-color: #161b22; height: 150px; animation: neon-glow 2s ease-in-out infinite alternate; }
+        #central-node::after { background-color: #161b22; }
+
+        .map-container {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+            padding: 3rem 1rem;
+        }
+
+        .svg-connections {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .flow-line {
+            stroke: rgba(88, 166, 255, 0.4);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        @media (max-width: 768px) {
+            .map-container { grid-template-columns: 1fr 1fr; gap: 15px; }
+            #central-node-container { grid-column: 1 / 3; }
+            .aisle-node { height: 90px; }
+        }
+
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h2 class="text-3xl font-bold text-white mb-2">Compañeros</h2>
+            <p class="text-gray-400 text-sm mb-4">Seleccione su nombre para ingresar</p>
+            
+            <form onsubmit="handleLogin(event)">
+                <div class="select-container">
+                    <input type="text" id="search-input" class="input-field" placeholder="Buscar compañero..." autocomplete="off">
+                    <div id="name-list" class="hidden">
+                        <!-- Nombres inyectados por JS -->
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    INGRESAR AL MAPA
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Encabezado Fijo -->
+    <header class="text-center mb-10">
+        <div id="welcome-message" class="hidden text-xs md:text-sm text-indigo-400 font-bold mb-1 tracking-[0.2em] uppercase bg-indigo-900/20 py-1 px-4 inline-block rounded-full border border-indigo-500/30">
+            <!-- Nombre seleccionado aparecerá aquí -->
+        </div>
+
+        <h1 class="text-4xl md:text-6xl font-black tracking-tighter mt-4">
+            <span class="gradient-text">Cecosesola</span>
+        </h1>
+        <p class="text-lg text-gray-500 font-medium">FERIA DEL ESTE | INVENTARIO</p>
+    </header>
+
+    <main id="app-container" class="max-w-7xl mx-auto">
+        <section id="map-view" class="map-container">
+            <svg id="connection-lines" class="svg-connections" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg>
+
+            <div id="central-node-container" class="col-span-4 flex justify-center mb-8">
+                <div id="central-node" class="aisle-node rounded-xl cursor-default w-full max-w-xl">
+                    <div>
+                        <h3 class="font-bold text-white text-xl md:text-3xl tracking-widest">MAPA DE INVENTARIO</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedores de pasillos (JS los llena) -->
+            <div id="aisle-1-container"></div> <div id="aisle-2-container"></div>
+            <div id="aisle-3-container"></div> <div id="aisle-4-container"></div>
+            <div id="aisle-5-container"></div> <div id="aisle-6-container"></div>
+            <div id="aisle-7-container"></div> <div id="aisle-8-container"></div>
+            <div id="aisle-9-container"></div> <div id="aisle-10-container"></div>
+            <div id="aisle-11-container"></div> <div id="aisle-12-container"></div>
+
+            <div id="deposito-abajo-container" class="col-span-2 mt-4">
+                <div id="deposito-abajo-node" class="aisle-node cursor-pointer" onclick="navigateToDepot('abajo')">
+                    <div class="flex flex-col">
+                        <span class="text-2xl mb-1">👇</span>
+                        <h3 class="font-bold text-white uppercase text-sm">Depósito Abajo</h3>
+                    </div>
+                </div>
+            </div>
+            <div id="deposito-arriba-container" class="col-span-2 mt-4">
+                <div id="deposito-arriba-node" class="aisle-node cursor-pointer" onclick="navigateToDepot('arriba')">
+                    <div class="flex flex-col">
+                        <span class="text-2xl mb-1">👆</span>
+                        <h3 class="font-bold text-white uppercase text-sm">Depósito Arriba</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // --- LISTA DE COMPAÑEROS ---
+        const companions = [
+            "AGUILAR MORENO LEYLA LIZETH", "ALMAO BARRERA YOHANNA BETZABE", "ALVARADO DURAN JOSE DANIEL", "ALVARADO NERWIN ANTONIO",
+            "ALVARADO RODRIGUEZ ROSA ELENA", "ALVAREZ CRESPO MEURYS DEL ROSARIO", "ALVAREZ DE MORILLO JUANA ELISA", "ANGULO GALLARDO JOSE MOISES",
+            "APONCIO SUAREZ JONNAYKER ENRIQUE", "APONCIO SUAREZ JORGELYS ANNERYS", "ARANGURE TORREALBA YEFERSON DANIEL", "ARANQUE PEREZ FELIX DANIEL",
+            "ARAUJO RIVERO OMAR ALBERTO", "BARRETO LOPEZ DASCHA MARYEILY", "BARRETO LOPEZ ESTREILI KATIUSKA", "BETANCOURT ANTIQUE LUIS CARLOS",
+            "BORJAS LOYO GRICENY CAROLINA", "BRAVO ANGULO YOLBER RAMON", "CAMACARO ALVAREZ EDUARDO LUIS", "CAMERO CAMACHO MARIAXIS",
+            "CAMERO CAMACHO SANTIAGO JOSE", "CAMERO NELO JAVIER DE JESUS", "CAMERO NELO JOSE GREGORIO", "CAMERO NELO YORDANO RAFAEL",
+            "CARRILLO OMAIRA DEL CARMEN", "CASTILLO VASQUEZ ANTONY ERIBERTH", "CHARACO LINARES RICHARD DANIEL", "COLMENARES PALACIOS DANIELA ALEJANDRA",
+            "COLMENAREZ LUCENA SABINA DEL CARMEN", "COLMENAREZ PEROZO JOSE MANUEL", "CORDERO ALVAREZ MINERVA PASTORA", "CORDERO JHONNY ANTONIO",
+            "CORDERO PIÑANGO GREYMARI", "CORDOVA JOSE RAFAEL", "DAZA ARIAS MARIA DANIELA", "DE LEON LOPEZ DIAGNERY STHELA",
+            "DELGADO COLMENAREZ WILIMAR JOSE", "DELGADO ELIAS MANUEL ANTONIO", "DELGADO ROMERO LIZETH KARINA", "DIAZ SUAREZ KELUHY ELIASIB",
+            "DOMINGUEZ TORRELBA ADELYS ALEXANDER", "DURAN COLMENAREZ CARLOS ALEJANDRO", "DURAN DE PARADA CARMEN LIJIA", "DURAN PEREZ ROSA ALVIRA",
+            "ESCALONA GLENDA CAROLINA", "ESCALONA PERERA ANA PASTORA", "ESCOBAR BRACHO JESUS ANTONIO", "ESCOBAR YOLEIDA PASTORA",
+            "FERNANDEZ FERNANDEZ FRANYE", "GAMBOA SANCHEZ CRISTIAN EDUARDO", "GARCIA GONZALEZ LUIS ALFONSO", "GARCIA MENDOZA JHONNIER JOSE",
+            "GARCIA RODRIGUEZ SAMUEL JOSE", "GARRIDO PEREZ MARIBEL DEL CARMEN", "GIL RODRIGUEZ WILMER ALEJANDRO", "GOLLO MEDINA PABLO DAVID",
+            "GOMEZ VALE ANGIE PAOLA", "GONZALEZ RODRIGUEZ YASGREINY GABRIELA", "GOYO SONIA BEATRIZ", "GUEDEZ RODRIGUEZ JACKELINE DEL CARMEN",
+            "GUEVARA ROJAS JERAIN COROMOTO", "GUTIERREZ ANGULO DANNY JOSE", "HERRERA GOYO JOSE GREGORIO", "HERNANDEZ HERNANDEZ LEODANNY JOSE",
+            "HERNANDEZ RODRIGUEZ GAUDY DEL CARMEN", "IZARRA VIANA ERISBEL YOHANA", "JIMENEZ LUCENA CESAR DANIEL", "JIMENEZ MEDINA RONNY ALBERTO",
+            "LANZAETA LOYO ANGELES DEL CARMEN", "LINAREZ GONZALEZ DILDIANA", "LINAREZ RONCEL SUYIN NAYIBETH", "LOPEZ VALERO ROSY CAROLINA",
+            "MARCHAN MARCHAN ELIECER JOSUE", "MARCHAN MARCHAN ELIZAUL ELIAS", "MARCHAN OVIEDO HEILYN FABIOLA", "MARCHAN SIRA MARIANO EDUARD",
+            "MARTINES TORRELAS LUIS DANIEL", "MEDINA LEAL JOSUE ENMANUIL", "MEDINA NIXON GREGORIO", "MEDIOMUNDO EDUARDO ENRIQUE",
+            "MELENDEZ PIÑA YOTXER DAVID", "MENDOZA GIL NAYGEL COROMOTO", "MENDOZA PEREZ ANDREA VALENTINA", "MENDOZA PEREZ ELIAS RAFAEL",
+            "MENDOZA SANCHEZ DANIERTH ANTONIO", "MERCADO GIMENEZ KEIBER ANTONIO", "MERCADO GIMENEZ YOMNATHAN", "MOGOLON CASTRO PUBLIO RAMON",
+            "MONTILLA ANGULO VICTOR MANUEL", "MONTILLA ESPINOZA DOUGLAS ALEJANDRO", "MORALES APOSTOL BRAYAN ADOLFO", "MORENO ESLY ANTONIO",
+            "MORILLO OLARTE JOSE MIGUEL", "NAVAS MARAPATE DIEGO JOSE", "NELO EMILIO ANTONIO", "NELO LOPEZ CESAR ANTONIO",
+            "PADRON RODRIGUEZ BRANDO ALEXANDER", "PALACIOS PEREZ MILAGRO DEL CARMEN", "PARADAS ROJAS FRIGOBERTO", "PERAZA VAZQUEZ JOSE ARMANDO",
+            "PEREIRA RODRIGUEZ ADRIANNY", "PEREZ ALMAO ALEXIS JOSÉ", "PEREZ GRATEROL DANIEL JAVIER", "PEREZ GRATEROL MARIEL ALEJANDRO",
+            "PEREZ OLIVERA ANDY DE JESUS YALIS", "PETTAQUERO RODRIGUEZ DIANA CAROLINA", "PINEDA SOTO LINDA COROMOTO", "PIÑA FUENTES EMILY RAICELYS",
+            "QUERALES COLMENAREZ JOSÉ MOISES", "QUIJADA LUBIANEZTA JANETH DEL CARMEN", "RAMOS SALERO GERSON ELIEZER", "RAMOS SALERO JOSUE ELIUD",
+            "RIOS PALACIOS EYKARIS MILANYERITH", "RODRIGUEZ RODRIGUEZ NERLINAR JOSÉ", "RODRIGUEZ ALVARADO NERLINAR COROMOTO", "RODRIGUEZ ALVARADO NERCY PASTORA",
+            "RODRIGUEZ ALVARADO DILEXI JOSÉ", "RODRIGUEZ ALVAREZ DINEIXIS JOSEFINA", "RODRIGUEZ CAMACARO HENRY RAMON", "RODRIGUEZ GONZALEZ ALEXANDER OLIVER",
+            "RODRIGUEZ SUAREZ ISMAEL ANTONIO", "RODRIGUEZ LOPEZ MARIELIS ALEXELIS", "RODRIGUEZ MORENO ABISAI DAVID", "RODRIGUEZ PIRE JOSSEANNYS YOHANDRELIS",
+            "RODRIGUEZ RAMOS DARNYD TAHITI", "RODRIGUEZ ROJAS WILMER ANTONIO", "ROJAS RANGEL JHONNAR ANDRE ZAIAS", "ROJAS RANGEL YOSBELYS LILIANA",
+            "ROJAS VARGAS JIMMY SEGUNDO", "ROJAS YEPEZ JIMMY JOSE (HIJO)", "ROMERO CAMACARO EVA PATRICIA", "ROMERO URBINA YER JAVIER",
+            "ROMERO URBINA RONALD EFRAIN", "SALAS CALDERA FRANCISCO JOSÉ", "SANCHEZ PEÑA JUAN DOMINGO", "SANCHEZ REYES SOL EDUARDO",
+            "SANTANA ANGULO JOSÉ ÁNGEL", "SEQUERA VILLALOBOS MONICA ELISENA", "SILVA PERAZA WILDER ALEXANDER", "SIRA SÁNCHEZ LEYDA MACRINA",
+            "SUAREZ PEDROMO YEFERSON JUANNERYS", "SUAREZ PINEDA JORGE AURELIO", "SUAREZ YETZABETH PATRICIA", "TIMAURE GUEDEZ JONIER SKEN",
+            "TIMAURE TORRES NORMARIS YANETH", "TORREALBA AZUAJE DOMINGO ANTONIO", "TORREALBA SUAREZ OMARLYS PASTORA", "TORRES MEDINA ANDERSON JOSÉ",
+            "TORRES DE CALLES MARY LUZ", "TORRES MELENDEZ LUIMAR VANESSA", "TORRES MELENDEZ LISIMAR VANESSA", "TOVAR VÁSQUEZ FRANYIMAR PASTORA",
+            "VALDERRAMA ROJAS YENNY ORIANA", "VALERO GARCIA RAIMON JOSÉ", "VALLES MONTERO CARLOS ALCIDES", "VARGAS CAMACARO LIZETH CAROLINA",
+            "VARGAS CECILIO RAMÓN", "VASQUEZ GONZALEZ JOSE RAFAEL", "VASQUEZ VARGAS NAYIBE PASTORA", "VILLANUEVA MAGALY JOSEFINA",
+            "VILORIA GOMEZ FRANCISCO JAVIER", "ZAMBRANO MORENO MIGUEL ANGEL", "MEDINA VALDERRAMA EVELIN NATHALY", "ROJAS CAMERO ARANXA DEL CARMEN",
+            "ANGULO GARCES EMELYN MOISELYN", "CASTAÑEDA ORELLANA ISNAILY DEL CARMEN", "SAHAVEDRA VARGAS ROBERTH JOSE", "PUERTA MANZANO JOHAN JAVIER",
+            "MUJICA URBINA FERNANDO ANTONIO", "SANTORO ANGULO GIANFRANCO", "SOTO ALEXANDER", "PERAZA SANCHEZ ROSELYN PASTORA",
+            "TORREZ COLMENAREZ ISAMAR BEATRIZ", "CAMACHO GUEDEZ JESUS DANIEL", "CASTRO LAGUNA GREIMAR DUSLEYVIS", "MEDINA DE PEREZ CARMEN COROMOTO",
+            "MARQUEZ YEPEZ WILMER RAFAEL", "CASTILLO PERALTA KLEIBER ADRIAN", "GUANIPA GONZALEZ VANESSA DEL CARMEN", 
+            "LINAREZ RIVERO JEISON JOSE TORREALBA LEAL JESUS HUMBERTO","VARGAS BETANCOURT FRANKLIN ORLANDO", "SOTO GARCIA ANTONIO JOSE", "PIÑA RODRIGUEZ JESUS DAVID","DURAN COLMENAREZ THAIS VANESA", "SALAS PETAQUERO DARWIN JOSE",  
+            "ANGULO PEREZ JOSE DANIEL", "VEGA DOMOROMO ENYER JOSE","GIL BOCOURT VILMARI COROMOTO", "BRAVO BARRADA YOELYS FABIOLA"," BARRETO MENDOZA ERICK SANTIAGO",
+            "GARCIA SEGUERI RUBEN ALFONSO","HECTOR MARIN","JOSUE ALVAREZ","ANA VALERO ESCOBAR", "YOEL LINAREZ","GOMEZ ANGELIS",
+            "RODRIGUEZ NAIBETH","RAMOS MONTILLA SEBASTIAN","HANDERSON PEREZ","PEREZ GIMENEZ RUBEN JAVIER","JESUS DURAN", "LISBEMAR RODRIGUEZ",
+            "ZAVIER MENDOZA","CINTIA OLMO"
+        ];
+
+        // --- Lógica del Buscador ---
+        const searchInput = document.getElementById('search-input');
+        const nameList = document.getElementById('name-list');
+        const loginScreen = document.getElementById('login-screen');
+        const welcomeMessage = document.getElementById('welcome-message');
+
+        function filterNames(query) {
+            const filtered = companions.filter(name => name.toLowerCase().includes(query.toLowerCase()));
+            renderNames(filtered);
+        }
+
+        function renderNames(list) {
+            nameList.innerHTML = '';
+            if (list.length === 0) {
+                nameList.classList.add('hidden');
+                return;
+            }
+            list.forEach(name => {
+                const div = document.createElement('div');
+                div.className = 'name-item';
+                div.textContent = name;
+                div.onclick = () => selectName(name);
+                nameList.appendChild(div);
+            });
+            nameList.classList.remove('hidden');
+        }
+
+        function selectName(name) {
+            searchInput.value = name;
+            nameList.classList.add('hidden');
+        }
+
+        searchInput.addEventListener('input', (e) => filterNames(e.target.value));
+        searchInput.addEventListener('focus', () => renderNames(companions));
+
+        // Cerrar lista al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.select-container')) nameList.classList.add('hidden');
+        });
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const name = searchInput.value;
+            if (companions.includes(name)) {
+                setUserName(name);
+                localStorage.setItem('cecosesolaUser', name);
+            } else {
+                alert("Por favor seleccione un nombre válido de la lista.");
+            }
+        }
+
+        function setUserName(name) {
+            loginScreen.style.opacity = '0';
+            setTimeout(() => loginScreen.classList.add('hidden'), 500);
+            welcomeMessage.textContent = `COMPAÑERO: ${name}`;
+            welcomeMessage.classList.remove('hidden');
+        }
+
+        // --- Lógica del Mapa ---
+        const aisles = [
+            { id: 1, name: 'PASILLO 1' }, { id: 2, name: 'PASILLO 2' },
+            { id: 3, name: 'PASILLO 3' }, { id: 4, name: 'PASILLO 4' },
+            { id: 5, name: 'PASILLO 5' }, { id: 6, name: 'PASILLO 6' },
+            { id: 7, name: 'PASILLO 7' }, { id: 8, name: 'PASILLO 8' },
+            { id: 9, name: 'PASILLO GRANOS' }, { id: 10, name: 'CAVA CUARTO' },
+            { id: 11, name: 'PASILLO ARRIBA 1-3' }, { id: 12, name: 'PASILLO ARRIBA 4-6' },
+        ];
+
+        function renderAisles() {
+            aisles.forEach(aisle => {
+                const container = document.getElementById(`aisle-${aisle.id}-container`);
+                if (container) {
+                    container.innerHTML = `
+                        <div id="aisle-${aisle.id}-node" class="aisle-node cursor-pointer" onclick="navigateToAisle(${aisle.id})">
+                            <div class="flex flex-col items-center">
+                                <span class="text-xl font-black gradient-text mb-1">${aisle.id}</span>
+                                <h3 class="text-[10px] md:text-xs font-bold text-white uppercase tracking-tighter">${aisle.name}</h3>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function getCenter(id) {
+            const element = document.getElementById(id);
+            if (!element) return null;
+            const mapContainer = document.getElementById('map-view');
+            const mapRect = mapContainer.getBoundingClientRect();
+            const rect = element.getBoundingClientRect();
+            return {
+                x: ((rect.left + rect.width / 2 - mapRect.left) / mapRect.width) * 1000,
+                y: ((rect.top + rect.height / 2 - mapRect.top) / mapRect.height) * 1000
+            };
+        }
+
+        function drawConnections() {
+            const central = getCenter('central-node');
+            if (!central) return;
+            let paths = '';
+            for (let i = 1; i <= 12; i++) {
+                const node = getCenter(`aisle-${i}-node`);
+                if (node) {
+                    paths += `<path class="flow-line" d="M ${central.x} ${central.y} L ${node.x} ${node.y}"/>`;
+                }
+            }
+            document.getElementById('connection-lines').innerHTML = paths;
+        }
+
+        function navigateToAisle(id) { window.location.href = `pasillo-${id}.html`; }
+        function navigateToDepot(type) { window.location.href = `deposito-${type}.html`; }
+
+        window.onload = () => {
+            renderAisles();
+            setTimeout(drawConnections, 100);
+            const saved = localStorage.getItem('cecosesolaUser');
+            if (saved) setUserName(saved);
+        };
+        window.onresize = drawConnections;
+    </script>
+</body>
+</html>
