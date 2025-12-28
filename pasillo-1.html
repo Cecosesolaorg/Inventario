@@ -25,12 +25,23 @@
             background-color: #0d0d0d;
             color: #e5e7eb;
             transition: background-color 0.3s, color 0.3s;
+            /* Evitar comportamientos por defecto en móviles al mantener presionado */
+            -webkit-touch-callout: none;
         }
 
         /* Utilidades */
         input[type="number"] { -moz-appearance: textfield; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         
+        /* Ocultar barras de desplazamiento (Scrollbar Hide) */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.85); display: none;
@@ -76,6 +87,13 @@
             border-right: 1px solid #374151;
             cursor: pointer; /* Indicar que es clickeable para el checklist */
             user-select: none; /* Evitar selección de texto al hacer clic rápido */
+            -webkit-user-select: none; /* Safari */
+            touch-action: manipulation;
+        }
+        
+        /* Animación suave al presionar */
+        .product-cell:active {
+            background-color: rgba(34, 211, 238, 0.1);
         }
 
         .qty-cell {
@@ -119,6 +137,9 @@
         /* Inputs y Footer Claro */
         .light-theme input[type="text"] { background-color: #ffffff; border-color: #94a3b8; color: #0f172a; }
         .light-theme .footer-container { background-color: #e2e8f0; border-color: #94a3b8; }
+        
+        /* Labels para los equipos en footer claro */
+        .light-theme .team-label-bg { background-color: #e2e8f0; }
     </style>
 </head>
 <body class="p-2 md:p-6 min-h-screen">
@@ -134,79 +155,114 @@
                 </div>
                 
                 <!-- Fila 2: PASILLO Y RESPONSABLES -->
-                <div class="flex flex-col md:flex-row justify-between items-start">
-                    <div class="mb-2 md:mb-0">
+                <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                    <div class="mb-2 md:mb-0 flex-1">
                         <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase"> PASILLO PASTAS </h2>
                         <h3 class="text-lg font-bold text-gray-300 light-theme:text-gray-600">FERIA DEL ESTE</h3>
                     </div>
                     
-                    <div class="text-sm w-full md:w-auto bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 grid grid-cols-1 gap-1">
-                        <p class="text-gray-400 light-theme:text-gray-500">RESP 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
-                        <p class="text-gray-400 light-theme:text-gray-500">RESP 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
-                        <p class="text-gray-400 light-theme:text-gray-500">RESP 3: <span id="resp3-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
-                        <p class="text-gray-400 light-theme:text-gray-500">RESP 4: <span id="resp4-display" class="font-semibold text-white light-theme:text-gray-800 uppercase">SIN NOMBRE</span></p>
+                    <!-- Contenedor de Equipos Separados -->
+                    <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                        <!-- EQUIPO 1 (ROJO) -->
+                        <div class="text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-red-500 pl-3 flex-1 min-w-[140px]">
+                            <p class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-wider">Equipo 1</p>
+                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
+                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
+                        </div>
+                        
+                        <!-- EQUIPO 2 (VERDE) -->
+                        <div class="text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-green-500 pl-3 flex-1 min-w-[140px]">
+                            <p class="text-[10px] text-green-400 font-bold mb-1 uppercase tracking-wider">Equipo 2</p>
+                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 3: <span id="resp3-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
+                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 4: <span id="resp4-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Botones de Acción -->
-            <div class="flex justify-end space-x-3 items-center sticky top-2 z-10 bg-gray-900/90 p-2 rounded-xl backdrop-blur-sm light-theme:bg-white/90">
-                <div class="flex space-x-3">
-                    <button 
-                        id="toggle-theme-btn"
-                        onclick="toggleTheme()"
-                        class="p-2 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200 border border-transparent hover:border-gray-600 light-theme:hover:bg-blue-100 light-theme:text-blue-600"
-                        aria-label="Cambiar tema"
-                    >
-                        <!-- Luna -->
-                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12.001 12.001 0 0012 21a12.001 12.001 0 008.354-5.646z" />
+            <!-- Barra de Búsqueda y Botones de Acción (STICKY) -->
+            <div class="sticky top-2 z-20 bg-gray-900/95 p-3 rounded-xl backdrop-blur-md shadow-2xl border border-gray-700/50 light-theme:bg-white/95 light-theme:border-gray-200 transition-all mb-4">
+                
+                <!-- Barra de Búsqueda -->
+                <div class="mb-3 relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 light-theme:text-gray-400 light-theme:group-focus-within:text-blue-500 transition-colors" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                         </svg>
-                        <!-- Sol -->
-                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </button>
-
-                    <!-- Botón Reset (Borrar Todo) -->
-                    <button 
-                        onclick="openResetModal()"
-                        class="bg-red-600/80 hover:bg-red-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95"
-                        title="Borrar todos los datos y empezar de nuevo"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
+                    </div>
+                    <input type="text" id="search-filter" 
+                        class="block w-full pl-10 pr-10 p-2.5 rounded-lg border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all light-theme:bg-gray-50 light-theme:border-gray-300 light-theme:text-gray-900 light-theme:focus:ring-blue-500 text-sm md:text-base shadow-inner" 
+                        placeholder="🔍 Escribe para buscar producto..." 
+                        autocomplete="off"
+                        oninput="applyFilter(this.value)">
                     
-                     <!-- Botón Agregar Producto -->
-                     <button 
-                     onclick="openAddProductModal()"
-                     class="bg-purple-600 hover:bg-purple-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95 font-bold flex items-center"
-                     title="Agregar un producto nuevo a la lista"
-                 >
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                     </svg>
-                     <span class="hidden md:inline">Agregar</span>
-                 </button>
-
-                    <button 
-                        onclick="downloadExcel()"
-                        class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm md:text-base"
-                        title="Descargar datos en formato Excel (.xlsx)"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    <!-- Botón limpiar (X) -->
+                    <button id="clear-search-btn" onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden text-gray-500 hover:text-white light-theme:hover:text-red-500 transition-colors cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                         </svg>
-                        Descargar Excel
                     </button>
+                </div>
+
+                <div class="flex justify-end space-x-3 items-center">
+                    <!-- SE AGREGÓ 'no-scrollbar' AQUÍ PARA OCULTAR LA BARRA -->
+                    <div class="flex space-x-2 md:space-x-3 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto justify-end no-scrollbar">
+                        <button 
+                            id="toggle-theme-btn"
+                            onclick="toggleTheme()"
+                            class="p-2 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200 border border-transparent hover:border-gray-600 light-theme:hover:bg-blue-100 light-theme:text-blue-600 flex-shrink-0"
+                            aria-label="Cambiar tema"
+                        >
+                            <!-- Luna -->
+                            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12.001 12.001 0 0012 21a12.001 12.001 0 008.354-5.646z" />
+                            </svg>
+                            <!-- Sol -->
+                            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </button>
+
+                        <!-- Botón Reset (Borrar Todo) -->
+                        <button 
+                            onclick="openResetModal()"
+                            class="bg-red-600/80 hover:bg-red-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95 flex-shrink-0"
+                            title="Borrar todos los datos y empezar de nuevo"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                        
+                        <!-- Botón Agregar Producto -->
+                        <button 
+                        onclick="openAddProductModal()"
+                        class="bg-purple-600 hover:bg-purple-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95 font-bold flex items-center flex-shrink-0"
+                        title="Agregar un producto nuevo a la lista"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span class="hidden md:inline">Agregar</span>
+                    </button>
+
+                        <button 
+                            onclick="downloadExcel()"
+                            class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm md:text-base flex-shrink-0"
+                            title="Descargar datos en formato Excel (.xlsx)"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            Descargar
+                        </button>
+                    </div>
                 </div>
             </div>
         </header>
 
         <!-- Tabla de Inventario -->
-        <div class="mt-4 overflow-x-auto">
+        <div class="mt-4 overflow-x-auto no-scrollbar"> <!-- TAMBIÉN OCULTA EN LA TABLA POR SI ACASO -->
             <table id="inventory-table">
                 <thead>
                     <tr>
@@ -222,35 +278,50 @@
 
         <!-- Footer / Resumen -->
         <footer class="mt-8 pt-6 border-t-4 border-cyan-600 bg-gray-800 rounded-lg p-4 shadow-xl footer-container transition-colors">
-            <div class="flex flex-col sm:flex-row items-start sm:items-stretch justify-between gap-6">
+            <div class="flex flex-col sm:flex-row items-start justify-between gap-6">
                 
                 <!-- Contador -->
-                <div class="w-full sm:w-1/2 flex flex-col"> 
+                <div class="w-full sm:w-1/3 flex flex-col"> 
                     <p class="text-lg font-bold text-cyan-400 mb-2 accent-text uppercase">CANTIDAD DE PRODUCTOS :</p>
-                    <div class="flex-grow bg-cyan-600/20 border border-cyan-600/50 rounded-xl p-4 flex items-center justify-center">
+                    <div class="flex-grow bg-cyan-600/20 border border-cyan-600/50 rounded-xl p-4 flex items-center justify-center min-h-[100px]">
                         <span id="stocked-products-count" class="text-5xl font-extrabold text-cyan-400 light-theme:text-blue-600">0</span>
                     </div>
                 </div>
                 
-                <!-- Inputs Responsables -->
-                <div class="w-full sm:w-1/2 flex flex-col space-y-3 sm:pl-4 sm:border-l border-gray-600 light-theme:border-gray-300">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 1 EA</label>
-                            <input type="text" id="responsable-1" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+                <!-- Inputs Responsables SEPARADOS POR EQUIPO -->
+                <div class="w-full sm:w-2/3 flex flex-col sm:pl-4 sm:border-l border-gray-600 light-theme:border-gray-300">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        <!-- EQUIPO 1: ROJO -->
+                        <div class="relative pt-4 pb-3 px-3 rounded-xl border border-red-500/50 bg-red-900/10 light-theme:bg-red-50 light-theme:border-red-300">
+                            <div class="absolute -top-3 left-3 bg-gray-800 light-theme:team-label-bg px-2 rounded border border-red-500/50 text-xs font-bold text-red-400">EQUIPO 1</div>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 1</label>
+                                    <input type="text" id="responsable-1" placeholder="Nombre" class="w-full p-2 rounded border border-red-900/60 focus:border-red-500 bg-gray-900 text-white focus:ring-1 focus:ring-red-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-red-200 light-theme:text-gray-800" oninput="updateReportHeaders(true)">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2</label>
+                                    <input type="text" id="responsable-2" placeholder="Nombre" class="w-full p-2 rounded border border-red-900/60 focus:border-red-500 bg-gray-900 text-white focus:ring-1 focus:ring-red-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-red-200 light-theme:text-gray-800" oninput="updateReportHeaders(true)">
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 1 EA</label>
-                            <input type="text" id="responsable-2" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
+
+                        <!-- EQUIPO 2: VERDE -->
+                        <div class="relative pt-4 pb-3 px-3 rounded-xl border border-green-500/50 bg-green-900/10 light-theme:bg-green-50 light-theme:border-green-300">
+                            <div class="absolute -top-3 left-3 bg-gray-800 light-theme:team-label-bg px-2 rounded border border-green-500/50 text-xs font-bold text-green-400">EQUIPO 2</div>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 3</label>
+                                    <input type="text" id="responsable-3" placeholder="Nombre" class="w-full p-2 rounded border border-green-900/60 focus:border-green-500 bg-gray-900 text-white focus:ring-1 focus:ring-green-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-green-200 light-theme:text-gray-800" oninput="updateReportHeaders(true)">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 4</label>
+                                    <input type="text" id="responsable-4" placeholder="Nombre" class="w-full p-2 rounded border border-green-900/60 focus:border-green-500 bg-gray-900 text-white focus:ring-1 focus:ring-green-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-green-200 light-theme:text-gray-800" oninput="updateReportHeaders(true)">
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2 EB</label>
-                            <input type="text" id="responsable-3" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
-                        </div>
-                        <div>
-                            <label class="text-sm font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2 EB</label>
-                            <input type="text" id="responsable-4" placeholder="Nombre" class="w-full p-2 rounded border border-gray-600 bg-gray-900 text-white focus:ring-2 focus:ring-cyan-500 outline-none transition-colors text-sm" oninput="updateReportHeaders(true)">
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -258,7 +329,7 @@
             <!-- Estado de LocalStorage -->
             <div class="mt-4 pt-4 border-t border-gray-700 text-xs text-gray-500">
                 <p>Estado de Guardado: <span id="connection-status" class="font-semibold text-lime-400">Guardado Automaticamente </span></p>
-                <p class="mt-1 text-gray-500">💡 Tip: Haz clic en el nombre del producto para marcarlo como <span class="text-green-400">Verificado</span> o <span class="text-red-400">Discrepancia</span>.</p>
+                <p class="mt-1 text-gray-500">💡 Tip: Haz clic en el nombre del producto para marcarlo como <span class="text-green-400">Verificado</span> o <span class="text-red-400">Discrepancia</span>. <span class="text-cyan-400 font-bold">¡Mantén presionado para Editar!</span></p>
             </div>
         </footer>
     </div>
@@ -326,7 +397,27 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmación para Borrar -->
+    <!-- Modal Editar Producto (NUEVO) -->
+    <div id="edit-product-modal" class="modal-overlay" onclick="if(event.target === this) closeEditProductModal()">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-blue-500">
+            <h3 class="text-xl font-bold text-blue-400 mb-4 uppercase">✏️ Editar Nombre</h3>
+            <p class="text-gray-300 mb-4 text-sm">Modifica el nombre del producto. La lista se reordenará automáticamente.</p>
+            
+            <input type="text" id="edit-product-name" class="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 text-white mb-6 focus:ring-2 focus:ring-blue-500 outline-none">
+            
+            <div class="flex justify-end space-x-4">
+                <button onclick="closeEditProductModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="confirmEditProduct()" class="py-2 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition shadow-lg">Guardar</button>
+            </div>
+
+            <!-- Botón Eliminar -->
+            <div class="mt-4 pt-4 border-t border-gray-700">
+                 <button onclick="deleteProductConfirmed()" class="w-full py-2 px-4 bg-red-900/50 text-red-300 font-bold rounded-lg hover:bg-red-900 transition border border-red-800 text-sm">🗑️ Eliminar Producto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación para Borrar Todo -->
     <div id="reset-modal" class="modal-overlay" onclick="if(event.target === this) closeResetModal()">
         <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-red-700">
             <h3 class="text-xl font-bold text-red-400 mb-4">⚠️ Confirmar Borrado Total</h3>
@@ -369,6 +460,7 @@
 
         let inventoryData = [];
         let responsables = { resp1: "SIN NOMBRE", resp2: "SIN NOMBRE", resp3: "SIN NOMBRE", resp4: "SIN NOMBRE" };
+        let currentFilter = ""; // VARIABLE GLOBAL PARA EL FILTRO
 
         window.loadInventoryDataFromLocal = function() {
             try {
@@ -459,6 +551,9 @@
                 document.getElementById('responsable-3').value = "";
                 document.getElementById('responsable-4').value = "";
                 
+                // Limpiar filtro al resetear
+                window.clearSearch();
+                
                 window.updateReportHeaders(false); 
                 window.saveInventoryData(false);
                 window.renderInventoryTable();
@@ -467,6 +562,34 @@
             } catch (e) {
                 console.error("ERROR: Fallo al borrar localStorage.", e);
             }
+        }
+
+        // --- GESTIÓN DE BÚSQUEDA Y FILTRADO ---
+        window.applyFilter = function(value) {
+            currentFilter = value.toLowerCase().trim();
+            const clearBtn = document.getElementById('clear-search-btn');
+            
+            if (currentFilter.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            window.renderInventoryTable();
+        }
+
+        window.clearSearch = function(shouldFocus = true) {
+            currentFilter = "";
+            const input = document.getElementById('search-filter');
+            if(input) {
+                input.value = "";
+                if(shouldFocus) {
+                    input.focus();
+                } else {
+                    input.blur(); // Quitar foco para cerrar teclado en móviles
+                }
+            }
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            window.renderInventoryTable();
         }
 
         // --- GESTIÓN DE PRODUCTOS NUEVOS ---
@@ -489,6 +612,7 @@
                 return;
             }
 
+            // 1. Agregar el producto
             inventoryData.push({
                 name: newName,
                 quantity: 0,
@@ -496,26 +620,130 @@
                 status: null
             });
 
+            // 2. Ordenar la lista alfabéticamente
+            inventoryData.sort((a, b) => a.name.localeCompare(b.name));
+
+            // Limpiar búsqueda para asegurar que se vea el nuevo producto
+            window.clearSearch();
+
+            // 3. Guardar y renderizar
             window.saveInventoryData(true);
             window.closeAddProductModal();
             
+            // 4. Buscar el índice del nuevo producto ordenado
+            const newIndex = inventoryData.findIndex(item => item.name === newName);
+
             setTimeout(() => {
-                const tableContainer = document.querySelector('.overflow-x-auto');
-                if (tableContainer) {
-                    tableContainer.scrollTop = tableContainer.scrollHeight;
-                }
-                const newRow = document.getElementById('inventory-list').lastElementChild;
-                if(newRow) {
+                const tableRows = document.getElementById('inventory-list').children;
+                if (tableRows[newIndex]) {
+                    const newRow = tableRows[newIndex];
+                    // Hacer scroll hasta el nuevo producto
+                    newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Resaltar
                     newRow.classList.add('bg-purple-900/30');
-                    setTimeout(() => newRow.classList.remove('bg-purple-900/30'), 1000);
+                    setTimeout(() => newRow.classList.remove('bg-purple-900/30'), 2000);
+
+                    // ABRIR CALCULADORA AUTOMÁTICAMENTE
+                    setTimeout(() => {
+                        window.openCalculator(newIndex, newName);
+                    }, 200);
                 }
             }, 100);
         }
 
-        // --- LÓGICA DE CHECKLIST (NUEVO) ---
+        // --- GESTIÓN DE EDICIÓN DE PRODUCTOS (LONG PRESS) ---
+        let pressTimer;
+        let longPressTriggered = false;
+        let editingProductIndex = null;
+
+        window.startLongPress = function(index) {
+            longPressTriggered = false;
+            // Iniciar temporizador (800ms)
+            pressTimer = setTimeout(() => {
+                longPressTriggered = true;
+                // Vibración háptica si es soportada
+                if (navigator.vibrate) navigator.vibrate(50);
+                window.openEditProductModal(index);
+            }, 800);
+        }
+
+        window.endLongPress = function(event, index) {
+            clearTimeout(pressTimer);
+            // Si NO fue un long press (fue un tap rápido), ejecutamos la lógica normal de checklist
+            // Solo si el evento que dispara esto es compatible (para evitar doble ejecución mouse/touch)
+            if (!longPressTriggered) {
+                // Usamos una pequeña lógica para filtrar eventos duplicados si es necesario, 
+                // pero aquí simplemente confiamos en que el usuario no arrastró.
+                window.toggleStatus(index);
+            }
+            longPressTriggered = false; // Resetear estado
+        }
+
+        window.cancelLongPress = function() {
+            clearTimeout(pressTimer);
+            longPressTriggered = false;
+        }
+
+        window.openEditProductModal = function(index) {
+            window.clearSearch(false); // Limpiar búsqueda al abrir editor
+            editingProductIndex = index;
+            const currentName = inventoryData[index].name;
+            document.getElementById('edit-product-name').value = currentName;
+            document.getElementById('edit-product-modal').style.display = 'flex';
+            document.getElementById('edit-product-name').focus();
+        }
+
+        window.closeEditProductModal = function() {
+            document.getElementById('edit-product-modal').style.display = 'none';
+            editingProductIndex = null;
+        }
+
+        window.confirmEditProduct = function() {
+            if (editingProductIndex === null) return;
+            
+            const nameInput = document.getElementById('edit-product-name');
+            const newName = nameInput.value.trim().toUpperCase();
+
+            if (!newName) {
+                alert("El nombre no puede estar vacío.");
+                return;
+            }
+
+            // 1. Actualizar nombre
+            inventoryData[editingProductIndex].name = newName;
+
+            // 2. Ordenar alfabéticamente
+            inventoryData.sort((a, b) => a.name.localeCompare(b.name));
+
+            // 3. Guardar y cerrar
+            window.saveInventoryData(true);
+            window.closeEditProductModal();
+        }
+
+        window.deleteProductConfirmed = function() {
+            if (editingProductIndex === null) return;
+            
+            const enteredCode = prompt("Ingrese la clave de seguridad para eliminar este producto:");
+
+            if (enteredCode === "124578963") {
+                if(confirm("Código correcto. ¿Estás seguro de que quieres eliminar este producto de la lista?")) {
+                    inventoryData.splice(editingProductIndex, 1);
+                    window.saveInventoryData(true);
+                    window.closeEditProductModal();
+                }
+            } else if (enteredCode !== null) {
+                alert("Código incorrecto. No se puede eliminar el producto.");
+            }
+        }
+
+        // --- LÓGICA DE CHECKLIST ---
         window.toggleStatus = function(index) {
+            // Si acabamos de abrir el modal de edición, no hacemos toggle
+            if (longPressTriggered) return;
+
+            // ELIMINADO: window.clearSearch(false); Para permitir marcar varios sin perder la búsqueda
+
             const item = inventoryData[index];
-            // Ciclo: Null -> OK (Verde) -> Error (Rojo) -> Null
             if (!item.status) {
                 item.status = 'ok';
             } else if (item.status === 'ok') {
@@ -541,6 +769,11 @@
             tbody.innerHTML = ''; 
 
             inventoryData.forEach((item, index) => {
+                // LÓGICA DE FILTRADO
+                if (currentFilter && !item.name.toLowerCase().includes(currentFilter)) {
+                    return; // Si no coincide con el filtro, saltamos este producto
+                }
+
                 const tr = document.createElement('tr');
                 tr.className = 'table-row';
                 const qtyValue = parseFloat(item.quantity) || 0;
@@ -568,9 +801,19 @@
                         </div>`;
                 }
 
+                // Aquí agregamos los listeners para Long Press
+                // Usamos touchstart/end para móviles y mousedown/up para desktop
+                // oncontextmenu="return false" evita que salga el menú del navegador al dejar presionado
                 tr.innerHTML = `
-                    <td class="table-data product-cell ${statusClass}" onclick="window.toggleStatus(${index})">
-                        <div class="flex items-center">
+                    <td class="table-data product-cell ${statusClass}" 
+                        ontouchstart="startLongPress(${index})"
+                        ontouchend="endLongPress(event, ${index})"
+                        onmousedown="startLongPress(${index})"
+                        onmouseup="endLongPress(event, ${index})"
+                        onmouseleave="cancelLongPress()"
+                        oncontextmenu="return false;"
+                    >
+                        <div class="flex items-center pointer-events-none"> <!-- pointer-events-none para que el click pase al TD -->
                             ${statusIcon}
                             <span class="flex-1">${item.name}</span>
                         </div>
@@ -633,6 +876,7 @@
         };
 
         window.openCalculator = function(index, productName) {
+            window.clearSearch(false); // Limpiar búsqueda automáticamente
             calculator.currentProductIndex = index;
             document.getElementById('calc-product-name').innerText = productName;
             
@@ -874,8 +1118,8 @@
                 ["Inventario F.E", "CECOSESOLA R.L J085030140"],
                 ["PASILLO", "PASTAS - FERIA DEL ESTE"],
                 ["FECHA", date],
-                ["RESPONSABLES 1:", team1Text],
-                ["RESPONSABLES 2:", team2Text],
+                ["EQUIPO 1 (ROJO):", team1Text],
+                ["EQUIPO 2 (VERDE):", team2Text],
                 [], // Fila vacía
                 ["ESTADO", "PRODUCTO", "HISTORIAL", "CANTIDAD"] 
             ];
