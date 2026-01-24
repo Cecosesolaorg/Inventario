@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVENTARIO DE VIVERES PASILLO 2 CAFE </title>
+    <title>INVENTARIO DE VIVERES PASILLO 2 Cafe </title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de SheetJS para Excel -->
@@ -432,7 +432,7 @@
 
     <script>
         // --- CONSTANTES Y ESTRUCTURA DE DATOS ---
-        const LOCAL_STORAGE_KEY = 'cafeInventoryData_v2'; 
+        const LOCAL_STORAGE_KEY = 'CafeInventoryData_v2'; 
         
         const defaultProductNames = [
             "ACEITE AGROIL*12",
@@ -701,14 +701,10 @@
 
         window.endLongPress = function(event, index) {
             clearTimeout(pressTimer);
-            // Si NO fue un long press (fue un tap rápido), ejecutamos la lógica normal de checklist
-            // Solo si el evento que dispara esto es compatible (para evitar doble ejecución mouse/touch)
-            if (!longPressTriggered) {
-                // Usamos una pequeña lógica para filtrar eventos duplicados si es necesario, 
-                // pero aquí simplemente confiamos en que el usuario no arrastró.
-                window.toggleStatus(index);
-            }
-            longPressTriggered = false; // Resetear estado
+            // MODIFICADO: Ya NO llamamos a toggleStatus aquí.
+            // Si fue un toque rápido (tap) sobre el texto, no hacemos nada.
+            // El usuario debe tocar el botón del checkbox explícitamente.
+            longPressTriggered = false; 
         }
 
         window.cancelLongPress = function() {
@@ -813,41 +809,56 @@
 
                 // Determinar clases e iconos según el estado
                 let statusClass = '';
-                let statusIcon = '<div class="w-5 h-5 rounded border border-gray-500 mr-3 flex items-center justify-center"></div>'; // Checkbox vacío
+                // Botón por defecto (Gris / Vacío) - Más grande para facilitar el toque
+                let statusIcon = `
+                    <div class="w-8 h-8 rounded-lg border-2 border-gray-500 bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors">
+                        <!-- Vacío -->
+                    </div>`;
                 
                 if (item.status === 'ok') {
-                    statusClass = 'status-ok'; // Definido en CSS
+                    statusClass = 'status-ok'; // Fondo verde claro en toda la celda
                     statusIcon = `
-                        <div class="w-5 h-5 rounded bg-green-500 mr-3 flex items-center justify-center text-white shadow-lg shadow-green-500/50">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <div class="w-8 h-8 rounded-lg bg-green-500 border-2 border-green-400 flex items-center justify-center text-white shadow-lg shadow-green-500/50 transform scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                         </div>`;
                 } else if (item.status === 'error') {
-                    statusClass = 'status-error'; // Definido en CSS
+                    statusClass = 'status-error'; // Fondo rojo claro en toda la celda
                     statusIcon = `
-                        <div class="w-5 h-5 rounded bg-red-500 mr-3 flex items-center justify-center text-white shadow-lg shadow-red-500/50">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <div class="w-8 h-8 rounded-lg bg-red-500 border-2 border-red-400 flex items-center justify-center text-white shadow-lg shadow-red-500/50 transform scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
                         </div>`;
                 }
 
-                // Aquí agregamos los listeners para Long Press
-                // Usamos touchstart/end para móviles y mousedown/up para desktop
-                // oncontextmenu="return false" evita que salga el menú del navegador al dejar presionado
+                // ESTRUCTURA MODIFICADA:
+                // 1. Botón explícito para el checklist a la izquierda.
+                // 2. El texto del nombre solo reacciona al Long Press (Mantener presionado), no al click simple.
                 tr.innerHTML = `
-                    <td class="table-data product-cell ${statusClass}" 
-                        ontouchstart="startLongPress(${index})"
-                        ontouchend="endLongPress(event, ${index})"
-                        onmousedown="startLongPress(${index})"
-                        onmouseup="endLongPress(event, ${index})"
-                        onmouseleave="cancelLongPress()"
-                        oncontextmenu="return false;"
-                    >
-                        <div class="flex items-center pointer-events-none"> <!-- pointer-events-none para que el click pase al TD -->
-                            ${statusIcon}
-                            <span class="flex-1">${item.name}</span>
+                    <td class="table-data product-cell ${statusClass}">
+                        <div class="flex items-center">
+                            <!-- BOTÓN DE ACCIÓN (CHECKLIST) -->
+                            <button 
+                                onclick="window.toggleStatus(${index})"
+                                class="mr-4 focus:outline-none active:scale-90 transition-transform"
+                                title="Marcar estado"
+                            >
+                                ${statusIcon}
+                            </button>
+
+                            <!-- NOMBRE DEL PRODUCTO (Solo Long Press) -->
+                            <span class="flex-1 py-2 select-none cursor-text"
+                                ontouchstart="startLongPress(${index})"
+                                ontouchend="endLongPress(event, ${index})"
+                                onmousedown="startLongPress(${index})"
+                                onmouseup="endLongPress(event, ${index})"
+                                onmouseleave="cancelLongPress()"
+                                oncontextmenu="return false;"
+                            >
+                                ${item.name}
+                            </span>
                         </div>
                     </td>
                     <td class="table-data qty-cell ${zeroClass}" 
@@ -1173,7 +1184,7 @@
             // 3. Crear hoja de trabajo y libro
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Inventario Cafe");
+            XLSX.utils.book_append_sheet(wb, ws, "Inventario cafe");
 
             ws['!cols'] = [
                 { wch: 15 }, // Estado
