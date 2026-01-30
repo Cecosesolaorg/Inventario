@@ -18,6 +18,7 @@
         :root {
             --neon-cyan: #22d3ee;
             --neon-lime: #a3e635;
+            --primary-celebration: #6366f1; /* Para la pantalla final */
         }
 
         body {
@@ -242,11 +243,220 @@
         .action-save { background-color: #65a30d; color: white; }
         .action-save:hover { background-color: #4d7c0f; }
 
+        /* --- ESTILOS DE LA PANTALLA DE AGRADECIMIENTO (OVERLAY) --- */
+        #celebration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            z-index: 9999; /* Muy alto para tapar todo */
+            display: none; /* Oculto por defecto */
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #celebration-overlay .container-celeb {
+            text-align: center;
+            position: relative;
+            z-index: 100;
+            width: 90%;
+            max-width: 600px;
+            pointer-events: none;
+        }
+
+        #celebration-overlay .explode-btn {
+            background-color: var(--primary-celebration);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 1.5rem 3rem;
+            font-size: 1.4rem;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.5);
+            outline: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            pointer-events: auto; /* El botón sí debe recibir clics */
+        }
+
+        #celebration-overlay .explode-btn:hover {
+            transform: scale(1.05);
+            background-color: #4f46e5;
+        }
+
+        /* Estilos del Botón Regresar */
+        #celebration-overlay .back-btn {
+            margin-top: 30px;
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            pointer-events: auto; /* IMPORTANTE: Para que sea clickeable */
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #celebration-overlay .back-btn:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        #celebration-overlay .back-btn:active {
+            transform: translateY(0);
+        }
+
+        #thanks-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            width: 100%;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #ffffff;
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.8), 0 0 40px rgba(255, 255, 255, 0.3);
+            line-height: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #thanks-message.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Partículas y Confeti */
+        .particle, .confetti {
+            position: absolute;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        /* --- GLOBOS REALISTAS --- */
+        .balloon {
+            position: absolute;
+            bottom: -150px; 
+            width: 60px;
+            height: 75px;
+            /* El color se establece dinámicamente vía variable CSS */
+            background-color: var(--balloon-color, #22d3ee); 
+            /* Degradados para efecto 3D y brillo especular */
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 8%, rgba(255,255,255,0) 20%), 
+                        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.15) 100%),
+                        var(--balloon-color);
+            
+            border-radius: 80% 80% 80% 80% / 80% 80% 90% 90%;
+            box-shadow: inset -5px -10px 20px rgba(0, 0, 0, 0.2), /* Sombra interior */
+                        2px 5px 10px rgba(0,0,0,0.1); /* Sombra proyectada */
+            z-index: 50;
+            will-change: transform, bottom;
+            transform-origin: bottom center;
+        }
+        
+        .balloon::before { /* Cuerda (String) */
+            content: '';
+            position: absolute;
+            bottom: -60px; /* Un poco más larga */
+            left: 50%;
+            width: 1px;
+            height: 60px;
+            background: rgba(230, 230, 230, 0.9);
+            transform: translateX(-50%);
+            z-index: -1;
+            transform-origin: top center;
+            /* ANIMACIÓN DE LA CUERDA */
+            animation: stringWave 3s ease-in-out infinite;
+        }
+        
+        .balloon::after { /* Nudo (Knot) */
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            width: 12px;
+            height: 10px;
+            background-color: var(--balloon-color);
+            /* Forma de trapecio para el nudo */
+            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+            border-radius: 2px;
+            transform: translateX(-50%);
+            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Animación para que el globo suba y se quede */
+        @keyframes floatUpAndStay {
+            0% { 
+                bottom: -150px; 
+                transform: translateX(0) rotate(0deg); 
+            }
+            100% { 
+                bottom: var(--float-final-y, 85%); /* Van al techo */
+                transform: translateX(var(--drift-x, 0px)) rotate(var(--rot, 5deg)); 
+            }
+        }
+        
+        /* Animación de oscilación del cuerpo del globo */
+        @keyframes sway {
+            0%, 100% { transform: translateX(0) rotate(-3deg); }
+            50% { transform: translateX(15px) rotate(3deg); }
+        }
+
+        /* NUEVA: Animación de la cuerda para que se mueva más natural */
+        @keyframes stringWave {
+            0%, 100% { transform: translateX(-50%) rotate(5deg); }
+            50% { transform: translateX(-50%) rotate(-5deg); }
+        }
+
+        @keyframes explodeOut {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(0); opacity: 0; }
+        }
+
+        @keyframes fallToFloor {
+            0% { transform: translateY(0) rotate(0deg) translateX(0); }
+            100% { transform: translateY(var(--floor-y)) rotate(720deg) translateX(var(--drift)); }
+        }
+
+        .jump {
+            animation: jumpEffect 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+        }
+
+        @keyframes jumpEffect {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(var(--jx), var(--jy)) rotate(180deg); }
+            100% { transform: translate(var(--jx), 0) rotate(360deg); }
+        }
+
+        .on-floor {
+            position: absolute;
+            bottom: 0;
+            pointer-events: none;
+        }
+
     </style>
 </head>
 <body class="p-2 md:p-6 min-h-screen">
 
     <div class="max-w-4xl mx-auto bg-gray-900 p-4 md:p-8 rounded-2xl shadow-2xl border border-cyan-900 main-container">
+        <!-- ... (Contenido principal sin cambios) ... -->
         <header class="mb-4">
             <!-- Cabecera tipo Reporte -->
             <div class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800/50 light-theme:bg-white light-theme:border-blue-200 transition-colors">
@@ -499,8 +709,8 @@
     </div>
 
     <!-- Modal Agregar Producto (MODIFICADO: AHORA EN LA PARTE SUPERIOR) -->
-    <!-- Se añadieron estilos inline para forzar la alineación superior: align-items: flex-start; padding-top: 5rem; -->
     <div id="add-product-modal" class="modal-overlay" style="align-items: flex-start; padding-top: 5rem;" onclick="if(event.target === this) closeAddProductModal()">
+        <!-- ... (Contenido modal sin cambios) ... -->
         <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-purple-500">
             <h3 class="text-xl font-bold text-purple-400 mb-4 uppercase">➕ Nuevo Producto</h3>
             <p class="text-gray-300 mb-4 text-sm">Ingresa el nombre del producto que deseas añadir a la lista.</p>
@@ -516,6 +726,7 @@
 
     <!-- Modal Editar Producto (NUEVO) -->
     <div id="edit-product-modal" class="modal-overlay" onclick="if(event.target === this) closeEditProductModal()">
+        <!-- ... (Contenido modal sin cambios) ... -->
         <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-blue-500">
             <h3 class="text-xl font-bold text-blue-400 mb-4 uppercase">✏️ Editar Nombre</h3>
             <p class="text-gray-300 mb-4 text-sm">Modifica el nombre del producto. La lista se reordenará automáticamente.</p>
@@ -536,6 +747,7 @@
     
     <!-- Modal Gestionar Equipos (MODIFICADO: MAS ARRIBA Y COMPACTO) -->
     <div id="team-modal" class="modal-overlay" style="align-items: flex-start; padding-top: 2rem;" onclick="if(event.target === this) closeTeamModal()">
+        <!-- ... (Contenido modal sin cambios) ... -->
         <div class="bg-gray-800 p-4 md:p-6 rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all border border-cyan-600">
             <h3 class="text-lg font-bold text-cyan-400 mb-3 uppercase text-center border-b border-gray-700 pb-2">👥 Gestionar Responsables</h3>
             
@@ -576,6 +788,7 @@
 
     <!-- Modal de Confirmación para Borrar Todo -->
     <div id="reset-modal" class="modal-overlay" onclick="if(event.target === this) closeResetModal()">
+        <!-- ... (Contenido modal sin cambios) ... -->
         <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-red-700">
             <h3 class="text-xl font-bold text-red-400 mb-4">⚠️ Confirmar Borrado Total</h3>
             <p class="text-gray-300 mb-6">Estás a punto de **eliminar todo el inventario** del almacenamiento local de tu navegador. Esta acción no se puede deshacer.</p>
@@ -587,10 +800,32 @@
         </div>
     </div>
 
+    <!-- PANTALLA DE AGRADECIMIENTO / CELEBRACIÓN -->
+    <div id="celebration-overlay">
+        <!-- ... (Contenido celebración sin cambios) ... -->
+        <div class="container-celeb">
+            <!-- NOTA: Este botón se ocultará automáticamente al descargar -->
+            <button class="explode-btn" id="celeb-mainButton">
+                ¡Finalizar Inventario!
+            </button>
+            <div id="thanks-message">
+                <p>¡Gracias por participar en el inventario! 🎉</p>
+                <button id="celeb-backButton" class="back-btn">
+                    Regresar
+                </button>
+            </div>
+        </div>
+        <!-- Contenedor para los globos (generado dinámicamente) -->
+        <div id="balloons-container" style="position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: hidden; top: 0; left: 0;"></div>
+    </div>
+
     <script>
         // --- CONSTANTES Y ESTRUCTURA DE DATOS ---
         const LOCAL_STORAGE_KEY = 'Pasillo 1 InventoryData_v2'; 
         
+        // Variable global para disparar la fiesta desde cualquier lugar
+        window.triggerCelebration = null;
+
 const defaultProductNames = [
             "ACEITE DE OLIVA 250ML ", "ACEITE DE OLIVA 500ML", "ALIÑOS SAN MIGUEL GRANDE ", "ALIÑOS SAN MIGUEL PEQUEÑO ", 
             "ALUMINIO ROLLO", "FIDEOS CAPRI", "PANELA DULCE", "PASTA CAPRI CORTA", 
@@ -944,6 +1179,9 @@ const defaultProductNames = [
             window.renderInventoryTable();
             window.updateReportHeaders(false);
             document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            
+            // --- INICIALIZACIÓN DE LA CELEBRACIÓN ---
+            initCelebrationLogic();
         });
 
         // --- UI Y RENDERIZADO ---
@@ -1352,16 +1590,24 @@ const defaultProductNames = [
             const itemsWithQuantity = inventoryData.filter(item => parseFloat(item.quantity) > 0);
             const countWithQuantity = itemsWithQuantity.length;
 
+            // --- LÓGICA DE ESTRELLAS DE ERROR ---
+            // Contamos cuántos productos tienen el estado "error" (Diferencia)
+            const errorCount = inventoryData.filter(i => i.status === 'error').length;
+            // Generamos las estrellas según la cantidad de errores
+            const starString = errorCount > 0 ? "★".repeat(errorCount) : "";
+
             // 1. Crear matriz de datos para Excel
             // CABECERA (Header Info)
             const ws_data = [
-                ["Inventario F.E", "CECOSESOLA R.L J085030140"],
-                ["PASILLO", "Pasillo 1 - FERIA DEL ESTE"],
+                ["INVENTARIO F.E", "-----------★CECOSESOLA R.L J085030140★----------"],
+                ["PASILLO", "-----------🛒Pasillo 1 - FERIA DEL ESTE🛒-----------"],
                 ["FECHA", date],
-                ["EQUIPO 1 (ROJO):", team1Text],
+                // AQUÍ SE APLICA LA LÓGICA DE LAS ESTRELLAS
+                ["EQUIPO 1 (ROJO) " + starString, team1Text],
+
                 ["EQUIPO 2 (VERDE):", team2Text],
                 [], // Fila vacía antes de la tabla
-                ["ESTADO", "PRODUCTO", "HISTORIAL", "CANTIDAD"] // Cabeceras de columna
+                ["ESTADO", "-------------------------PRODUCTO-------------------------", "HISTORIAL", "-----CANTIDAD------"] // Cabeceras de columna
             ];
 
             // Variable para calcular el ancho máximo del historial
@@ -1370,7 +1616,7 @@ const defaultProductNames = [
             // 2. Agregar los datos del inventario (FILAS DE PRODUCTOS)
             itemsWithQuantity.forEach(item => {
                 let estadoTexto = "PENDIENTE";
-                if(item.status === 'ok') estadoTexto = "CORRECTO";
+                if(item.status === 'ok') estadoTexto = "CHEQUEADO";
                 if(item.status === 'error') estadoTexto = "DIFERENCIA";
 
                 const historyText = item.history || "0";
@@ -1389,7 +1635,7 @@ const defaultProductNames = [
 
             // 3. AGREGAR TOTAL AL FINAL (Debajo de la lista)
             ws_data.push([]); // Una fila vacía para separar
-            ws_data.push(["TOTAL PRODUCTOS CON EXISTENCIA:", countWithQuantity]); // El total
+            ws_data.push(["CANTIDAD DE PRODUCTOS:", countWithQuantity]); // El total
 
             // Ajuste de "padding" visual al ancho calculado
             maxHistoryLen = maxHistoryLen + 2;
@@ -1411,6 +1657,12 @@ const defaultProductNames = [
             // Nombre del archivo usando solo la primera persona válida del Equipo 1
             const fileName = `Inventario_pasillo 1${team1FileSuffix}_${date.replace(/\//g, '-')}.xlsx`;
             XLSX.writeFile(wb, fileName);
+
+            // --- MOSTRAR CELEBRACIÓN AUTOMÁTICAMENTE ---
+            // Llamamos directamente a la función de disparo de fiesta
+            if (window.triggerCelebration) {
+                window.triggerCelebration();
+            }
         }
 
         // --- CAMBIO DE TEMA ---
@@ -1432,7 +1684,220 @@ const defaultProductNames = [
                  if(document.getElementById('moon-icon')) document.getElementById('moon-icon').classList.remove('hidden');
              }
         });
-        
+
+        // ==========================================
+        // === LÓGICA DE LA PANTALLA DE CELEBRACIÓN ===
+        // ==========================================
+        function initCelebrationLogic() {
+            const btn = document.getElementById('celeb-mainButton');
+            const message = document.getElementById('thanks-message');
+            const overlay = document.getElementById('celebration-overlay');
+            const backBtn = document.getElementById('celeb-backButton');
+            const colors = ['#FF007F', '#00D4FF', '#FFD700', '#32CD32', '#FF4500', '#9370DB', '#FFFFFF', '#00FFCC', '#FF69B4'];
+            
+            let canInteract = false;
+
+            // --- DEFINIR FUNCIÓN GLOBAL PARA ACTIVAR DESDE AFUERA ---
+            window.triggerCelebration = function() {
+                // 1. Mostrar Overlay
+                overlay.style.display = 'flex';
+                
+                // 2. Ocultar el botón manual (porque ya se presionó "Descargar")
+                if(btn) btn.style.display = 'none';
+
+                // 3. Vibrar
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+                // 4. Iniciar efectos inmediatamente
+                // Disparo central
+                initExplosion(window.innerWidth / 2, window.innerHeight / 2);
+                
+                // Disparos aleatorios extra para más fiesta
+                setTimeout(() => initExplosion(window.innerWidth * 0.3, window.innerHeight * 0.4), 200);
+                setTimeout(() => initExplosion(window.innerWidth * 0.7, window.innerHeight * 0.4), 400);
+
+                // GLOBOS FLOTANTES (NUEVO)
+                createBalloons();
+
+                // 5. Mostrar mensaje
+                setTimeout(() => {
+                    message.classList.add('show');
+                    canInteract = true;
+                }, 300);
+            };
+
+            // Botón Regresar
+            if(backBtn) {
+                backBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Evitar que dispare la fiesta
+                    overlay.style.display = 'none';
+                    // Resetear mensaje y globos para la próxima
+                    if(message) message.classList.remove('show');
+                    document.getElementById('balloons-container').innerHTML = ''; 
+                });
+            }
+
+            // [MODIFICADO] SE ELIMINÓ LA INTERACCIÓN AL TOCAR LA PANTALLA
+            // Ya no explota confeti al hacer clic en el fondo
+
+            function initExplosion(x, y) {
+                createShockwave(x, y);
+                createRain(x);
+            }
+
+            function createShockwave(x, y) {
+                for (let i = 0; i < 50; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    if (Math.random() > 0.5) p.style.borderRadius = '50%';
+                    
+                    const size = 5 + Math.random() * 12;
+                    p.style.width = size + 'px';
+                    p.style.height = size + 'px';
+                    p.style.left = x + 'px';
+                    p.style.top = y + 'px';
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 100 + Math.random() * 300;
+                    p.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+                    p.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+                    p.style.setProperty('--r', `${Math.random() * 720}deg`);
+                    
+                    p.style.animation = `explodeOut ${0.5 + Math.random() * 0.5}s ease-out forwards`;
+                    overlay.appendChild(p);
+                    setTimeout(() => p.remove(), 1000);
+                }
+            }
+
+            function createRain(originX) {
+                const count = canInteract ? 20 : 100;
+                for (let i = 0; i < count; i++) {
+                    const c = document.createElement('div');
+                    c.className = 'confetti';
+                    c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    // Si es interacción, cae cerca del toque, si no, en toda la pantalla
+                    const startX = canInteract ? (originX + (Math.random() - 0.5) * 200) : (Math.random() * 100);
+                    c.style.left = canInteract ? `${startX}px` : `${startX}vw`;
+                    c.style.top = '-20px';
+                    
+                    const size = 6 + Math.random() * 8;
+                    c.style.width = size + 'px';
+                    c.style.height = (size * 0.7) + 'px';
+                    
+                    const duration = 2 + Math.random() * 2;
+                    const floorY = window.innerHeight - (Math.random() * 30 + 10);
+                    
+                    c.style.setProperty('--floor-y', `${floorY}px`);
+                    c.style.setProperty('--drift', `${(Math.random() - 0.5) * 100}px`);
+                    c.style.animation = `fallToFloor ${duration}s linear forwards`;
+                    
+                    overlay.appendChild(c);
+
+                    setTimeout(() => {
+                        c.style.animation = 'none';
+                        c.classList.add('on-floor');
+                        c.style.top = 'auto';
+                        c.style.bottom = (window.innerHeight - floorY) + 'px';
+                        c.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    }, duration * 1000);
+                }
+            }
+
+            // --- FUNCIÓN NUEVA: GLOBOS ---
+            function createBalloons() {
+                const container = document.getElementById('balloons-container');
+                if(!container) return;
+                container.innerHTML = ''; // Limpiar previos
+
+                const balloonCount = 20; // Cantidad de globos
+                
+                for(let i=0; i<balloonCount; i++) {
+                    const b = document.createElement('div');
+                    b.className = 'balloon';
+                    
+                    // Color aleatorio (AHORA USAMOS PROPIEDAD CSS)
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    b.style.setProperty('--balloon-color', randomColor);
+                    
+                    // Posición horizontal aleatoria
+                    const leftPos = Math.random() * 95; // 0% a 95%
+                    b.style.left = leftPos + '%';
+                    
+                    // Velocidad aleatoria (duración)
+                    const speed = 4 + Math.random() * 4; // 4s a 8s
+                    b.style.animationDuration = speed + 's';
+                    
+                    // Retraso aleatorio (para que no salgan todos en linea)
+                    const delay = Math.random() * 2;
+                    b.style.animationDelay = delay + 's';
+                    
+                    // Altura final ligeramente variable para que no sea una línea recta perfecta
+                    // Queremos que queden en el techo (top ~5-15%)
+                    // Como la animación mueve 'bottom', calculamos bottom = 85% aprox
+                    const finalBottom = 85 + Math.random() * 10; // 85% a 95%
+                    b.style.setProperty('--float-final-y', finalBottom + '%');
+                    
+                    // Deriva lateral
+                    const drift = (Math.random() - 0.5) * 50;
+                    b.style.setProperty('--drift-x', drift + 'px');
+
+                    // Rotación final
+                    const rot = (Math.random() - 0.5) * 20;
+                    b.style.setProperty('--rot', rot + 'deg');
+                    
+                    // Asignar animación de subida Y LUEGO oscilación
+                    // Truco: Usamos 'floatUpAndStay' con forwards
+                    b.style.animationName = 'floatUpAndStay';
+                    b.style.animationFillMode = 'forwards';
+                    b.style.animationTimingFunction = 'ease-out';
+
+                    // Luego de subir, agregar animación de oscilación infinita
+                    setTimeout(() => {
+                        b.style.animationName = 'sway';
+                        b.style.animationDuration = '3s';
+                        b.style.animationIterationCount = 'infinite';
+                        b.style.animationTimingFunction = 'ease-in-out';
+                        // Fijar la posición manualmente para que no salten
+                        b.style.bottom = finalBottom + '%';
+                        b.style.transform = `translateX(${drift}px) rotate(${rot}deg)`;
+                    }, (speed + delay) * 1000);
+
+                    container.appendChild(b);
+                }
+            }
+
+            function affectFloorConfetti(clickX, clickY) {
+                // Esta función se mantiene por si en el futuro se quiere reactivar la interacción
+                // pero ya no es llamada por el evento pointerdown
+                const floorItems = overlay.querySelectorAll('.on-floor');
+                floorItems.forEach(item => {
+                    const rect = item.getBoundingClientRect();
+                    const dx = rect.left - clickX;
+                    const dy = rect.top - clickY;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+
+                    if (distance < 200) {
+                        const power = (200 - distance) / 200;
+                        const jumpX = (dx / distance) * (100 * power);
+                        const jumpY = - (150 * power) - (Math.random() * 50);
+
+                        item.style.setProperty('--jx', `${jumpX}px`);
+                        item.style.setProperty('--jy', `${jumpY}px`);
+                        
+                        item.classList.remove('jump');
+                        void item.offsetWidth; // Trigger reflow
+                        item.classList.add('jump');
+                        
+                        setTimeout(() => {
+                            item.classList.remove('jump');
+                            item.style.left = (rect.left + jumpX) + 'px';S
+                        }, 800);
+                    }
+                });
+            }
+        }
     </script>
 </body>
 </html>
