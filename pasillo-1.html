@@ -1389,7 +1389,7 @@ const defaultProductNames = [
 
             // 3. AGREGAR TOTAL AL FINAL (Debajo de la lista)
             ws_data.push([]); // Una fila vacía para separar
-            ws_data.push(["CANTIDAD DE PRODUCTOS:", countWithQuantity]); // El total
+            ws_data.push(["TOTAL PRODUCTOS CON EXISTENCIA:", countWithQuantity]); // El total
 
             // Ajuste de "padding" visual al ancho calculado
             maxHistoryLen = maxHistoryLen + 2;
@@ -1400,15 +1400,16 @@ const defaultProductNames = [
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Inventario pasillo 1");
 
+            // Configuración de anchos de columna (A=29, B=29, C=Dinámico, D=15)
             ws['!cols'] = [
-                { wch: 15 }, // Estado
-                { wch: 40 }, // Producto
-                { wch: maxHistoryLen }, // Historial (Dinámico)
-                { wch: 15 }  // Cantidad
+                { wch: 32 }, // A: ESTADO
+                { wch: 40 }, // B: PRODUCTO
+                { wch: maxHistoryLen }, // C: HISTORIAL (Dinámico)
+                { wch: 15 }  // D: CANTIDAD
             ];
 
             // Nombre del archivo usando solo la primera persona válida del Equipo 1
-            const fileName = `Inventario_pasillo1${team1FileSuffix}_${date.replace(/\//g, '-')}.xlsx`;
+            const fileName = `Inventario_pasillo 1${team1FileSuffix}_${date.replace(/\//g, '-')}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
 
