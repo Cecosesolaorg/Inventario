@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVENTARIO DE VIVERES PASILLO 1 PASTA </title>
+    <title>INVENTARIO DE VIVERES PASILLO 1  </title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de SheetJS para Excel -->
@@ -61,8 +61,9 @@
             overflow: hidden;
         }
         
+        /* AQUI SE AJUSTÓ EL PADDING PARA QUE SE VEA MENOS GRANDE */
         .table-header, .table-data {
-            padding: 12px 16px;
+            padding: 10px 12px; /* Reducido de 12px 16px */
             border-bottom: 1px solid #374151;
         }
 
@@ -73,6 +74,7 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             text-align: center;
+            font-size: 0.9rem; /* Header un poco más pequeño también */
         }
 
         .table-row { transition: background-color 0.2s; }
@@ -81,14 +83,17 @@
         /* Modo Oscuro (Default) */
         .table-row:hover { background-color: #1f2937; }
         
+        /* AQUI SE CAMBIÓ EL TAMAÑO DE LA FUENTE DEL PRODUCTO */
         .product-cell {
-            font-size: 0.95rem;
+            font-size: 0.85rem; /* Reducido de 0.95rem para que se lea mejor y menos amontonado */
             color: #e5e7eb;
             border-right: 1px solid #374151;
-            cursor: pointer; /* Indicar que es clickeable para el checklist */
-            user-select: none; /* Evitar selección de texto al hacer clic rápido */
-            -webkit-user-select: none; /* Safari */
+            cursor: pointer; 
+            user-select: none; 
+            -webkit-user-select: none;
             touch-action: manipulation;
+            font-weight: 500; /* Un poco de peso para legibilidad */
+            letter-spacing: 0.01em; /* Un poco de espacio entre letras */
         }
         
         /* Animación suave al presionar */
@@ -103,6 +108,7 @@
             background-color: rgba(17, 24, 39, 0.5);
             cursor: pointer;
             transition: background-color 0.2s;
+            font-size: 0.95rem; /* Mantener números legibles */
         }
         .qty-cell:hover {
             background-color: #374151;
@@ -130,16 +136,112 @@
         .light-theme .qty-cell:hover { background-color: #d1fae5; }
         .light-theme .zero-qty { color: #6b7280 !important; }
 
-        /* Estados Checklist Claro */
-        .light-theme .status-ok { background-color: #dcfce7 !important; color: #166534 !important; }
-        .light-theme .status-error { background-color: #fee2e2 !important; color: #991b1b !important; }
-
-        /* Inputs y Footer Claro */
-        .light-theme input[type="text"] { background-color: #ffffff; border-color: #94a3b8; color: #0f172a; }
-        .light-theme .footer-container { background-color: #e2e8f0; border-color: #94a3b8; }
-        
         /* Labels para los equipos en footer claro */
         .light-theme .team-label-bg { background-color: #e2e8f0; }
+
+        /* Efecto Clickable para el Header */
+        .header-team-box {
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .header-team-box:hover {
+            transform: translateY(-2px);
+            background-color: rgba(31, 41, 55, 0.8); /* gray-800 con más opacidad */
+        }
+        .header-team-box:active {
+            transform: scale(0.98);
+        }
+
+        /* --- ESTILOS DE LA NUEVA CALCULADORA --- */
+        .calc-container {
+            width: 320px;
+            background-color: #202020;
+            border: 1px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .calc-header {
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #d1d5db;
+        }
+
+        .display-area {
+            padding: 20px;
+            text-align: right;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            word-break: break-all;
+        }
+
+        .previous-op {
+            color: #a0a0a0;
+            font-size: 13px; /* Un poco más pequeño para que quepa más historial */
+            min-height: 20px;
+            margin-bottom: 5px;
+            /* Quitamos el truncate agresivo para intentar mostrar más si es posible, o usamos scroll */
+            overflow-x: auto; 
+            white-space: nowrap;
+            scrollbar-width: thin; /* Firefox */
+        }
+        /* Scrollbar para el historial */
+        .previous-op::-webkit-scrollbar { height: 4px; }
+        .previous-op::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 2px; }
+
+        .current-val {
+            font-size: 48px;
+            font-weight: 600;
+            line-height: 1;
+            overflow: hidden;
+            color: white;
+        }
+
+        .grid-pad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            padding: 2px;
+            background-color: #202020;
+        }
+
+        /* Usamos clase específica .calc-btn para no afectar botones globales */
+        .calc-btn {
+            height: 54px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            background-color: #3b3b3b;
+            color: white;
+            transition: background-color 0.1s;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .calc-btn:hover { background-color: #323232; }
+        .op-btn { background-color: #323232; }
+        .op-btn:hover { background-color: #3b3b3b; }
+        .num-btn { background-color: #3b3b3b; font-weight: bold; }
+        .num-btn:hover { background-color: #2c2c2c; }
+        
+        .equal-btn { background-color: #76b9ed; color: black; }
+        .equal-btn:hover { background-color: #5da0d4; }
+        
+        /* Botones especiales de acción inferior */
+        .action-btn { font-size: 14px; font-weight: bold; text-transform: uppercase; }
+        .action-cancel { background-color: #7f1d1d; color: #fecaca; }
+        .action-cancel:hover { background-color: #991b1b; }
+        .action-save { background-color: #65a30d; color: white; }
+        .action-save:hover { background-color: #4d7c0f; }
+
     </style>
 </head>
 <body class="p-2 md:p-6 min-h-screen">
@@ -163,16 +265,20 @@
                     
                     <!-- Contenedor de Equipos Separados -->
                     <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                        <!-- EQUIPO 1 (ROJO) -->
-                        <div class="text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-red-500 pl-3 flex-1 min-w-[140px]">
-                            <p class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-wider">Equipo 1</p>
+                        <!-- EQUIPO 1 (ROJO) - CLICKABLE -->
+                        <div onclick="openTeamModal()" class="header-team-box text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-red-500 pl-3 flex-1 min-w-[140px]" title="Clic para editar nombres">
+                            <p class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-wider flex justify-between items-center">
+                                Equipo 1 <span class="text-gray-500 text-[9px] font-normal lowercase">(editar)</span>
+                            </p>
                             <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
                             <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
                         </div>
                         
-                        <!-- EQUIPO 2 (VERDE) -->
-                        <div class="text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-green-500 pl-3 flex-1 min-w-[140px]">
-                            <p class="text-[10px] text-green-400 font-bold mb-1 uppercase tracking-wider">Equipo 2</p>
+                        <!-- EQUIPO 2 (VERDE) - CLICKABLE -->
+                        <div onclick="openTeamModal()" class="header-team-box text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-green-500 pl-3 flex-1 min-w-[140px]" title="Clic para editar nombres">
+                             <p class="text-[10px] text-green-400 font-bold mb-1 uppercase tracking-wider flex justify-between items-center">
+                                Equipo 2 <span class="text-gray-500 text-[9px] font-normal lowercase">(editar)</span>
+                            </p>
                             <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 3: <span id="resp3-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
                             <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 4: <span id="resp4-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
                         </div>
@@ -288,7 +394,7 @@
                     </div>
                 </div>
                 
-                <!-- Inputs Responsables SEPARADOS POR EQUIPO -->
+                <!-- Inputs Responsables SEPARADOS POR EQUIPO (Sincronizados con el Header/Modal) -->
                 <div class="w-full sm:w-2/3 flex flex-col sm:pl-4 sm:border-l border-gray-600 light-theme:border-gray-300">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         
@@ -334,56 +440,67 @@
         </footer>
     </div>
 
-    <!-- Modal Calculadora -->
-    <div id="calculator-modal" class="modal-overlay" onclick="if(event.target === this) closeCalculator()">
-        <div class="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-xs mx-4 transform transition-all border border-cyan-700 relative">
-            <!-- Header Calc -->
-            <div class="mb-4 text-center">
-                <h2 class="text-lg font-bold text-cyan-400 leading-tight truncate px-2" id="calc-product-name">Producto</h2>
+    <!-- Modal Calculadora Estándar -->
+    <div id="calculator-modal" class="modal-overlay" onclick="if(event.target === this) window.closeCalculator()">
+        <div class="calc-container" onclick="event.stopPropagation()">
+            <!-- Título superior -->
+            <div class="calc-header">
+                <div class="flex items-center gap-3 w-full">
+                    <span>&#9776;</span>
+                    <span class="font-semibold truncate w-full" id="calc-product-name">Producto</span>
+                </div>
             </div>
 
-            <!-- Pantalla -->
-            <div class="bg-gray-900 p-3 mb-4 rounded-lg text-right border border-gray-700 shadow-inner">
-                <div class="text-gray-500 text-xs h-4 mb-1 truncate" id="calc-history"></div>
-                <div id="calc-display" class="text-white text-4xl font-mono font-bold truncate tracking-widest">0</div>
+            <!-- Pantalla de resultados -->
+            <div class="display-area">
+                <div id="prev-operation" class="previous-op"></div>
+                <div id="display" class="current-val">0</div>
             </div>
 
-            <!-- Teclado -->
-            <div class="grid grid-cols-4 gap-2 mb-4">
-                <button onclick="clearCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800">C</button>
-                <button onclick="backspaceCalculator()" class="col-span-1 bg-red-900/80 text-red-200 rounded-lg p-3 font-bold hover:bg-red-800">⌫</button>
-                <button onclick="handleOperator('/')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">÷</button>
-                <button onclick="handleOperator('*')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">×</button>
-
-                <button onclick="inputDigit('7')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">7</button>
-                <button onclick="inputDigit('8')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">8</button>
-                <button onclick="inputDigit('9')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">9</button>
-                <button onclick="handleOperator('-')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">-</button>
-
-                <button onclick="inputDigit('4')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">4</button>
-                <button onclick="inputDigit('5')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">5</button>
-                <button onclick="inputDigit('6')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">6</button>
-                <button onclick="handleOperator('+')" class="bg-gray-700 text-cyan-400 rounded-lg p-3 font-bold hover:bg-gray-600">+</button>
-
-                <button onclick="inputDigit('1')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">1</button>
-                <button onclick="inputDigit('2')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">2</button>
-                <button onclick="inputDigit('3')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">3</button>
-                <button onclick="handleOperator('=')" class="row-span-2 bg-cyan-600 text-white rounded-lg p-3 font-bold hover:bg-cyan-500 shadow-lg flex items-center justify-center text-xl">=</button>
-
-                <button onclick="inputDigit('0')" class="col-span-2 bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">0</button>
-                <button onclick="inputDigit('.')" class="bg-gray-600 text-white rounded-lg p-3 font-bold hover:bg-gray-500">.</button>
+            <!-- Teclado Numérico y Funciones -->
+            <div class="grid-pad">
+                <button class="calc-btn" onclick="appendOperator('%')">%</button>
+                <button class="calc-btn" onclick="clearEntry()">CE</button>
+                <button class="calc-btn" onclick="allClear()">C</button>
+                <button class="calc-btn" onclick="deleteLast()"><span style="font-size: 20px;">&#9003;</span></button>
+                
+                <button class="calc-btn" onclick="specialOp('1/x')"><sup>1</sup>/<sub>x</sub></button>
+                <button class="calc-btn" onclick="specialOp('x2')">x&sup2;</button>
+                <button class="calc-btn" onclick="specialOp('sqrt')">&radic;x</button>
+                <button class="calc-btn op-btn" onclick="appendOperator('/')">&divide;</button>
+                
+                <button class="calc-btn num-btn" onclick="appendNumber('7')">7</button>
+                <button class="calc-btn num-btn" onclick="appendNumber('8')">8</button>
+                <button class="calc-btn num-btn" onclick="appendNumber('9')">9</button>
+                <button class="calc-btn op-btn" onclick="appendOperator('*')">&times;</button>
+                
+                <button class="calc-btn num-btn" onclick="appendNumber('4')">4</button>
+                <button class="calc-btn num-btn" onclick="appendNumber('5')">5</button>
+                <button class="calc-btn num-btn" onclick="appendNumber('6')">6</button>
+                <button class="calc-btn op-btn" onclick="appendOperator('-')">&minus;</button>
+                
+                <button class="calc-btn num-btn" onclick="appendNumber('1')">1</button>
+                <button class="calc-btn num-btn" onclick="appendNumber('2')">2</button>
+                <button class="calc-btn num-btn" onclick="appendNumber('3')">3</button>
+                <button class="calc-btn op-btn" onclick="appendOperator('+')">+</button>
+                
+                <button class="calc-btn" onclick="toggleSign()">+/-</button>
+                <button class="calc-btn num-btn" onclick="appendNumber('0')">0</button>
+                <button class="calc-btn" onclick="appendNumber('.')">,</button>
+                <button class="calc-btn equal-btn" onclick="calculate(true)">=</button>
             </div>
-
-            <!-- Botones Control -->
-            <div class="flex space-x-2">
-                <button onclick="closeCalculator()" class="flex-1 py-3 bg-gray-700 text-gray-300 rounded-xl font-semibold hover:bg-gray-600">Cancelar</button>
-                <button onclick="saveAndClose()" class="flex-1 py-3 bg-lime-600 text-white rounded-xl font-bold hover:bg-lime-500 shadow-lg shadow-lime-900/20">GUARDAR</button>
+            
+            <!-- Acciones de Guardado -->
+            <div class="grid grid-cols-2 gap-0 border-t border-gray-700">
+                <button onclick="window.closeCalculator()" class="calc-btn action-btn action-cancel">Cancelar</button>
+                <button onclick="window.saveAndClose()" class="calc-btn action-btn action-save">Guardar</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Agregar Producto -->
-    <div id="add-product-modal" class="modal-overlay" onclick="if(event.target === this) closeAddProductModal()">
+    <!-- Modal Agregar Producto (MODIFICADO: AHORA EN LA PARTE SUPERIOR) -->
+    <!-- Se añadieron estilos inline para forzar la alineación superior: align-items: flex-start; padding-top: 5rem; -->
+    <div id="add-product-modal" class="modal-overlay" style="align-items: flex-start; padding-top: 5rem;" onclick="if(event.target === this) closeAddProductModal()">
         <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-purple-500">
             <h3 class="text-xl font-bold text-purple-400 mb-4 uppercase">➕ Nuevo Producto</h3>
             <p class="text-gray-300 mb-4 text-sm">Ingresa el nombre del producto que deseas añadir a la lista.</p>
@@ -416,6 +533,46 @@
             </div>
         </div>
     </div>
+    
+    <!-- Modal Gestionar Equipos (MODIFICADO: MAS ARRIBA Y COMPACTO) -->
+    <div id="team-modal" class="modal-overlay" style="align-items: flex-start; padding-top: 2rem;" onclick="if(event.target === this) closeTeamModal()">
+        <div class="bg-gray-800 p-4 md:p-6 rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all border border-cyan-600">
+            <h3 class="text-lg font-bold text-cyan-400 mb-3 uppercase text-center border-b border-gray-700 pb-2">👥 Gestionar Responsables</h3>
+            
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <!-- Columna Equipo 1 -->
+                <div class="space-y-2">
+                    <h4 class="text-red-400 font-bold text-[10px] uppercase border-b border-red-500/30 pb-1">Equipo 1 (Rojo)</h4>
+                    <div>
+                        <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 1</label>
+                        <input type="text" id="modal-resp-1" class="w-full p-1.5 rounded bg-gray-900 border border-red-900 focus:border-red-500 text-white text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 2</label>
+                        <input type="text" id="modal-resp-2" class="w-full p-1.5 rounded bg-gray-900 border border-red-900 focus:border-red-500 text-white text-sm outline-none">
+                    </div>
+                </div>
+
+                <!-- Columna Equipo 2 -->
+                <div class="space-y-2">
+                    <h4 class="text-green-400 font-bold text-[10px] uppercase border-b border-green-500/30 pb-1">Equipo 2 (Verde)</h4>
+                    <div>
+                        <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 3</label>
+                        <input type="text" id="modal-resp-3" class="w-full p-1.5 rounded bg-gray-900 border border-green-900 focus:border-green-500 text-white text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 4</label>
+                        <input type="text" id="modal-resp-4" class="w-full p-1.5 rounded bg-gray-900 border border-green-900 focus:border-green-500 text-white text-sm outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-3 border-t border-gray-700">
+                <button onclick="closeTeamModal()" class="py-1.5 px-3 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="saveTeamModal()" class="py-1.5 px-4 bg-cyan-600 text-white font-bold text-sm rounded-lg hover:bg-cyan-500 transition shadow-lg">Guardar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal de Confirmación para Borrar Todo -->
     <div id="reset-modal" class="modal-overlay" onclick="if(event.target === this) closeResetModal()">
@@ -432,7 +589,7 @@
 
     <script>
         // --- CONSTANTES Y ESTRUCTURA DE DATOS ---
-        const LOCAL_STORAGE_KEY = 'PastaInventoryData_v2'; 
+        const LOCAL_STORAGE_KEY = 'Pasillo 1 InventoryData_v2'; 
         
 const defaultProductNames = [
             "ACEITE DE OLIVA 250ML ", "ACEITE DE OLIVA 500ML", "ALIÑOS SAN MIGUEL GRANDE ", "ALIÑOS SAN MIGUEL PEQUEÑO ", 
@@ -658,20 +815,17 @@ const defaultProductNames = [
 
         window.startLongPress = function(index) {
             longPressTriggered = false;
-            // Iniciar temporizador (800ms)
+            // Iniciar temporizador (AUMENTADO A 5 SEGUNDOS)
             pressTimer = setTimeout(() => {
                 longPressTriggered = true;
                 // Vibración háptica si es soportada
                 if (navigator.vibrate) navigator.vibrate(50);
                 window.openEditProductModal(index);
-            }, 800);
+            }, 5000); // <-- MODIFICADO: 5000ms (5 segundos)
         }
 
         window.endLongPress = function(event, index) {
             clearTimeout(pressTimer);
-            // MODIFICADO: Ya NO llamamos a toggleStatus aquí.
-            // Si fue un toque rápido (tap) sobre el texto, no hacemos nada.
-            // El usuario debe tocar el botón del checkbox explícitamente.
             longPressTriggered = false; 
         }
 
@@ -732,12 +886,46 @@ const defaultProductNames = [
             }
         }
 
+        // --- GESTIÓN DE EQUIPOS (MODAL) ---
+        window.openTeamModal = function() {
+            const r1 = document.getElementById('responsable-1').value;
+            const r2 = document.getElementById('responsable-2').value;
+            const r3 = document.getElementById('responsable-3').value;
+            const r4 = document.getElementById('responsable-4').value;
+
+            document.getElementById('modal-resp-1').value = r1;
+            document.getElementById('modal-resp-2').value = r2;
+            document.getElementById('modal-resp-3').value = r3;
+            document.getElementById('modal-resp-4').value = r4;
+
+            document.getElementById('team-modal').style.display = 'flex';
+        }
+
+        window.closeTeamModal = function() {
+            document.getElementById('team-modal').style.display = 'none';
+        }
+
+        window.saveTeamModal = function() {
+            const r1 = document.getElementById('modal-resp-1').value.trim();
+            const r2 = document.getElementById('modal-resp-2').value.trim();
+            const r3 = document.getElementById('modal-resp-3').value.trim();
+            const r4 = document.getElementById('modal-resp-4').value.trim();
+
+            // Sincronizar con los inputs del footer
+            document.getElementById('responsable-1').value = r1;
+            document.getElementById('responsable-2').value = r2;
+            document.getElementById('responsable-3').value = r3;
+            document.getElementById('responsable-4').value = r4;
+
+            // Actualizar vista y guardar
+            window.updateReportHeaders(true);
+            window.closeTeamModal();
+        }
+
         // --- LÓGICA DE CHECKLIST ---
         window.toggleStatus = function(index) {
             // Si acabamos de abrir el modal de edición, no hacemos toggle
             if (longPressTriggered) return;
-
-            // ELIMINADO: window.clearSearch(false); Para permitir marcar varios sin perder la búsqueda
 
             const item = inventoryData[index];
             if (!item.status) {
@@ -779,23 +967,23 @@ const defaultProductNames = [
                 let statusClass = '';
                 // Botón por defecto (Gris / Vacío) - Más grande para facilitar el toque
                 let statusIcon = `
-                    <div class="w-8 h-8 rounded-lg border-2 border-gray-500 bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors">
-                        <!-- Vacío -->
+                    <div class="w-7 h-7 rounded-lg border-2 border-gray-500 bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors">
+                        <!-- Vacío (Tamaño reducido a w-7 h-7) -->
                     </div>`;
                 
                 if (item.status === 'ok') {
                     statusClass = 'status-ok'; // Fondo verde claro en toda la celda
                     statusIcon = `
-                        <div class="w-8 h-8 rounded-lg bg-green-500 border-2 border-green-400 flex items-center justify-center text-white shadow-lg shadow-green-500/50 transform scale-110 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <div class="w-7 h-7 rounded-lg bg-green-500 border-2 border-green-400 flex items-center justify-center text-white shadow-lg shadow-green-500/50 transform scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                         </div>`;
                 } else if (item.status === 'error') {
                     statusClass = 'status-error'; // Fondo rojo claro en toda la celda
                     statusIcon = `
-                        <div class="w-8 h-8 rounded-lg bg-red-500 border-2 border-red-400 flex items-center justify-center text-white shadow-lg shadow-red-500/50 transform scale-110 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <div class="w-7 h-7 rounded-lg bg-red-500 border-2 border-red-400 flex items-center justify-center text-white shadow-lg shadow-red-500/50 transform scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                             </svg>
                         </div>`;
@@ -810,14 +998,14 @@ const defaultProductNames = [
                             <!-- BOTÓN DE ACCIÓN (CHECKLIST) -->
                             <button 
                                 onclick="window.toggleStatus(${index})"
-                                class="mr-4 focus:outline-none active:scale-90 transition-transform"
+                                class="mr-3 focus:outline-none active:scale-90 transition-transform"
                                 title="Marcar estado"
                             >
                                 ${statusIcon}
                             </button>
 
                             <!-- NOMBRE DEL PRODUCTO (Solo Long Press) -->
-                            <span class="flex-1 py-2 select-none cursor-text"
+                            <span class="flex-1 py-1 select-none cursor-text"
                                 ontouchstart="startLongPress(${index})"
                                 ontouchend="endLongPress(event, ${index})"
                                 onmousedown="startLongPress(${index})"
@@ -875,229 +1063,258 @@ const defaultProductNames = [
             document.getElementById('stocked-products-count').textContent = count;
         }
 
-        // --- CALCULADORA ---
-        const calculator = {
-            displayValue: '0',
-            firstOperand: null,
-            waitingForSecondOperand: false,
-            operator: null,
-            currentProductIndex: null,
-            fullExpression: '0',
-            isResultCalculated: false,
-        };
+        // --- LÓGICA CALCULADORA ESTÁNDAR (AUDIT TRAIL) ---
+        let currentInput = '0';
+        let runningTotal = null;
+        let lastOperator = null;
+        let fullHistory = '';
+        let shouldResetScreen = false;
+        let editingProductIndexForCalc = null; 
+
+        const displayElement = document.getElementById('display');
+        const prevOpElement = document.getElementById('prev-operation');
 
         window.openCalculator = function(index, productName) {
-            window.clearSearch(false); // Limpiar búsqueda automáticamente
-            calculator.currentProductIndex = index;
+            window.clearSearch(false);
+            editingProductIndexForCalc = index; 
+            
+            // CARGA INTELIGENTE: Si el historial es '0', empezamos limpio.
+            // Si tiene datos (ej: "10 + 10 = 20"), lo cargamos tal cual.
+            fullHistory = inventoryData[index].history || '';
+            if (fullHistory === '0') fullHistory = '';
+            
+            // La pantalla principal muestra la cantidad actual
+            currentInput = String(inventoryData[index].quantity || '0');
+            
+            runningTotal = null;
+            lastOperator = null;
+            shouldResetScreen = false;
+
             document.getElementById('calc-product-name').innerText = productName;
+            updateDisplay();
             
-            const currentQty = inventoryData[index].quantity;
-            const currentHist = inventoryData[index].history || String(currentQty); 
+            // Mostrar historial recuperado
+            if(document.getElementById('prev-operation')) {
+                document.getElementById('prev-operation').textContent = fullHistory;
+            }
             
-            window.clearCalculator(false);
-
-            calculator.displayValue = String(currentQty);
-            calculator.fullExpression = currentHist;
-            calculator.firstOperand = parseFloat(currentQty) || 0;
-            calculator.isResultCalculated = true;
-
-            window.updateDisplay();
             document.getElementById('calculator-modal').style.display = 'flex';
         }
 
         window.closeCalculator = function() {
             document.getElementById('calculator-modal').style.display = 'none';
-            calculator.currentProductIndex = null;
+            editingProductIndexForCalc = null;
         }
 
         window.updateDisplay = function() {
-            const display = document.getElementById('calc-display');
-            const history = document.getElementById('calc-history');
+            const display = document.getElementById('display');
+            if(!display) return;
             
-            const formattedDisplay = calculator.displayValue.length > 12 ? 
-                                     parseFloat(calculator.displayValue).toExponential(3) : 
-                                     calculator.displayValue;
-            
-            display.textContent = formattedDisplay;
-            history.textContent = calculator.fullExpression;
-
-            if(calculator.displayValue.length > 9) {
-                display.style.fontSize = '1.5rem';
+            display.innerText = currentInput;
+            if (currentInput.length > 10) {
+                display.style.fontSize = '32px';
             } else {
-                display.style.fontSize = '2.25rem';
+                display.style.fontSize = '48px';
             }
         }
-        
-        window.clearCalculator = function(fullReset = true) {
-            calculator.displayValue = '0';
-            calculator.firstOperand = null;
-            calculator.waitingForSecondOperand = false;
-            calculator.operator = null;
-            calculator.isResultCalculated = false;
-            if (fullReset) {
-                 calculator.fullExpression = '0';
-            } else if (calculator.currentProductIndex !== null) {
-                calculator.fullExpression = inventoryData[calculator.currentProductIndex].history || '0';
+
+        window.appendNumber = function(number) {
+            if (currentInput === '0' || shouldResetScreen) {
+                currentInput = number === '.' ? '0.' : number;
+                shouldResetScreen = false;
+            } else {
+                if (number === '.' && currentInput.includes('.')) return;
+                currentInput += number;
             }
             window.updateDisplay();
         }
 
-        window.backspaceCalculator = function() {
-            const { displayValue, fullExpression, waitingForSecondOperand } = calculator;
-            if (waitingForSecondOperand || calculator.isResultCalculated) return;
-
-            calculator.displayValue = displayValue.length === 1 ? '0' : displayValue.slice(0, -1);
+        window.appendOperator = function(op) {
+            const val = parseFloat(currentInput);
+            const prevOpDisplay = document.getElementById('prev-operation');
             
-            if (fullExpression.length > 0) {
-                 calculator.fullExpression = fullExpression.slice(0, -1).trim();
-            }
-            if (calculator.fullExpression.length === 0) {
-                 calculator.fullExpression = '0';
-            }
-            window.updateDisplay();
-        }
-        
-        window.calculate = function(firstOperand, secondOperand, operator) {
-            const num1 = parseFloat(firstOperand);
-            const num2 = parseFloat(secondOperand);
-            if (isNaN(num1) || isNaN(num2)) return secondOperand;
-
-            let result = 0;
-            if (operator === '+') result = num1 + num2;
-            else if (operator === '-') result = num1 - num2;
-            else if (operator === '*') result = num1 * num2;
-            else if (operator === '/') {
-                if (num2 === 0) return 0; 
-                result = num1 / num2;
-            }
-            return Math.round(result * 1000) / 1000;
-        }
-
-        window.inputDigit = function(digit) {
-            const { displayValue, waitingForSecondOperand, isResultCalculated, fullExpression } = calculator;
-
-            if (isResultCalculated) {
-                calculator.displayValue = digit === '.' ? '0.' : digit;
-                calculator.fullExpression = calculator.displayValue;
-                calculator.isResultCalculated = false;
-                calculator.firstOperand = null; 
-                calculator.operator = null;
-                calculator.waitingForSecondOperand = false; 
-            } else if (digit === '.') {
-                if (displayValue.includes('.')) return;
+            if (runningTotal === null) {
+                runningTotal = val;
                 
-                if (waitingForSecondOperand) {
-                     calculator.displayValue = '0.';
-                     calculator.fullExpression = fullExpression.trim() + ' 0.';
-                     calculator.waitingForSecondOperand = false;
+                // LÓGICA CLAVE: APPENDING
+                let text = fullHistory.trim();
+                
+                if (text === '') {
+                    // Si estaba vacío, empezamos: "10 +"
+                    fullHistory = currentInput + ' ' + getOpSymbol(op);
                 } else {
-                    calculator.displayValue = displayValue + digit;
-                    calculator.fullExpression += digit;
+                    // Si ya había historia (ej: "... = 20"), AGREGAMOS el operador al final.
+                    // Resultado: "... = 20 +"
+                    fullHistory = text + ' ' + getOpSymbol(op);
                 }
-            } else if (waitingForSecondOperand) {
-                calculator.displayValue = digit;
-                calculator.waitingForSecondOperand = false;
-                calculator.fullExpression = fullExpression.trim() + ' ' + digit;
+            } else if (!shouldResetScreen) {
+                 // Cadena continua (ej: 10 + 10 + ...)
+                 window.calculate(false);
+                 fullHistory += ' ' + getOpSymbol(op);
             } else {
-                if (displayValue === '0' && digit !== '0') {
-                    calculator.displayValue = digit;
-                    if (fullExpression === '0') {
-                         calculator.fullExpression = digit;
-                    } else if (fullExpression.endsWith('0') && fullExpression.length > 1) {
-                         const lastCharIndex = fullExpression.trim().length - 1;
-                         if (fullExpression.trim().charAt(lastCharIndex) === '0' && fullExpression.trim().length > 1) {
-                             calculator.fullExpression = fullExpression.slice(0, lastCharIndex) + digit;
-                         } else {
-                             calculator.fullExpression += digit;
-                         }
-                    } else {
-                        calculator.fullExpression += digit;
+                 // Cambio de operador
+                 lastOperator = op;
+                 fullHistory = fullHistory.slice(0, -1) + getOpSymbol(op);
+                 if(prevOpDisplay) prevOpDisplay.textContent = fullHistory;
+                 return;
+            }
+
+            lastOperator = op;
+            if(prevOpDisplay) prevOpDisplay.textContent = fullHistory;
+            shouldResetScreen = true;
+        }
+
+        window.getOpSymbol = function(op) {
+            switch(op) {
+                case '*': return '×';
+                case '/': return '÷';
+                case '-': return '−';
+                case '+': return '+';
+                default: return op;
+            }
+        }
+
+        window.calculate = function(isFinal) {
+            if (lastOperator === null || (shouldResetScreen && isFinal === false)) return;
+            
+            const current = parseFloat(currentInput);
+            let result;
+
+            switch (lastOperator) {
+                case '+': result = runningTotal + current; break;
+                case '-': result = runningTotal - current; break;
+                case '*': result = runningTotal * current; break;
+                case '/': 
+                    if (current === 0) {
+                        window.showError("Error");
+                        return;
                     }
-                } else if (displayValue === '0' && digit === '0') {
-                    return; 
-                } else {
-                    calculator.displayValue = displayValue + digit;
-                    calculator.fullExpression += digit;
-                }
+                    result = runningTotal / current; 
+                    break;
+                case '%': result = (runningTotal * current) / 100; break;
+                default: return;
+            }
+            
+            result = Math.round(result * 1000000) / 1000000;
+            const prevOpDisplay = document.getElementById('prev-operation');
+
+            if (isFinal) {
+                // AL PRESIONAR IGUAL:
+                // No borramos fullHistory. Lo extendemos.
+                // Ej: "... + 10" se convierte en "... + 10 = 30"
+                fullHistory = fullHistory + ' ' + currentInput + ' = ' + result;
+                
+                if(prevOpDisplay) prevOpDisplay.textContent = fullHistory;
+                
+                currentInput = result.toString();
+                runningTotal = null;
+                lastOperator = null;
+                // NOTA: NO borramos fullHistory. Se mantiene visible.
+            } else {
+                // Cálculo intermedio
+                fullHistory = fullHistory + ' ' + currentInput;
+                runningTotal = result;
+                currentInput = result.toString();
+            }
+            
+            shouldResetScreen = true;
+            window.updateDisplay();
+        }
+
+        window.specialOp = function(type) {
+            let val = parseFloat(currentInput);
+            switch(type) {
+                case '1/x': val = 1 / val; break;
+                case 'x2': val = val * val; break;
+                case 'sqrt': val = Math.sqrt(val); break;
+            }
+            currentInput = val.toString();
+            window.updateDisplay();
+            shouldResetScreen = true;
+        }
+
+        window.clearEntry = function() {
+            currentInput = '0';
+            window.updateDisplay();
+        }
+
+        // BORRAR TODO (C): Este SÍ limpia el historial para empezar de cero.
+        window.allClear = function() {
+            currentInput = '0';
+            runningTotal = null;
+            lastOperator = null;
+            fullHistory = ''; // Reinicia la cadena
+            if(document.getElementById('prev-operation')) document.getElementById('prev-operation').textContent = '';
+            window.updateDisplay();
+        }
+
+        window.deleteLast = function() {
+            if (shouldResetScreen) return;
+            if (currentInput.length <= 1) {
+                currentInput = '0';
+            } else {
+                currentInput = currentInput.slice(0, -1);
             }
             window.updateDisplay();
         }
 
-        window.handleOperator = function(nextOperator) {
-            const { firstOperand, displayValue, operator, waitingForSecondOperand, isResultCalculated, fullExpression } = calculator;
-            const inputValue = parseFloat(displayValue);
-
-            if (isResultCalculated) {
-                if (nextOperator === '=') return; 
-                calculator.fullExpression = fullExpression.trim() + ` ${nextOperator} `;
-                calculator.firstOperand = inputValue;
-                calculator.operator = nextOperator;
-                calculator.waitingForSecondOperand = true;
-                calculator.isResultCalculated = false;
-                window.updateDisplay();
-                return;
-            }
-            if (waitingForSecondOperand && nextOperator !== '=') {
-                calculator.fullExpression = fullExpression.slice(0, -2).trim() + ` ${nextOperator} `;
-                calculator.operator = nextOperator;
-                window.updateDisplay();
-                return; 
-            }
-            if (nextOperator === '=') {
-                if (operator === null) return;
-                const secondOperand = waitingForSecondOperand ? firstOperand : inputValue;
-                const result = window.calculate(firstOperand, secondOperand, operator);
-                calculator.displayValue = String(result);
-                calculator.firstOperand = result;
-                calculator.operator = null; 
-                calculator.waitingForSecondOperand = false;
-                if (waitingForSecondOperand) {
-                    calculator.fullExpression += `${secondOperand} = ${result}`;
-                } else {
-                    calculator.fullExpression += ` = ${result}`;
-                }
-                calculator.isResultCalculated = true;
-                window.updateDisplay();
-                return;
-            }
-            if (firstOperand !== null && operator) {
-                const result = window.calculate(firstOperand, inputValue, operator);
-                calculator.displayValue = String(result);
-                calculator.firstOperand = result; 
-            } else if (firstOperand === null) {
-                calculator.firstOperand = inputValue;
-            }
-            calculator.waitingForSecondOperand = true;
-            calculator.operator = nextOperator;
-            calculator.isResultCalculated = false;
-            calculator.fullExpression += ` ${nextOperator} `; 
+        window.toggleSign = function() {
+            currentInput = (parseFloat(currentInput) * -1).toString();
             window.updateDisplay();
         }
 
+        window.showError = function(msg) {
+            const display = document.getElementById('display');
+            if(display) {
+                const oldText = display.innerText;
+                display.innerText = msg;
+                setTimeout(() => {
+                     display.innerText = oldText;
+                     window.allClear();
+                }, 1500);
+            }
+        }
+
+        // GUARDAR: Toma lo que hay en pantalla (incluyendo el historial visible)
         window.saveAndClose = function() {
-            if (calculator.currentProductIndex === null) {
+            if (lastOperator !== null && !shouldResetScreen) {
+                window.calculate(true);
+            }
+
+            if (editingProductIndexForCalc === null) {
                 window.closeCalculator();
                 return;
             }
-            if (calculator.operator && !calculator.waitingForSecondOperand) {
-                 window.handleOperator('=');
-            } else if (calculator.operator && calculator.waitingForSecondOperand) {
-                 window.handleOperator('=');
-            }
 
-            const finalValue = parseFloat(calculator.displayValue);
-            let finalHistory = calculator.fullExpression;
-
+            const finalValue = parseFloat(currentInput);
+            
             if (finalValue >= 0 && !isNaN(finalValue)) {
-                inventoryData[calculator.currentProductIndex].quantity = finalValue;
-                inventoryData[calculator.currentProductIndex].history = finalHistory;
+                inventoryData[editingProductIndexForCalc].quantity = finalValue;
+                // Guardamos el texto completo del historial
+                const histElem = document.getElementById('prev-operation');
+                inventoryData[editingProductIndexForCalc].history = histElem ? histElem.textContent : '';
             } else {
-                inventoryData[calculator.currentProductIndex].quantity = 0;
-                inventoryData[calculator.currentProductIndex].history = "0";
+                inventoryData[editingProductIndexForCalc].quantity = 0;
             }
+            
             window.saveInventoryData();
             window.closeCalculator();
         }
+
+        // Manejo de teclado
+        window.addEventListener('keydown', (e) => {
+            if(document.getElementById('calculator-modal').style.display !== 'flex') return;
+
+            if (e.key >= 0 && e.key <= 9) window.appendNumber(e.key);
+            if (e.key === '.' || e.key === ',') window.appendNumber('.');
+            if (e.key === '+') window.appendOperator('+');
+            if (e.key === '-') window.appendOperator('-');
+            if (e.key === '*') window.appendOperator('*');
+            if (e.key === '/') window.appendOperator('/');
+            if (e.key === 'Enter' || e.key === '=') window.calculate(true);
+            if (e.key === 'Backspace') window.deleteLast();
+            if (e.key === 'Escape') window.closeCalculator();
+        });
         
         // --- MODALES ---
         window.openResetModal = function() { document.getElementById('reset-modal').style.display = 'flex'; }
@@ -1111,58 +1328,87 @@ const defaultProductNames = [
             const r4 = document.getElementById('responsable-4').value.trim();
             const date = document.getElementById('report-date').textContent;
             
-            // Construir texto de Equipo 1 (Resp 1 y 2) para el reporte interno
+            // Construir texto de Equipo 1 (Resp 1 y 2) para el reporte interno (celdas dentro del excel)
             const team1Names = [r1, r2].filter(n => n && n !== "SIN NOMBRE" && n !== "");
             const team1Text = team1Names.length > 0 ? team1Names.join(" / ").toUpperCase() : "SIN ASIGNAR";
 
-            // Construir nombre para el ARCHIVO basado en Equipo 1 (Sanitizado: espacios -> guiones bajos)
-            const team1FileSuffix = team1Names.length > 0 
-                                    ? "_" + team1Names.join("-").toUpperCase().replace(/[^A-Z0-9\-]/g, '_') 
+            // --- LÓGICA PARA EL NOMBRE DEL ARCHIVO (PRIORIDAD AL EQUIPO ROJO) ---
+            // Tomamos al Responsable 1, si no existe, tomamos al Responsable 2
+            let nameForFile = r1;
+            if (!nameForFile || nameForFile === "SIN NOMBRE") {
+                nameForFile = r2;
+            }
+            
+            // Sanitizar nombre para que sea válido en un archivo (quitar caracteres raros)
+            const team1FileSuffix = (nameForFile && nameForFile !== "SIN NOMBRE") 
+                                    ? "_" + nameForFile.toUpperCase().replace(/[^A-Z0-9\-]/g, '_') 
                                     : "";
 
             // Construir texto de Equipo 2 (Resp 3 y 4)
             const team2Names = [r3, r4].filter(n => n && n !== "SIN NOMBRE" && n !== "");
             const team2Text = team2Names.length > 0 ? team2Names.join(" / ").toUpperCase() : "SIN ASIGNAR";
 
+            // FILTRAR PRODUCTOS CON EXISTENCIA (>0)
+            const itemsWithQuantity = inventoryData.filter(item => parseFloat(item.quantity) > 0);
+            const countWithQuantity = itemsWithQuantity.length;
+
             // 1. Crear matriz de datos para Excel
+            // CABECERA (Header Info)
             const ws_data = [
                 ["Inventario F.E", "CECOSESOLA R.L J085030140"],
-                ["PASILLO", "PASTAS - FERIA DEL ESTE"],
+                ["PASILLO", "Pasillo 1 - FERIA DEL ESTE"],
                 ["FECHA", date],
                 ["EQUIPO 1 (ROJO):", team1Text],
                 ["EQUIPO 2 (VERDE):", team2Text],
-                [], // Fila vacía
-                ["ESTADO", "PRODUCTO", "HISTORIAL", "CANTIDAD"] 
+                [], // Fila vacía antes de la tabla
+                ["ESTADO", "PRODUCTO", "HISTORIAL", "CANTIDAD"] // Cabeceras de columna
             ];
 
-            // 2. Agregar los datos del inventario con su estado
-            inventoryData.forEach(item => {
+            // Variable para calcular el ancho máximo del historial
+            let maxHistoryLen = 15; 
+
+            // 2. Agregar los datos del inventario (FILAS DE PRODUCTOS)
+            itemsWithQuantity.forEach(item => {
                 let estadoTexto = "PENDIENTE";
                 if(item.status === 'ok') estadoTexto = "CORRECTO";
                 if(item.status === 'error') estadoTexto = "DIFERENCIA";
 
+                const historyText = item.history || "0";
+                
+                if (historyText.length > maxHistoryLen) {
+                    maxHistoryLen = historyText.length;
+                }
+
                 ws_data.push([
                     estadoTexto,
                     item.name,
-                    item.history || "0",
+                    historyText,
                     parseFloat(item.quantity)
                 ]);
             });
 
-            // 3. Crear hoja de trabajo y libro
+            // 3. AGREGAR TOTAL AL FINAL (Debajo de la lista)
+            ws_data.push([]); // Una fila vacía para separar
+            ws_data.push(["TOTAL PRODUCTOS CON EXISTENCIA:", countWithQuantity]); // El total
+
+            // Ajuste de "padding" visual al ancho calculado
+            maxHistoryLen = maxHistoryLen + 2;
+            if (maxHistoryLen > 150) maxHistoryLen = 150;
+
+            // 4. Crear hoja de trabajo y libro
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Inventario Pasta");
+            XLSX.utils.book_append_sheet(wb, ws, "Inventario pasillo 1");
 
             ws['!cols'] = [
                 { wch: 15 }, // Estado
                 { wch: 40 }, // Producto
-                { wch: 30 }, // Historial
+                { wch: maxHistoryLen }, // Historial (Dinámico)
                 { wch: 15 }  // Cantidad
             ];
 
-            // Nombre del archivo modificado para incluir el Equipo 1
-            const fileName = `Inventario_pasta${team1FileSuffix}_${date.replace(/\//g, '-')}.xlsx`;
+            // Nombre del archivo usando solo la primera persona válida del Equipo 1
+            const fileName = `Inventario_pasillo1${team1FileSuffix}_${date.replace(/\//g, '-')}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
 
