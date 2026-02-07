@@ -1,10 +1,9 @@
-Ç
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVENTARIO DE VIVERES PASILLO ARRIBA 4,5 Y 6  </title>
+    <title>INVENTARIO DE VIVERES PASILLO ARRIBA 4-5-6  </title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de SheetJS para Excel -->
@@ -477,7 +476,7 @@
                 <!-- Fila 2: PASILLO Y RESPONSABLES -->
                 <div class="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div class="mb-2 md:mb-0 flex-1">
-                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase"> ★-PASILLO ARRIBA 4,5 Y 6-★ </h2>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase"> ★-PASILLO arriba 4-5-6-★ </h2>
                         <h3 class="text-lg font-bold text-gray-300 light-theme:text-gray-600">FERIA DEL ESTE</h3>
                     </div>
                     
@@ -829,7 +828,7 @@
 
     <script>
         // --- CONSTANTES Y ESTRUCTURA DE DATOS ---
-        const LOCAL_STORAGE_KEY = 'Pasillo arriba 4,5 y 6 InventoryData_v2'; 
+        const LOCAL_STORAGE_KEY = 'Pasillo ARRIBA 4-5-6 InventoryData_v2'; 
         
         // Variable global para disparar la fiesta desde cualquier lugar
         window.triggerCelebration = null;
@@ -1724,7 +1723,7 @@ const listaProductosCompleta = [
             // CABECERA (Header Info)
             const ws_data = [
                 ["INVENTARIO F.E", "-----------★CECOSESOLA R.L J085030140★----------"],
-                ["PASILLO", "-----------🛒Pasillo ARRIBA 4,5 Y 6 - FERIA DEL ESTE🛒-----------"],
+                ["PASILLO", "-----------🛒Pasillo Arriba 4-5-6- FERIA DEL ESTE🛒-----------"],
                 ["FECHA", date],
                 // AQUÍ SE APLICA LA LÓGICA DE LAS ESTRELLAS
                 ["EQUIPO 1 (ROJO) " + starString, team1Text],
@@ -1768,7 +1767,7 @@ const listaProductosCompleta = [
             // 4. Crear hoja de trabajo y libro
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Inventario pasillo ARRIBA 4,5 Y 6");
+            XLSX.utils.book_append_sheet(wb, ws, "Inventario pasillo arriba 4-5-6");
 
             // Configuración de anchos de columna (A=29, B=29, C=Dinámico, D=15)
             ws['!cols'] = [
@@ -1779,7 +1778,7 @@ const listaProductosCompleta = [
             ];
 
             // Nombre del archivo usando solo la primera persona válida del Equipo 1
-            const fileName = `Inventario_pasillo ARRIBA 4,5 Y 6${team1FileSuffix}_${date.replace(/\//g, '-')}.xlsx`;
+            const fileName = `Inventario_pasillo arriba 4-5-6${team1FileSuffix}_${date.replace(/\//g, '-')}.xlsx`;
             XLSX.writeFile(wb, fileName);
 
             // --- MOSTRAR CELEBRACIÓN AUTOMÁTICAMENTE ---
