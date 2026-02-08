@@ -457,6 +457,14 @@
             bottom: 0;
             pointer-events: none;
         }
+        
+        /* ANIMACIÓN DE TEXTO LLAMATIVO */
+        .blink-text {
+            animation: blinker 1.5s linear infinite;
+        }
+        @keyframes blinker {
+            50% { opacity: 0.5; transform: scale(0.98); }
+        }
 
     </style>
 </head>
@@ -755,13 +763,20 @@
     <!-- Modal Gestionar Equipos (MODIFICADO: MAS ARRIBA Y COMPACTO) -->
     <div id="team-modal" class="modal-overlay" style="align-items: flex-start; padding-top: 2rem;" onclick="if(event.target === this) closeTeamModal()">
         <!-- ... (Contenido modal sin cambios) ... -->
-        <div class="bg-gray-800 p-4 md:p-6 rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all border border-cyan-600">
+        <!-- CAMBIO AQUI: Se cambió bg-gray-800 por bg-[#111111] para el negro mate -->
+        <div class="bg-[#111111] p-4 md:p-6 rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all border border-cyan-600">
             <h3 class="text-lg font-bold text-cyan-400 mb-3 uppercase text-center border-b border-gray-700 pb-2">👥 Gestionar Responsables</h3>
             
             <div class="grid grid-cols-2 gap-3 mb-4">
-                <!-- Columna Equipo 1 -->
+                <!-- Columna Equipo 1 (MODIFICADA CON TEXTO LLAMATIVO) -->
                 <div class="space-y-2">
-                    <h4 class="text-red-400 font-bold text-[10px] uppercase border-b border-red-500/30 pb-1">Equipo 1 (Rojo)</h4>
+                    <div class="flex flex-col">
+                        <h4 class="text-red-400 font-bold text-[10px] uppercase border-b border-red-500/30 pb-1">Equipo 1 (Rojo)</h4>
+                        <!-- Etiqueta Llamativa NUEVA -->
+                        <span class="mt-1 text-[10px] bg-red-500/20 text-red-300 border border-red-500 p-1 rounded text-center blink-text font-extrabold tracking-wider">
+                            🚨 ¡RESPONSABLE DEL INVENTARIO - ANOTARSE! 🚨
+                        </span>
+                    </div>
                     <div>
                         <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 1</label>
                         <input type="text" id="modal-resp-1" class="w-full p-1.5 rounded bg-gray-900 border border-red-900 focus:border-red-500 text-white text-sm outline-none">
@@ -774,7 +789,9 @@
 
                 <!-- Columna Equipo 2 -->
                 <div class="space-y-2">
-                    <h4 class="text-green-400 font-bold text-[10px] uppercase border-b border-green-500/30 pb-1">Equipo 2 (Verde)</h4>
+                    <h4 class="text-green-400 font-bold text-[10px] uppercase border-b border-green-500/30 pb-1 mt-0">Equipo 2 (Verde)</h4>
+                     <!-- Espaciador para alinear con la columna 1 que tiene el aviso -->
+                    <div style="height: 28px;"></div> 
                     <div>
                         <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 3</label>
                         <input type="text" id="modal-resp-3" class="w-full p-1.5 rounded bg-gray-900 border border-green-900 focus:border-green-500 text-white text-sm outline-none">
@@ -799,6 +816,7 @@
         <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-red-700">
             <h3 class="text-xl font-bold text-red-400 mb-4">⚠️ Confirmar Borrado Total</h3>
             <p class="text-gray-300 mb-6">Estás a punto de **eliminar todo el inventario** del almacenamiento local de tu navegador. Esta acción no se puede deshacer.</p>
+            <p class="text-yellow-400 text-xs mb-4 p-2 bg-gray-900/50 rounded border border-yellow-600/30">NOTA: Se eliminarán todos los productos agregados manualmente y se restablecerá la lista original.</p>
             <p class="text-white font-semibold mb-6">¿Estás absolutamente seguro de que deseas continuar?</p>
             <div class="flex justify-end space-x-4">
                 <button onclick="closeResetModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
@@ -947,6 +965,8 @@ const defaultProductNames = [
         window.resetAllDataConfirmed = function() {
             window.closeResetModal();
             try {
+                // AL BORRAR, SE RESTAURA DESDE 'getInitialInventoryData', 
+                // LO CUAL ELIMINA LOS AGREGADOS MANUALMENTE.
                 localStorage.removeItem(LOCAL_STORAGE_KEY);
                 const initial = getInitialInventoryData();
                 inventoryData = initial.inventory;
@@ -1198,6 +1218,12 @@ const defaultProductNames = [
             
             // --- INICIALIZACIÓN DE LA CELEBRACIÓN ---
             initCelebrationLogic();
+
+            // --- ABRIR MODAL AUTOMÁTICAMENTE AL INICIO ---
+            // Pequeño timeout para asegurar que todo cargó
+            setTimeout(() => {
+                window.openTeamModal();
+            }, 300);
         });
 
         // --- UI Y RENDERIZADO ---
