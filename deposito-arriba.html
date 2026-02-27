@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVENTARIO DE DEPOSITO ARRIBA  </title>
+    <title>INVENTARIO DE DEPOSITO ARRIBA </title>
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Carga de SheetJS para Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    
+
     <!-- Configuración de fuente Inter -->
     <style>
-        @import url('https://fonts.fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
     </style>
     <style>
         /* --- CONFIGURACIÓN DE VARIABLES Y TEMA --- */
         :root {
             --neon-cyan: #22d3ee;
             --neon-lime: #a3e635;
-            --primary-celebration: #6366f1; /* Para la pantalla final */
+            --primary-celebration: #6366f1;
+            /* Para la pantalla final */
         }
 
         body {
@@ -31,40 +33,62 @@
         }
 
         /* Utilidades */
-        input[type="number"] { -moz-appearance: textfield; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
         /* Ocultar barras de desplazamiento (Scrollbar Hide) */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
+
         .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
         }
 
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85); display: none;
-            justify-content: center; align-items: center; z-index: 1000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
             backdrop-filter: blur(4px);
         }
 
-        .neon-title { text-shadow: 0 0 5px rgba(34, 211, 238, 0.8); }
-        
+        .neon-title {
+            text-shadow: 0 0 5px rgba(34, 211, 238, 0.8);
+        }
+
         /* --- ESTILOS DE TABLA (Simulación Excel) --- */
         #inventory-table {
-            border-collapse: separate; 
+            border-collapse: separate;
             border-spacing: 0;
             width: 100%;
             border: 1px solid #374151;
-            border-radius: 0.75rem; /* rounded-xl */
+            border-radius: 0.75rem;
+            /* rounded-xl */
             overflow: hidden;
         }
-        
+
         /* AQUI SE AJUSTÓ EL PADDING PARA QUE SE VEA MENOS GRANDE */
-        .table-header, .table-data {
-            padding: 10px 12px; /* Reducido de 12px 16px */
+        .table-header,
+        .table-data {
+            padding: 10px 12px;
+            /* Reducido de 12px 16px */
             border-bottom: 1px solid #374151;
         }
 
@@ -75,28 +99,39 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             text-align: center;
-            font-size: 0.9rem; /* Header un poco más pequeño también */
+            font-size: 0.9rem;
+            /* Header un poco más pequeño también */
         }
 
-        .table-row { transition: background-color 0.2s; }
-        .table-row:last-child .table-data { border-bottom: none; }
-        
+        .table-row {
+            transition: background-color 0.2s;
+        }
+
+        .table-row:last-child .table-data {
+            border-bottom: none;
+        }
+
         /* Modo Oscuro (Default) */
-        .table-row:hover { background-color: #1f2937; }
-        
+        .table-row:hover {
+            background-color: #1f2937;
+        }
+
         /* AQUI SE CAMBIÓ EL TAMAÑO DE LA FUENTE DEL PRODUCTO */
         .product-cell {
-            font-size: 0.85rem; /* Reducido de 0.95rem para que se lea mejor y menos amontonado */
+            font-size: 0.85rem;
+            /* Reducido de 0.95rem para que se lea mejor y menos amontonado */
             color: #e5e7eb;
             border-right: 1px solid #374151;
-            cursor: pointer; 
-            user-select: none; 
+            cursor: pointer;
+            user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
-            font-weight: 500; /* Un poco de peso para legibilidad */
-            letter-spacing: 0.01em; /* Un poco de espacio entre letras */
+            font-weight: 500;
+            /* Un poco de peso para legibilidad */
+            letter-spacing: 0.01em;
+            /* Un poco de espacio entre letras */
         }
-        
+
         /* Animación suave al presionar */
         .product-cell:active {
             background-color: rgba(34, 211, 238, 0.1);
@@ -109,46 +144,108 @@
             background-color: rgba(17, 24, 39, 0.5);
             cursor: pointer;
             transition: background-color 0.2s;
-            font-size: 0.95rem; /* Mantener números legibles */
+            font-size: 0.95rem;
+            /* Mantener números legibles */
         }
+
         .qty-cell:hover {
             background-color: #374151;
             text-decoration: underline;
         }
-        .zero-qty { color: #9ca3af !important; }
+
+        .zero-qty {
+            color: #9ca3af !important;
+        }
 
         /* Estilos de Estado Checklist */
-        .status-ok { background-color: rgba(6, 78, 59, 0.4) !important; color: #4ade80 !important; } /* Verde oscuro */
-        .status-error { background-color: rgba(127, 29, 29, 0.4) !important; color: #f87171 !important; } /* Rojo oscuro */
+        .status-ok {
+            background-color: rgba(6, 78, 59, 0.4) !important;
+            color: #4ade80 !important;
+        }
+
+        /* Verde oscuro */
+        .status-error {
+            background-color: rgba(127, 29, 29, 0.4) !important;
+            color: #f87171 !important;
+        }
+
+        /* Rojo oscuro */
 
         /* --- TEMA CLARO --- */
-        .light-theme body { background-color: #f3f4f6; color: #1f2937; }
-        .light-theme .main-container { background-color: #ffffff; border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .light-theme .neon-title { color: #2563eb; text-shadow: none; }
-        .light-theme .accent-text { color: #2563eb; }
-        
+        .light-theme body {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .light-theme .main-container {
+            background-color: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .light-theme .neon-title {
+            color: #2563eb;
+            text-shadow: none;
+        }
+
+        .light-theme .accent-text {
+            color: #2563eb;
+        }
+
         /* Tabla Claro */
-        .light-theme #inventory-table { border-color: #e5e7eb; }
-        .light-theme .table-header { background-color: #bfdbfe; color: #1e40af; border-bottom: 1px solid #93c5fd; }
-        .light-theme .table-data { border-bottom: 1px solid #e5e7eb; }
-        .light-theme .product-cell { color: #1f2937; border-right: 1px solid #e5e7eb; }
-        .light-theme .table-row:hover { background-color: #f0f9ff; }
-        .light-theme .qty-cell { background-color: #ecfdf5; color: #059669; }
-        .light-theme .qty-cell:hover { background-color: #d1fae5; }
-        .light-theme .zero-qty { color: #6b7280 !important; }
+        .light-theme #inventory-table {
+            border-color: #e5e7eb;
+        }
+
+        .light-theme .table-header {
+            background-color: #bfdbfe;
+            color: #1e40af;
+            border-bottom: 1px solid #93c5fd;
+        }
+
+        .light-theme .table-data {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .light-theme .product-cell {
+            color: #1f2937;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .light-theme .table-row:hover {
+            background-color: #f0f9ff;
+        }
+
+        .light-theme .qty-cell {
+            background-color: #ecfdf5;
+            color: #059669;
+        }
+
+        .light-theme .qty-cell:hover {
+            background-color: #d1fae5;
+        }
+
+        .light-theme .zero-qty {
+            color: #6b7280 !important;
+        }
 
         /* Labels para los equipos en footer claro */
-        .light-theme .team-label-bg { background-color: #e2e8f0; }
+        .light-theme .team-label-bg {
+            background-color: #e2e8f0;
+        }
 
         /* Efecto Clickable para el Header */
         .header-team-box {
             cursor: pointer;
             transition: transform 0.2s, background-color 0.2s;
         }
+
         .header-team-box:hover {
             transform: translateY(-2px);
-            background-color: rgba(31, 41, 55, 0.8); /* gray-800 con más opacidad */
+            background-color: rgba(31, 41, 55, 0.8);
+            /* gray-800 con más opacidad */
         }
+
         .header-team-box:active {
             transform: scale(0.98);
         }
@@ -159,7 +256,7 @@
             background-color: #202020;
             border: 1px solid #333;
             border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -186,17 +283,26 @@
 
         .previous-op {
             color: #a0a0a0;
-            font-size: 13px; /* Un poco más pequeño para que quepa más historial */
+            font-size: 13px;
+            /* Un poco más pequeño para que quepa más historial */
             min-height: 20px;
             margin-bottom: 5px;
             /* Quitamos el truncate agresivo para intentar mostrar más si es posible, o usamos scroll */
-            overflow-x: auto; 
+            overflow-x: auto;
             white-space: nowrap;
-            scrollbar-width: thin; /* Firefox */
+            scrollbar-width: thin;
+            /* Firefox */
         }
+
         /* Scrollbar para el historial */
-        .previous-op::-webkit-scrollbar { height: 4px; }
-        .previous-op::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 2px; }
+        .previous-op::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .previous-op::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 2px;
+        }
 
         .current-val {
             font-size: 48px;
@@ -227,21 +333,60 @@
             cursor: pointer;
         }
 
-        .calc-btn:hover { background-color: #323232; }
-        .op-btn { background-color: #323232; }
-        .op-btn:hover { background-color: #3b3b3b; }
-        .num-btn { background-color: #3b3b3b; font-weight: bold; }
-        .num-btn:hover { background-color: #2c2c2c; }
-        
-        .equal-btn { background-color: #76b9ed; color: black; }
-        .equal-btn:hover { background-color: #5da0d4; }
-        
+        .calc-btn:hover {
+            background-color: #323232;
+        }
+
+        .op-btn {
+            background-color: #323232;
+        }
+
+        .op-btn:hover {
+            background-color: #3b3b3b;
+        }
+
+        .num-btn {
+            background-color: #3b3b3b;
+            font-weight: bold;
+        }
+
+        .num-btn:hover {
+            background-color: #2c2c2c;
+        }
+
+        .equal-btn {
+            background-color: #76b9ed;
+            color: black;
+        }
+
+        .equal-btn:hover {
+            background-color: #5da0d4;
+        }
+
         /* Botones especiales de acción inferior */
-        .action-btn { font-size: 14px; font-weight: bold; text-transform: uppercase; }
-        .action-cancel { background-color: #7f1d1d; color: #fecaca; }
-        .action-cancel:hover { background-color: #991b1b; }
-        .action-save { background-color: #65a30d; color: white; }
-        .action-save:hover { background-color: #4d7c0f; }
+        .action-btn {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .action-cancel {
+            background-color: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .action-cancel:hover {
+            background-color: #991b1b;
+        }
+
+        .action-save {
+            background-color: #65a30d;
+            color: white;
+        }
+
+        .action-save:hover {
+            background-color: #4d7c0f;
+        }
 
         /* --- ESTILOS DE LA PANTALLA DE AGRADECIMIENTO (OVERLAY) --- */
         #celebration-overlay {
@@ -251,8 +396,10 @@
             width: 100%;
             height: 100%;
             background-color: #000000;
-            z-index: 9999; /* Muy alto para tapar todo */
-            display: none; /* Oculto por defecto */
+            z-index: 9999;
+            /* Muy alto para tapar todo */
+            display: none;
+            /* Oculto por defecto */
             justify-content: center;
             align-items: center;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -274,7 +421,7 @@
         #celebration-overlay .explode-btn {
             background-color: var(--primary-celebration);
             color: white;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             padding: 1.5rem 3rem;
             font-size: 1.4rem;
             font-weight: 800;
@@ -285,7 +432,8 @@
             outline: none;
             text-transform: uppercase;
             letter-spacing: 1px;
-            pointer-events: auto; /* El botón sí debe recibir clics */
+            pointer-events: auto;
+            /* El botón sí debe recibir clics */
         }
 
         #celebration-overlay .explode-btn:hover {
@@ -305,7 +453,8 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            pointer-events: auto; /* IMPORTANTE: Para que sea clickeable */
+            pointer-events: auto;
+            /* IMPORTANTE: Para que sea clickeable */
             display: inline-block;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -315,7 +464,7 @@
             background-color: rgba(255, 255, 255, 0.15);
             border-color: white;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
         #celebration-overlay .back-btn:active {
@@ -346,42 +495,47 @@
         }
 
         /* Partículas y Confeti - OPTIMIZADO */
-        .particle, .confetti {
+        .particle,
+        .confetti {
             position: absolute;
             pointer-events: none;
             /* IMPORTANTE: Promoción a GPU */
             will-change: transform, opacity;
             backface-visibility: hidden;
-            transform: translate3d(0,0,0);
+            transform: translate3d(0, 0, 0);
         }
 
         /* --- GLOBOS REALISTAS - OPTIMIZADO --- */
         .balloon {
             position: absolute;
-            bottom: -150px; 
+            bottom: -150px;
             width: 60px;
             height: 75px;
             /* El color se establece dinámicamente vía variable CSS */
-            background-color: var(--balloon-color, #22d3ee); 
+            background-color: var(--balloon-color, #22d3ee);
             /* Degradados para efecto 3D y brillo especular */
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 8%, rgba(255,255,255,0) 20%), 
-                        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.15) 100%),
-                        var(--balloon-color);
-            
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.6) 8%, rgba(255, 255, 255, 0) 20%),
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.15) 100%),
+                var(--balloon-color);
+
             border-radius: 80% 80% 80% 80% / 80% 80% 90% 90%;
-            box-shadow: inset -5px -10px 20px rgba(0, 0, 0, 0.2), /* Sombra interior */
-                        2px 5px 10px rgba(0,0,0,0.1); /* Sombra proyectada */
+            box-shadow: inset -5px -10px 20px rgba(0, 0, 0, 0.2),
+                /* Sombra interior */
+                2px 5px 10px rgba(0, 0, 0, 0.1);
+            /* Sombra proyectada */
             z-index: 50;
             /* IMPORTANTE: Promoción a GPU */
             will-change: transform, bottom;
             transform-origin: bottom center;
             backface-visibility: hidden;
         }
-        
-        .balloon::before { /* Cuerda (String) */
+
+        .balloon::before {
+            /* Cuerda (String) */
             content: '';
             position: absolute;
-            bottom: -60px; /* Un poco más larga */
+            bottom: -60px;
+            /* Un poco más larga */
             left: 50%;
             width: 1px;
             height: 60px;
@@ -392,8 +546,9 @@
             /* ANIMACIÓN DE LA CUERDA */
             animation: stringWave 3s ease-in-out infinite;
         }
-        
-        .balloon::after { /* Nudo (Knot) */
+
+        .balloon::after {
+            /* Nudo (Knot) */
             content: '';
             position: absolute;
             bottom: -4px;
@@ -405,41 +560,69 @@
             clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
             border-radius: 2px;
             transform: translateX(-50%);
-            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2);
+            box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.2);
         }
 
         /* Animación para que el globo suba y se quede */
         @keyframes floatUpAndStay {
-            0% { 
-                bottom: -150px; 
-                transform: translateX(0) rotate(0deg); 
+            0% {
+                bottom: -150px;
+                transform: translateX(0) rotate(0deg);
             }
-            100% { 
-                bottom: var(--float-final-y, 85%); /* Van al techo */
-                transform: translateX(var(--drift-x, 0px)) rotate(var(--rot, 5deg)); 
+
+            100% {
+                bottom: var(--float-final-y, 85%);
+                /* Van al techo */
+                transform: translateX(var(--drift-x, 0px)) rotate(var(--rot, 5deg));
             }
         }
-        
+
         /* Animación de oscilación del cuerpo del globo */
         @keyframes sway {
-            0%, 100% { transform: translateX(0) rotate(-3deg); }
-            50% { transform: translateX(15px) rotate(3deg); }
+
+            0%,
+            100% {
+                transform: translateX(0) rotate(-3deg);
+            }
+
+            50% {
+                transform: translateX(15px) rotate(3deg);
+            }
         }
 
         /* NUEVA: Animación de la cuerda para que se mueva más natural */
         @keyframes stringWave {
-            0%, 100% { transform: translateX(-50%) rotate(5deg); }
-            50% { transform: translateX(-50%) rotate(-5deg); }
+
+            0%,
+            100% {
+                transform: translateX(-50%) rotate(5deg);
+            }
+
+            50% {
+                transform: translateX(-50%) rotate(-5deg);
+            }
         }
 
         @keyframes explodeOut {
-            0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
-            100% { transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(0); opacity: 0; }
+            0% {
+                transform: translate3d(0, 0, 0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(0);
+                opacity: 0;
+            }
         }
 
         @keyframes fallToFloor {
-            0% { transform: translate3d(0, 0, 0) rotate(0deg); }
-            100% { transform: translate3d(var(--drift), var(--floor-y), 0) rotate(720deg); }
+            0% {
+                transform: translate3d(0, 0, 0) rotate(0deg);
+            }
+
+            100% {
+                transform: translate3d(var(--drift), var(--floor-y), 0) rotate(720deg);
+            }
         }
 
         .jump {
@@ -447,9 +630,17 @@
         }
 
         @keyframes jumpEffect {
-            0% { transform: translate3d(0, 0, 0) rotate(0deg); }
-            50% { transform: translate3d(var(--jx), var(--jy), 0) rotate(180deg); }
-            100% { transform: translate3d(var(--jx), 0, 0) rotate(360deg); }
+            0% {
+                transform: translate3d(0, 0, 0) rotate(0deg);
+            }
+
+            50% {
+                transform: translate3d(var(--jx), var(--jy), 0) rotate(180deg);
+            }
+
+            100% {
+                transform: translate3d(var(--jx), 0, 0) rotate(360deg);
+            }
         }
 
         .on-floor {
@@ -457,133 +648,166 @@
             bottom: 0;
             pointer-events: none;
         }
-        
+
         /* ANIMACIÓN DE TEXTO LLAMATIVO */
         .blink-text {
             animation: blinker 1.5s linear infinite;
         }
-        @keyframes blinker {
-            50% { opacity: 0.5; transform: scale(0.98); }
-        }
 
+        @keyframes blinker {
+            50% {
+                opacity: 0.5;
+                transform: scale(0.98);
+            }
+        }
     </style>
 </head>
+
 <body class="p-2 md:p-6 min-h-screen">
 
     <div class="max-w-4xl mx-auto bg-gray-900 p-4 md:p-8 rounded-2xl shadow-2xl border border-cyan-900 main-container">
         <!-- ... (Contenido principal sin cambios) ... -->
         <header class="mb-4">
             <!-- Cabecera tipo Reporte -->
-            <div class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800/50 light-theme:bg-white light-theme:border-blue-200 transition-colors">
+            <div
+                class="border border-gray-700 p-4 rounded-xl mb-6 bg-gray-800/50 light-theme:bg-white light-theme:border-blue-200 transition-colors">
                 <!-- Fila 1: ORGANISMO Y FECHA -->
-                <div class="flex flex-col md:flex-row justify-between md:items-center border-b border-gray-700 pb-2 mb-2 light-theme:border-gray-200">
-                    <p class="text-xs font-bold text-cyan-400 light-theme:text-blue-600 tracking-wide mb-1 md:mb-0">CECOSESOLA J085030140</p>
-                    <p class="text-xs text-gray-400 light-theme:text-gray-500">FECHA: <span id="report-date" class="font-semibold text-gray-200 light-theme:text-gray-800"></span></p>
+                <div
+                    class="flex flex-col md:flex-row justify-between md:items-center border-b border-gray-700 pb-2 mb-2 light-theme:border-gray-200">
+                    <p class="text-xs font-bold text-cyan-400 light-theme:text-blue-600 tracking-wide mb-1 md:mb-0">
+                        CECOSESOLA J085030140</p>
+                    <p class="text-xs text-gray-400 light-theme:text-gray-500">FECHA: <span id="report-date"
+                            class="font-semibold text-gray-200 light-theme:text-gray-800"></span></p>
                 </div>
-                
+
                 <!-- Fila 2: PASILLO Y RESPONSABLES -->
                 <div class="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div class="mb-2 md:mb-0 flex-1">
-                        <h2 class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase"> ★-DEPOSITO ARRIBA-★ </h2>
+                        <h2
+                            class="text-2xl md:text-3xl font-extrabold text-cyan-400 neon-title light-theme:text-blue-700 uppercase">
+                            ★-DEPOSITO ARRIBA-★ </h2>
                         <h3 class="text-lg font-bold text-gray-300 light-theme:text-gray-600">FERIA DEL ESTE</h3>
                     </div>
-                    
+
                     <!-- Contenedor de Equipos Separados -->
                     <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                         <!-- EQUIPO 1 (ROJO) - CLICKABLE -->
-                        <div onclick="openTeamModal()" class="header-team-box text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-red-500 pl-3 flex-1 min-w-[140px]" title="Clic para editar nombres">
-                            <p class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-wider flex justify-between items-center">
+                        <div onclick="openTeamModal()"
+                            class="header-team-box text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-red-500 pl-3 flex-1 min-w-[140px]"
+                            title="Clic para editar nombres">
+                            <p
+                                class="text-[10px] text-red-400 font-bold mb-1 uppercase tracking-wider flex justify-between items-center">
                                 Equipo 1 <span class="text-gray-500 text-[9px] font-normal lowercase">(editar)</span>
                             </p>
-                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 1: <span id="resp1-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
-                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 2: <span id="resp2-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
+                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 1: <span id="resp1-display"
+                                    class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN
+                                    NOMBRE</span></p>
+                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 2: <span id="resp2-display"
+                                    class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN
+                                    NOMBRE</span></p>
                         </div>
-                        
+
                         <!-- EQUIPO 2 (VERDE) - CLICKABLE -->
-                        <div onclick="openTeamModal()" class="header-team-box text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-green-500 pl-3 flex-1 min-w-[140px]" title="Clic para editar nombres">
-                             <p class="text-[10px] text-green-400 font-bold mb-1 uppercase tracking-wider flex justify-between items-center">
+                        <div onclick="openTeamModal()"
+                            class="header-team-box text-sm bg-gray-900/50 p-2 rounded light-theme:bg-gray-100 border-l-4 border-green-500 pl-3 flex-1 min-w-[140px]"
+                            title="Clic para editar nombres">
+                            <p
+                                class="text-[10px] text-green-400 font-bold mb-1 uppercase tracking-wider flex justify-between items-center">
                                 Equipo 2 <span class="text-gray-500 text-[9px] font-normal lowercase">(editar)</span>
                             </p>
-                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 3: <span id="resp3-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
-                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 4: <span id="resp4-display" class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN NOMBRE</span></p>
+                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 3: <span id="resp3-display"
+                                    class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN
+                                    NOMBRE</span></p>
+                            <p class="text-gray-400 light-theme:text-gray-500 text-xs">RESP 4: <span id="resp4-display"
+                                    class="font-semibold text-white light-theme:text-gray-800 uppercase block truncate">SIN
+                                    NOMBRE</span></p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Barra de Búsqueda y Botones de Acción (STICKY) -->
-            <div class="sticky top-2 z-20 bg-gray-900/95 p-3 rounded-xl backdrop-blur-md shadow-2xl border border-gray-700/50 light-theme:bg-white/95 light-theme:border-gray-200 transition-all mb-4">
-                
+            <div
+                class="sticky top-2 z-20 bg-gray-900/95 p-3 rounded-xl backdrop-blur-md shadow-2xl border border-gray-700/50 light-theme:bg-white/95 light-theme:border-gray-200 transition-all mb-4">
+
                 <!-- Barra de Búsqueda -->
                 <div class="mb-3 relative group">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 light-theme:text-gray-400 light-theme:group-focus-within:text-blue-500 transition-colors" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 light-theme:text-gray-400 light-theme:group-focus-within:text-blue-500 transition-colors"
+                            viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                clip-rule="evenodd" />
                         </svg>
                     </div>
-                    <input type="text" id="search-filter" 
-                        class="block w-full pl-10 pr-10 p-2.5 rounded-lg border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all light-theme:bg-gray-50 light-theme:border-gray-300 light-theme:text-gray-900 light-theme:focus:ring-blue-500 text-sm md:text-base shadow-inner" 
-                        placeholder="🔍 Escribe para buscar producto..." 
-                        autocomplete="off"
+                    <input type="text" id="search-filter"
+                        class="block w-full pl-10 pr-10 p-2.5 rounded-lg border border-gray-600 bg-gray-800 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all light-theme:bg-gray-50 light-theme:border-gray-300 light-theme:text-gray-900 light-theme:focus:ring-blue-500 text-sm md:text-base shadow-inner"
+                        placeholder="🔍 Escribe para buscar producto..." autocomplete="off"
                         oninput="applyFilter(this.value)">
-                    
+
                     <!-- Botón limpiar (X) -->
-                    <button id="clear-search-btn" onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden text-gray-500 hover:text-white light-theme:hover:text-red-500 transition-colors cursor-pointer">
+                    <button id="clear-search-btn" onclick="clearSearch()"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center hidden text-gray-500 hover:text-white light-theme:hover:text-red-500 transition-colors cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                 </div>
 
                 <div class="flex justify-end space-x-3 items-center">
                     <!-- SE AGREGÓ 'no-scrollbar' AQUÍ PARA OCULTAR LA BARRA -->
-                    <div class="flex space-x-2 md:space-x-3 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto justify-end no-scrollbar">
-                        <button 
-                            id="toggle-theme-btn"
-                            onclick="toggleTheme()"
+                    <div
+                        class="flex space-x-2 md:space-x-3 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto justify-end no-scrollbar">
+                        <button id="toggle-theme-btn" onclick="toggleTheme()"
                             class="p-2 rounded-full text-cyan-400 hover:bg-gray-700 transition duration-200 border border-transparent hover:border-gray-600 light-theme:hover:bg-blue-100 light-theme:text-blue-600 flex-shrink-0"
-                            aria-label="Cambiar tema"
-                        >
+                            aria-label="Cambiar tema">
                             <!-- Luna -->
-                            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 12.001 12.001 0 0012 21a12.001 12.001 0 008.354-5.646z" />
+                            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M20.354 15.354A9 9 0 018.646 3.646 12.001 12.001 0 0012 21a12.001 12.001 0 008.354-5.646z" />
                             </svg>
                             <!-- Sol -->
-                            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                             </svg>
                         </button>
 
                         <!-- Botón Reset (Borrar Todo) -->
-                        <button 
-                            onclick="openResetModal()"
+                        <button onclick="openResetModal()"
                             class="bg-red-600/80 hover:bg-red-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95 flex-shrink-0"
-                            title="Borrar todos los datos y empezar de nuevo"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            title="Borrar todos los datos y empezar de nuevo">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                         </button>
-                        
-                        <!-- Botón Agregar Producto -->
-                        <button 
-                        onclick="openAddProductModal()"
-                        class="bg-purple-600 hover:bg-purple-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95 font-bold flex items-center flex-shrink-0"
-                        title="Agregar un producto nuevo a la lista"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span class="hidden md:inline">Agregar</span>
-                    </button>
 
-                        <button 
-                            onclick="downloadExcel()"
+                        <!-- Botón Agregar Producto -->
+                        <button onclick="openAddProductModal()"
+                            class="bg-purple-600 hover:bg-purple-500 text-white p-2 rounded-xl shadow-lg transition duration-200 transform hover:scale-105 active:scale-95 font-bold flex items-center flex-shrink-0"
+                            title="Agregar un producto nuevo a la lista">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:mr-1" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span class="hidden md:inline">Agregar</span>
+                        </button>
+
+                        <button onclick="downloadExcel()"
                             class="bg-lime-500 hover:bg-lime-400 text-gray-900 font-bold py-2 px-4 rounded-xl shadow-lg transition duration-200 flex items-center transform hover:scale-105 active:scale-95 text-sm md:text-base flex-shrink-0"
-                            title="Descargar datos en formato Excel (.xlsx)"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            title="Descargar datos en formato Excel (.xlsx)">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
                             </svg>
                             Descargar
                         </button>
@@ -597,7 +821,8 @@
             <table id="inventory-table">
                 <thead>
                     <tr>
-                        <th class="table-header text-left w-[75%] md:w-[80%] pl-4 sticky left-0 z-10">PRODUCTO / CHECKLIST</th>
+                        <th class="table-header text-left w-[75%] md:w-[80%] pl-4 sticky left-0 z-10">PRODUCTO /
+                            CHECKLIST</th>
                         <th class="table-header w-[25%] md:w-[20%]">CANTIDAD</th>
                     </tr>
                 </thead>
@@ -608,47 +833,73 @@
         </div>
 
         <!-- Footer / Resumen -->
-        <footer class="mt-8 pt-6 border-t-4 border-cyan-600 bg-gray-800 rounded-lg p-4 shadow-xl footer-container transition-colors">
+        <footer
+            class="mt-8 pt-6 border-t-4 border-cyan-600 bg-gray-800 rounded-lg p-4 shadow-xl footer-container transition-colors">
             <div class="flex flex-col sm:flex-row items-start justify-between gap-6">
-                
+
                 <!-- Contador -->
-                <div class="w-full sm:w-1/3 flex flex-col"> 
+                <div class="w-full sm:w-1/3 flex flex-col">
                     <p class="text-lg font-bold text-cyan-400 mb-2 accent-text uppercase">CANTIDAD DE PRODUCTOS :</p>
-                    <div class="flex-grow bg-cyan-600/20 border border-cyan-600/50 rounded-xl p-4 flex items-center justify-center min-h-[100px]">
-                        <span id="stocked-products-count" class="text-5xl font-extrabold text-cyan-400 light-theme:text-blue-600">0</span>
+                    <div
+                        class="flex-grow bg-cyan-600/20 border border-cyan-600/50 rounded-xl p-4 flex items-center justify-center min-h-[100px]">
+                        <span id="stocked-products-count"
+                            class="text-5xl font-extrabold text-cyan-400 light-theme:text-blue-600">0</span>
                     </div>
                 </div>
-                
+
                 <!-- Inputs Responsables SEPARADOS POR EQUIPO (Sincronizados con el Header/Modal) -->
-                <div class="w-full sm:w-2/3 flex flex-col sm:pl-4 sm:border-l border-gray-600 light-theme:border-gray-300">
+                <div
+                    class="w-full sm:w-2/3 flex flex-col sm:pl-4 sm:border-l border-gray-600 light-theme:border-gray-300">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        
+
                         <!-- EQUIPO 1: ROJO -->
-                        <div class="relative pt-4 pb-3 px-3 rounded-xl border border-red-500/50 bg-red-900/10 light-theme:bg-red-50 light-theme:border-red-300">
-                            <div class="absolute -top-3 left-3 bg-gray-800 light-theme:team-label-bg px-2 rounded border border-red-500/50 text-xs font-bold text-red-400">EQUIPO 1</div>
+                        <div
+                            class="relative pt-4 pb-3 px-3 rounded-xl border border-red-500/50 bg-red-900/10 light-theme:bg-red-50 light-theme:border-red-300">
+                            <div
+                                class="absolute -top-3 left-3 bg-gray-800 light-theme:team-label-bg px-2 rounded border border-red-500/50 text-xs font-bold text-red-400">
+                                EQUIPO 1</div>
                             <div class="space-y-3">
                                 <div>
-                                    <label class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 1</label>
-                                    <input type="text" id="responsable-1" placeholder="Nombre" class="w-full p-2 rounded border border-red-900/60 focus:border-red-500 bg-gray-900 text-white focus:ring-1 focus:ring-red-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-red-200 light-theme:text-gray-800" oninput="updateReportHeaders(true)">
+                                    <label
+                                        class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable
+                                        1</label>
+                                    <input type="text" id="responsable-1" placeholder="Nombre"
+                                        class="w-full p-2 rounded border border-red-900/60 focus:border-red-500 bg-gray-900 text-white focus:ring-1 focus:ring-red-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-red-200 light-theme:text-gray-800"
+                                        oninput="updateReportHeaders(true)">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 2</label>
-                                    <input type="text" id="responsable-2" placeholder="Nombre" class="w-full p-2 rounded border border-red-900/60 focus:border-red-500 bg-gray-900 text-white focus:ring-1 focus:ring-red-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-red-200 light-theme:text-gray-800" oninput="updateReportHeaders(true)">
+                                    <label
+                                        class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable
+                                        2</label>
+                                    <input type="text" id="responsable-2" placeholder="Nombre"
+                                        class="w-full p-2 rounded border border-red-900/60 focus:border-red-500 bg-gray-900 text-white focus:ring-1 focus:ring-red-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-red-200 light-theme:text-gray-800"
+                                        oninput="updateReportHeaders(true)">
                                 </div>
                             </div>
                         </div>
 
                         <!-- EQUIPO 2: VERDE -->
-                        <div class="relative pt-4 pb-3 px-3 rounded-xl border border-green-500/50 bg-green-900/10 light-theme:bg-green-50 light-theme:border-green-300">
-                            <div class="absolute -top-3 left-3 bg-gray-800 light-theme:team-label-bg px-2 rounded border border-green-500/50 text-xs font-bold text-green-400">EQUIPO 2</div>
+                        <div
+                            class="relative pt-4 pb-3 px-3 rounded-xl border border-green-500/50 bg-green-900/10 light-theme:bg-green-50 light-theme:border-green-300">
+                            <div
+                                class="absolute -top-3 left-3 bg-gray-800 light-theme:team-label-bg px-2 rounded border border-green-500/50 text-xs font-bold text-green-400">
+                                EQUIPO 2</div>
                             <div class="space-y-3">
                                 <div>
-                                    <label class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 3</label>
-                                    <input type="text" id="responsable-3" placeholder="Nombre" class="w-full p-2 rounded border border-green-900/60 focus:border-green-500 bg-gray-900 text-white focus:ring-1 focus:ring-green-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-green-200 light-theme:text-gray-800" oninput="updateReportHeaders(true)">
+                                    <label
+                                        class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable
+                                        3</label>
+                                    <input type="text" id="responsable-3" placeholder="Nombre"
+                                        class="w-full p-2 rounded border border-green-900/60 focus:border-green-500 bg-gray-900 text-white focus:ring-1 focus:ring-green-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-green-200 light-theme:text-gray-800"
+                                        oninput="updateReportHeaders(true)">
                                 </div>
                                 <div>
-                                    <label class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable 4</label>
-                                    <input type="text" id="responsable-4" placeholder="Nombre" class="w-full p-2 rounded border border-green-900/60 focus:border-green-500 bg-gray-900 text-white focus:ring-1 focus:ring-green-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-green-200 light-theme:text-gray-800" oninput="updateReportHeaders(true)">
+                                    <label
+                                        class="text-xs font-semibold text-gray-400 light-theme:text-gray-600 uppercase block mb-1">Responsable
+                                        4</label>
+                                    <input type="text" id="responsable-4" placeholder="Nombre"
+                                        class="w-full p-2 rounded border border-green-900/60 focus:border-green-500 bg-gray-900 text-white focus:ring-1 focus:ring-green-500 outline-none transition-colors text-sm light-theme:bg-white light-theme:border-green-200 light-theme:text-gray-800"
+                                        oninput="updateReportHeaders(true)">
                                 </div>
                             </div>
                         </div>
@@ -656,11 +907,14 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Estado de LocalStorage -->
             <div class="mt-4 pt-4 border-t border-gray-700 text-xs text-gray-500">
-                <p>Estado de Guardado: <span id="connection-status" class="font-semibold text-lime-400">Guardado Automaticamente </span></p>
-                <p class="mt-1 text-gray-500">💡 Tip: Haz clic en el nombre del producto para marcarlo como <span class="text-green-400">Verificado</span> o <span class="text-red-400">Discrepancia</span>. <span class="text-cyan-400 font-bold">¡Mantén presionado para Editar!</span></p>
+                <p>Estado de Guardado: <span id="connection-status" class="font-semibold text-lime-400">Guardado
+                        Automaticamente </span></p>
+                <p class="mt-1 text-gray-500">💡 Tip: Haz clic en el nombre del producto para marcarlo como <span
+                        class="text-green-400">Verificado</span> o <span class="text-red-400">Discrepancia</span>. <span
+                        class="text-cyan-400 font-bold">¡Mantén presionado para Editar!</span></p>
             </div>
         </footer>
     </div>
@@ -688,33 +942,33 @@
                 <button class="calc-btn" onclick="clearEntry()">CE</button>
                 <button class="calc-btn" onclick="allClear()">C</button>
                 <button class="calc-btn" onclick="deleteLast()"><span style="font-size: 20px;">&#9003;</span></button>
-                
+
                 <button class="calc-btn" onclick="specialOp('1/x')"><sup>1</sup>/<sub>x</sub></button>
                 <button class="calc-btn" onclick="specialOp('x2')">x&sup2;</button>
                 <button class="calc-btn" onclick="specialOp('sqrt')">&radic;x</button>
                 <button class="calc-btn op-btn" onclick="appendOperator('/')">&divide;</button>
-                
+
                 <button class="calc-btn num-btn" onclick="appendNumber('7')">7</button>
                 <button class="calc-btn num-btn" onclick="appendNumber('8')">8</button>
                 <button class="calc-btn num-btn" onclick="appendNumber('9')">9</button>
                 <button class="calc-btn op-btn" onclick="appendOperator('*')">&times;</button>
-                
+
                 <button class="calc-btn num-btn" onclick="appendNumber('4')">4</button>
                 <button class="calc-btn num-btn" onclick="appendNumber('5')">5</button>
                 <button class="calc-btn num-btn" onclick="appendNumber('6')">6</button>
                 <button class="calc-btn op-btn" onclick="appendOperator('-')">&minus;</button>
-                
+
                 <button class="calc-btn num-btn" onclick="appendNumber('1')">1</button>
                 <button class="calc-btn num-btn" onclick="appendNumber('2')">2</button>
                 <button class="calc-btn num-btn" onclick="appendNumber('3')">3</button>
                 <button class="calc-btn op-btn" onclick="appendOperator('+')">+</button>
-                
+
                 <button class="calc-btn" onclick="toggleSign()">+/-</button>
                 <button class="calc-btn num-btn" onclick="appendNumber('0')">0</button>
                 <button class="calc-btn" onclick="appendNumber('.')">,</button>
                 <button class="calc-btn equal-btn" onclick="calculate(true)">=</button>
             </div>
-            
+
             <!-- Acciones de Guardado -->
             <div class="grid grid-cols-2 gap-0 border-t border-gray-700">
                 <button onclick="window.closeCalculator()" class="calc-btn action-btn action-cancel">Cancelar</button>
@@ -724,17 +978,22 @@
     </div>
 
     <!-- Modal Agregar Producto (MODIFICADO: AHORA EN LA PARTE SUPERIOR) -->
-    <div id="add-product-modal" class="modal-overlay" style="align-items: flex-start; padding-top: 5rem;" onclick="if(event.target === this) closeAddProductModal()">
+    <div id="add-product-modal" class="modal-overlay" style="align-items: flex-start; padding-top: 5rem;"
+        onclick="if(event.target === this) closeAddProductModal()">
         <!-- ... (Contenido modal sin cambios) ... -->
-        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-purple-500">
+        <div
+            class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-purple-500">
             <h3 class="text-xl font-bold text-purple-400 mb-4 uppercase">➕ Nuevo Producto</h3>
             <p class="text-gray-300 mb-4 text-sm">Ingresa el nombre del producto que deseas añadir a la lista.</p>
-            
-            <input type="text" id="new-product-name" placeholder="Ej: Pan de Molde Integral" class="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 text-white mb-6 focus:ring-2 focus:ring-purple-500 outline-none">
-            
+
+            <input type="text" id="new-product-name" placeholder="Ej: Pan de Molde Integral"
+                class="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 text-white mb-6 focus:ring-2 focus:ring-purple-500 outline-none">
+
             <div class="flex justify-end space-x-4">
-                <button onclick="closeAddProductModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
-                <button onclick="confirmAddProduct()" class="py-2 px-4 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition shadow-lg">Agregar</button>
+                <button onclick="closeAddProductModal()"
+                    class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="confirmAddProduct()"
+                    class="py-2 px-4 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition shadow-lg">Agregar</button>
             </div>
         </div>
     </div>
@@ -742,70 +1001,89 @@
     <!-- Modal Editar Producto (NUEVO) -->
     <div id="edit-product-modal" class="modal-overlay" onclick="if(event.target === this) closeEditProductModal()">
         <!-- ... (Contenido modal sin cambios) ... -->
-        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-blue-500">
+        <div
+            class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-blue-500">
             <h3 class="text-xl font-bold text-blue-400 mb-4 uppercase">✏️ Editar Nombre</h3>
-            <p class="text-gray-300 mb-4 text-sm">Modifica el nombre del producto. La lista se reordenará automáticamente.</p>
-            
-            <input type="text" id="edit-product-name" class="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 text-white mb-6 focus:ring-2 focus:ring-blue-500 outline-none">
-            
+            <p class="text-gray-300 mb-4 text-sm">Modifica el nombre del producto. La lista se reordenará
+                automáticamente.</p>
+
+            <input type="text" id="edit-product-name"
+                class="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 text-white mb-6 focus:ring-2 focus:ring-blue-500 outline-none">
+
             <div class="flex justify-end space-x-4">
-                <button onclick="closeEditProductModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
-                <button onclick="confirmEditProduct()" class="py-2 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition shadow-lg">Guardar</button>
+                <button onclick="closeEditProductModal()"
+                    class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="confirmEditProduct()"
+                    class="py-2 px-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition shadow-lg">Guardar</button>
             </div>
 
             <!-- Botón Eliminar -->
             <div class="mt-4 pt-4 border-t border-gray-700">
-                 <button onclick="deleteProductConfirmed()" class="w-full py-2 px-4 bg-red-900/50 text-red-300 font-bold rounded-lg hover:bg-red-900 transition border border-red-800 text-sm">🗑️ Eliminar Producto</button>
+                <button onclick="deleteProductConfirmed()"
+                    class="w-full py-2 px-4 bg-red-900/50 text-red-300 font-bold rounded-lg hover:bg-red-900 transition border border-red-800 text-sm">🗑️
+                    Eliminar Producto</button>
             </div>
         </div>
     </div>
-    
+
     <!-- Modal Gestionar Equipos (MODIFICADO: MAS ARRIBA Y COMPACTO) -->
-    <div id="team-modal" class="modal-overlay" style="align-items: flex-start; padding-top: 2rem;" onclick="if(event.target === this) closeTeamModal()">
+    <div id="team-modal" class="modal-overlay" style="align-items: flex-start; padding-top: 2rem;"
+        onclick="if(event.target === this) closeTeamModal()">
         <!-- ... (Contenido modal sin cambios) ... -->
         <!-- CAMBIO AQUI: Se cambió bg-gray-800 por bg-[#111111] para el negro mate -->
-        <div class="bg-[#111111] p-4 md:p-6 rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all border border-cyan-600">
-            <h3 class="text-lg font-bold text-cyan-400 mb-3 uppercase text-center border-b border-gray-700 pb-2">👥 Gestionar Responsables</h3>
-            
+        <div
+            class="bg-[#111111] p-4 md:p-6 rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all border border-cyan-600">
+            <h3 class="text-lg font-bold text-cyan-400 mb-3 uppercase text-center border-b border-gray-700 pb-2">👥
+                Gestionar Responsables</h3>
+
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <!-- Columna Equipo 1 (MODIFICADA CON TEXTO LLAMATIVO) -->
                 <div class="space-y-2">
                     <div class="flex flex-col">
-                        <h4 class="text-red-400 font-bold text-[10px] uppercase border-b border-red-500/30 pb-1">Equipo 1 (Rojo)</h4>
+                        <h4 class="text-red-400 font-bold text-[10px] uppercase border-b border-red-500/30 pb-1">Equipo
+                            1 (Rojo)</h4>
                         <!-- Etiqueta Llamativa NUEVA -->
-                        <span class="mt-1 text-[10px] bg-red-500/20 text-red-300 border border-red-500 p-1 rounded text-center blink-text font-extrabold tracking-wider">
+                        <span
+                            class="mt-1 text-[10px] bg-red-500/20 text-red-300 border border-red-500 p-1 rounded text-center blink-text font-extrabold tracking-wider">
                             🚨 ¡RESPONSABLE DEL INVENTARIO - ANOTARSE! 🚨
                         </span>
                     </div>
                     <div>
                         <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 1</label>
-                        <input type="text" id="modal-resp-1" class="w-full p-1.5 rounded bg-gray-900 border border-red-900 focus:border-red-500 text-white text-sm outline-none">
+                        <input type="text" id="modal-resp-1"
+                            class="w-full p-1.5 rounded bg-gray-900 border border-red-900 focus:border-red-500 text-white text-sm outline-none">
                     </div>
                     <div>
                         <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 2</label>
-                        <input type="text" id="modal-resp-2" class="w-full p-1.5 rounded bg-gray-900 border border-red-900 focus:border-red-500 text-white text-sm outline-none">
+                        <input type="text" id="modal-resp-2"
+                            class="w-full p-1.5 rounded bg-gray-900 border border-red-900 focus:border-red-500 text-white text-sm outline-none">
                     </div>
                 </div>
 
                 <!-- Columna Equipo 2 -->
                 <div class="space-y-2">
-                    <h4 class="text-green-400 font-bold text-[10px] uppercase border-b border-green-500/30 pb-1 mt-0">Equipo 2 (Verde)</h4>
-                     <!-- Espaciador para alinear con la columna 1 que tiene el aviso -->
-                    <div style="height: 28px;"></div> 
+                    <h4 class="text-green-400 font-bold text-[10px] uppercase border-b border-green-500/30 pb-1 mt-0">
+                        Equipo 2 (Verde)</h4>
+                    <!-- Espaciador para alinear con la columna 1 que tiene el aviso -->
+                    <div style="height: 28px;"></div>
                     <div>
                         <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 3</label>
-                        <input type="text" id="modal-resp-3" class="w-full p-1.5 rounded bg-gray-900 border border-green-900 focus:border-green-500 text-white text-sm outline-none">
+                        <input type="text" id="modal-resp-3"
+                            class="w-full p-1.5 rounded bg-gray-900 border border-green-900 focus:border-green-500 text-white text-sm outline-none">
                     </div>
                     <div>
                         <label class="text-[9px] text-gray-400 uppercase block mb-0.5">Responsable 4</label>
-                        <input type="text" id="modal-resp-4" class="w-full p-1.5 rounded bg-gray-900 border border-green-900 focus:border-green-500 text-white text-sm outline-none">
+                        <input type="text" id="modal-resp-4"
+                            class="w-full p-1.5 rounded bg-gray-900 border border-green-900 focus:border-green-500 text-white text-sm outline-none">
                     </div>
                 </div>
             </div>
 
             <div class="flex justify-end space-x-3 pt-3 border-t border-gray-700">
-                <button onclick="closeTeamModal()" class="py-1.5 px-3 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition">Cancelar</button>
-                <button onclick="saveTeamModal()" class="py-1.5 px-4 bg-cyan-600 text-white font-bold text-sm rounded-lg hover:bg-cyan-500 transition shadow-lg">Guardar</button>
+                <button onclick="closeTeamModal()"
+                    class="py-1.5 px-3 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="saveTeamModal()"
+                    class="py-1.5 px-4 bg-cyan-600 text-white font-bold text-sm rounded-lg hover:bg-cyan-500 transition shadow-lg">Guardar</button>
             </div>
         </div>
     </div>
@@ -813,14 +1091,20 @@
     <!-- Modal de Confirmación para Borrar Todo -->
     <div id="reset-modal" class="modal-overlay" onclick="if(event.target === this) closeResetModal()">
         <!-- ... (Contenido modal sin cambios) ... -->
-        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-red-700">
+        <div
+            class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 transform transition-all border border-red-700">
             <h3 class="text-xl font-bold text-red-400 mb-4">⚠️ Confirmar Borrado Total</h3>
-            <p class="text-gray-300 mb-6">Estás a punto de **eliminar todo el inventario** del almacenamiento local de tu navegador. Esta acción no se puede deshacer.</p>
-            <p class="text-yellow-400 text-xs mb-4 p-2 bg-gray-900/50 rounded border border-yellow-600/30">NOTA: Se eliminarán todos los productos agregados manualmente y se restablecerá la lista original.</p>
+            <p class="text-gray-300 mb-6">Estás a punto de **eliminar todo el inventario** del almacenamiento local de
+                tu navegador. Esta acción no se puede deshacer.</p>
+            <p class="text-yellow-400 text-xs mb-4 p-2 bg-gray-900/50 rounded border border-yellow-600/30">NOTA: Se
+                eliminarán todos los productos agregados manualmente y se restablecerá la lista original.</p>
             <p class="text-white font-semibold mb-6">¿Estás absolutamente seguro de que deseas continuar?</p>
             <div class="flex justify-end space-x-4">
-                <button onclick="closeResetModal()" class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
-                <button onclick="resetAllDataConfirmed()" class="py-2 px-4 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 transition shadow-lg">Sí, Borrar Todo</button>
+                <button onclick="closeResetModal()"
+                    class="py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">Cancelar</button>
+                <button onclick="resetAllDataConfirmed()"
+                    class="py-2 px-4 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 transition shadow-lg">Sí,
+                    Borrar Todo</button>
             </div>
         </div>
     </div>
@@ -841,75 +1125,77 @@
             </div>
         </div>
         <!-- Contenedor para los globos (generado dinámicamente) -->
-        <div id="balloons-container" style="position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: hidden; top: 0; left: 0;"></div>
+        <div id="balloons-container"
+            style="position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: hidden; top: 0; left: 0;">
+        </div>
     </div>
 
     <script>
         // --- CONSTANTES Y ESTRUCTURA DE DATOS ---
-        const LOCAL_STORAGE_KEY = 'Deposito arriba InventoryData_v2'; 
-        
+        const LOCAL_STORAGE_KEY = 'Deposito arriba InventoryData_v2';
+
         // Variable global para disparar la fiesta desde cualquier lugar
         window.triggerCelebration = null;
 
-const productos = [
-        "CHUPETA",
-        "CARNE DE SOYA",
-        "CEPILLO DE BARRER*12",
-        "CHOCOLATE TERRY",
-        "CHOCOPILO",
-        "ESPONJA MAX HOGAR",
-        "GALLETA CHARMY",
-        "GALLETA CLUB SOCIAL *30",
-        "GALLETA HONY BRAM",
-        "GALLETA KRAKER BRAM90G",
-        "GALLETA MARIA CALEDONIA 250GR*24",
-        "GALLETA MARIA ITALIA 200G *12",
-        "GALLETA MARIA SELECTA *24",
-        "GALLETA MARILU *24",
-        "GALLETA OREO*48",
-        "GALLETA SODA CARABOBO *12",
-        "GALLETA SODA CARABOBO *24",
-        "GALLETA SODA SOL*12",
-        "GALLETA SODA SOL*24",
-        "GALLETA TIP TOP",
-        "GATARINA GATSY",
-        "GELATINA GELLA",
-        "GELATINA SONRISSA*48",
-        "MAIZINA AMERICANA 200GR*40",
-        "MAIZOR PLANET",
-        "MAIZORITO AZUCARADO 240 GR",
-        "MAIZORITO FRUTI AROS 240 GR",
-        "MAIZORITO NORMAL 300 GR*",
-        "MEGA ARO*8",
-        "MEGA BOL *8",
-        "PAPEL ROSAL DE 400 HOJAS*12",
-        "PAPEL ALUMINIO",
-        "PAPEL ROSAL PLUS 215 HOJAS*12",
-        "PAPEL ROSAL PLUS 600 HOJAS*12",
-        "PEPITO CHEEZ PEK",
-        "PEPITO OSTIS",
-        "PERRARINA K-NINA",
-        "PERRARINA SUPER CAN",
-        "PRESTOTOBARBAS ALISSON",
-        "PRESTOTOBARBAS DORCO",
-        "SACO ECOLOGICOS",
-        "SALSA FRITZ CHEDDAR",
-        "SALSA FRIZ MAIZ",
-        "SALSA FRIZ PICANTE",
-        "SALSA ZUYCH ROSADA",
-        "SALSA ZUYCH TODAS",
-        "SERVILLETAS Z PEQUEÑAS",
-        "SOPA SOBRE IBERIA",
-        "SOPA SOBRE MAGGY",
-        "TANG",
-        "TOALLIN ROSAL PLUS 80 HOJAS",
-        "TODDY"
+        const productos = [
+            "CHUPETA",
+            "CARNE DE SOYA",
+            "CEPILLO DE BARRER*12",
+            "CHOCOLATE TERRY",
+            "CHOCOPILO",
+            "ESPONJA MAX HOGAR",
+            "GALLETA CHARMY",
+            "GALLETA CLUB SOCIAL *30",
+            "GALLETA HONY BRAM",
+            "GALLETA KRAKER BRAM90G",
+            "GALLETA MARIA CALEDONIA 250GR*24",
+            "GALLETA MARIA ITALIA 200G *12",
+            "GALLETA MARIA SELECTA *24",
+            "GALLETA MARILU *24",
+            "GALLETA OREO*48",
+            "GALLETA SODA CARABOBO *12",
+            "GALLETA SODA CARABOBO *24",
+            "GALLETA SODA SOL*12",
+            "GALLETA SODA SOL*24",
+            "GALLETA TIP TOP",
+            "GATARINA GATSY",
+            "GELATINA GELLA",
+            "GELATINA SONRISSA*48",
+            "MAIZINA AMERICANA 200GR*40",
+            "MAIZOR PLANET",
+            "MAIZORITO AZUCARADO 240 GR",
+            "MAIZORITO FRUTI AROS 240 GR",
+            "MAIZORITO NORMAL 300 GR*",
+            "MEGA ARO*8",
+            "MEGA BOL *8",
+            "PAPEL ROSAL DE 400 HOJAS*12",
+            "PAPEL ALUMINIO",
+            "PAPEL ROSAL PLUS 215 HOJAS*12",
+            "PAPEL ROSAL PLUS 600 HOJAS*12",
+            "PEPITO CHEEZ PEK",
+            "PEPITO OSTIS",
+            "PERRARINA K-NINA",
+            "PERRARINA SUPER CAN",
+            "PRESTOTOBARBAS ALISSON",
+            "PRESTOTOBARBAS DORCO",
+            "SACO ECOLOGICOS",
+            "SALSA FRITZ CHEDDAR",
+            "SALSA FRIZ MAIZ",
+            "SALSA FRIZ PICANTE",
+            "SALSA ZUYCH ROSADA",
+            "SALSA ZUYCH TODAS",
+            "SERVILLETAS Z PEQUEÑAS",
+            "SOPA SOBRE IBERIA",
+            "SOPA SOBRE MAGGY",
+            "TANG",
+            "TOALLIN ROSAL PLUS 80 HOJAS",
+            "TODDY"
 
-];
+        ];
 
         // Función para generar la estructura de inventario inicial
         const getInitialInventoryData = () => ({
-            inventory: defaultProductNames.map(name => ({
+            inventory: productos.map(name => ({
                 name: name,
                 quantity: 0,
                 history: "0",
@@ -928,13 +1214,13 @@ const productos = [
         let responsables = { resp1: "SIN NOMBRE", resp2: "SIN NOMBRE", resp3: "SIN NOMBRE", resp4: "SIN NOMBRE" };
         let currentFilter = ""; // VARIABLE GLOBAL PARA EL FILTRO
 
-        window.loadInventoryDataFromLocal = function() {
+        window.loadInventoryDataFromLocal = function () {
             try {
                 const storedDataJson = localStorage.getItem(LOCAL_STORAGE_KEY);
-                
+
                 if (storedDataJson) {
                     const storedData = JSON.parse(storedDataJson);
-                    
+
                     responsables.resp1 = storedData.responsable1 || "SIN NOMBRE";
                     responsables.resp2 = storedData.responsable2 || "SIN NOMBRE";
                     responsables.resp3 = storedData.responsable3 || "SIN NOMBRE";
@@ -973,17 +1259,17 @@ const productos = [
             }
         }
 
-        window.saveInventoryData = function(updateStatus = true) {
+        window.saveInventoryData = function (updateStatus = true) {
             const r1Input = document.getElementById('responsable-1');
             const r2Input = document.getElementById('responsable-2');
             const r3Input = document.getElementById('responsable-3');
             const r4Input = document.getElementById('responsable-4');
-            
+
             const responsable1 = r1Input ? r1Input.value : responsables.resp1;
             const responsable2 = r2Input ? r2Input.value : responsables.resp2;
             const responsable3 = r3Input ? r3Input.value : responsables.resp3;
             const responsable4 = r4Input ? r4Input.value : responsables.resp4;
-            
+
             responsables.resp1 = responsable1 || "SIN NOMBRE";
             responsables.resp2 = responsable2 || "SIN NOMBRE";
             responsables.resp3 = responsable3 || "SIN NOMBRE";
@@ -1001,16 +1287,16 @@ const productos = [
             try {
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dataToSave));
                 if (updateStatus) console.log("LocalStorage: Datos guardados.");
-                
+
             } catch (e) {
                 console.error("ERROR: Fallo al guardar.", e);
             }
-            
+
             window.renderInventoryTable();
             window.calculateTotalItems();
         }
 
-        window.resetAllDataConfirmed = function() {
+        window.resetAllDataConfirmed = function () {
             window.closeResetModal();
             try {
                 // AL BORRAR, SE RESTAURA DESDE 'getInitialInventoryData', 
@@ -1019,30 +1305,30 @@ const productos = [
                 const initial = getInitialInventoryData();
                 inventoryData = initial.inventory;
                 responsables = { resp1: "SIN NOMBRE", resp2: "SIN NOMBRE", resp3: "SIN NOMBRE", resp4: "SIN NOMBRE" };
-                
+
                 document.getElementById('responsable-1').value = "";
                 document.getElementById('responsable-2').value = "";
                 document.getElementById('responsable-3').value = "";
                 document.getElementById('responsable-4').value = "";
-                
+
                 // Limpiar filtro al resetear
                 window.clearSearch();
-                
-                window.updateReportHeaders(false); 
+
+                window.updateReportHeaders(false);
                 window.saveInventoryData(false);
                 window.renderInventoryTable();
                 window.calculateTotalItems();
-                
+
             } catch (e) {
                 console.error("ERROR: Fallo al borrar localStorage.", e);
             }
         }
 
         // --- GESTIÓN DE BÚSQUEDA Y FILTRADO ---
-        window.applyFilter = function(value) {
+        window.applyFilter = function (value) {
             currentFilter = value.toLowerCase().trim();
             const clearBtn = document.getElementById('clear-search-btn');
-            
+
             if (currentFilter.length > 0) {
                 clearBtn.classList.remove('hidden');
             } else {
@@ -1051,12 +1337,12 @@ const productos = [
             window.renderInventoryTable();
         }
 
-        window.clearSearch = function(shouldFocus = true) {
+        window.clearSearch = function (shouldFocus = true) {
             currentFilter = "";
             const input = document.getElementById('search-filter');
-            if(input) {
+            if (input) {
                 input.value = "";
-                if(shouldFocus) {
+                if (shouldFocus) {
                     input.focus();
                 } else {
                     input.blur(); // Quitar foco para cerrar teclado en móviles
@@ -1067,17 +1353,17 @@ const productos = [
         }
 
         // --- GESTIÓN DE PRODUCTOS NUEVOS ---
-        window.openAddProductModal = function() {
+        window.openAddProductModal = function () {
             document.getElementById('new-product-name').value = "";
             document.getElementById('add-product-modal').style.display = 'flex';
             document.getElementById('new-product-name').focus();
         }
 
-        window.closeAddProductModal = function() {
+        window.closeAddProductModal = function () {
             document.getElementById('add-product-modal').style.display = 'none';
         }
 
-        window.confirmAddProduct = function() {
+        window.confirmAddProduct = function () {
             const nameInput = document.getElementById('new-product-name');
             const newName = nameInput.value.trim().toUpperCase();
 
@@ -1104,7 +1390,7 @@ const productos = [
             // 3. Guardar y renderizar
             window.saveInventoryData(true);
             window.closeAddProductModal();
-            
+
             // 4. Buscar el índice del nuevo producto ordenado
             const newIndex = inventoryData.findIndex(item => item.name === newName);
 
@@ -1131,7 +1417,7 @@ const productos = [
         let longPressTriggered = false;
         let editingProductIndex = null;
 
-        window.startLongPress = function(index) {
+        window.startLongPress = function (index) {
             longPressTriggered = false;
             // Iniciar temporizador (AUMENTADO A 5 SEGUNDOS)
             pressTimer = setTimeout(() => {
@@ -1142,17 +1428,17 @@ const productos = [
             }, 5000); // <-- MODIFICADO: 5000ms (5 segundos)
         }
 
-        window.endLongPress = function(event, index) {
-            clearTimeout(pressTimer);
-            longPressTriggered = false; 
-        }
-
-        window.cancelLongPress = function() {
+        window.endLongPress = function (event, index) {
             clearTimeout(pressTimer);
             longPressTriggered = false;
         }
 
-        window.openEditProductModal = function(index) {
+        window.cancelLongPress = function () {
+            clearTimeout(pressTimer);
+            longPressTriggered = false;
+        }
+
+        window.openEditProductModal = function (index) {
             window.clearSearch(false); // Limpiar búsqueda al abrir editor
             editingProductIndex = index;
             const currentName = inventoryData[index].name;
@@ -1161,14 +1447,14 @@ const productos = [
             document.getElementById('edit-product-name').focus();
         }
 
-        window.closeEditProductModal = function() {
+        window.closeEditProductModal = function () {
             document.getElementById('edit-product-modal').style.display = 'none';
             editingProductIndex = null;
         }
 
-        window.confirmEditProduct = function() {
+        window.confirmEditProduct = function () {
             if (editingProductIndex === null) return;
-            
+
             const nameInput = document.getElementById('edit-product-name');
             const newName = nameInput.value.trim().toUpperCase();
 
@@ -1188,13 +1474,13 @@ const productos = [
             window.closeEditProductModal();
         }
 
-        window.deleteProductConfirmed = function() {
+        window.deleteProductConfirmed = function () {
             if (editingProductIndex === null) return;
-            
+
             const enteredCode = prompt("Ingrese la clave de seguridad para eliminar este producto:");
 
             if (enteredCode === "124578963") {
-                if(confirm("Código correcto. ¿Estás seguro de que quieres eliminar este producto de la lista?")) {
+                if (confirm("Código correcto. ¿Estás seguro de que quieres eliminar este producto de la lista?")) {
                     inventoryData.splice(editingProductIndex, 1);
                     window.saveInventoryData(true);
                     window.closeEditProductModal();
@@ -1205,7 +1491,7 @@ const productos = [
         }
 
         // --- GESTIÓN DE EQUIPOS (MODAL) ---
-        window.openTeamModal = function() {
+        window.openTeamModal = function () {
             const r1 = document.getElementById('responsable-1').value;
             const r2 = document.getElementById('responsable-2').value;
             const r3 = document.getElementById('responsable-3').value;
@@ -1219,11 +1505,11 @@ const productos = [
             document.getElementById('team-modal').style.display = 'flex';
         }
 
-        window.closeTeamModal = function() {
+        window.closeTeamModal = function () {
             document.getElementById('team-modal').style.display = 'none';
         }
 
-        window.saveTeamModal = function() {
+        window.saveTeamModal = function () {
             const r1 = document.getElementById('modal-resp-1').value.trim();
             const r2 = document.getElementById('modal-resp-2').value.trim();
             const r3 = document.getElementById('modal-resp-3').value.trim();
@@ -1241,7 +1527,7 @@ const productos = [
         }
 
         // --- LÓGICA DE CHECKLIST (ACTUALIZADA) ---
-        window.toggleStatus = function(index) {
+        window.toggleStatus = function (index) {
             // Si acabamos de abrir el modal de edición, no hacemos toggle
             if (longPressTriggered) return;
 
@@ -1263,7 +1549,7 @@ const productos = [
             window.renderInventoryTable();
             window.updateReportHeaders(false);
             document.getElementById('report-date').textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            
+
             // --- INICIALIZACIÓN DE LA CELEBRACIÓN ---
             initCelebrationLogic();
 
@@ -1275,10 +1561,10 @@ const productos = [
         });
 
         // --- UI Y RENDERIZADO ---
-        window.renderInventoryTable = function() {
+        window.renderInventoryTable = function () {
             const tbody = document.getElementById('inventory-list');
             if (!tbody) return;
-            tbody.innerHTML = ''; 
+            tbody.innerHTML = '';
 
             inventoryData.forEach((item, index) => {
                 // LÓGICA DE FILTRADO
@@ -1298,7 +1584,7 @@ const productos = [
                     <div class="w-7 h-7 rounded-lg border-2 border-gray-500 bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors">
                         <!-- Vacío (Tamaño reducido a w-7 h-7) -->
                     </div>`;
-                
+
                 if (item.status === 'ok') {
                     statusClass = 'status-ok'; // Fondo verde claro en toda la celda
                     statusIcon = `
@@ -1355,12 +1641,12 @@ const productos = [
             });
         }
 
-        window.updateReportHeaders = function(shouldSave) {
+        window.updateReportHeaders = function (shouldSave) {
             const r1Input = document.getElementById('responsable-1');
             const r2Input = document.getElementById('responsable-2');
             const r3Input = document.getElementById('responsable-3');
             const r4Input = document.getElementById('responsable-4');
-            
+
             if (!shouldSave) {
                 r1Input.value = responsables.resp1 === "SIN NOMBRE" ? "" : responsables.resp1;
                 r2Input.value = responsables.resp2 === "SIN NOMBRE" ? "" : responsables.resp2;
@@ -1377,16 +1663,16 @@ const productos = [
             document.getElementById('resp2-display').textContent = r2.toUpperCase();
             document.getElementById('resp3-display').textContent = r3.toUpperCase();
             document.getElementById('resp4-display').textContent = r4.toUpperCase();
-            
+
             clearTimeout(window.saveTimeout);
             if (shouldSave) {
-                 window.saveTimeout = setTimeout(() => {
+                window.saveTimeout = setTimeout(() => {
                     window.saveInventoryData(true);
                 }, 500);
             }
         }
 
-        window.calculateTotalItems = function() {
+        window.calculateTotalItems = function () {
             const count = inventoryData.filter(i => (parseFloat(i.quantity) || 0) > 0).length;
             document.getElementById('stocked-products-count').textContent = count;
         }
@@ -1397,47 +1683,47 @@ const productos = [
         let lastOperator = null;
         let fullHistory = '';
         let shouldResetScreen = false;
-        let editingProductIndexForCalc = null; 
+        let editingProductIndexForCalc = null;
 
         const displayElement = document.getElementById('display');
         const prevOpElement = document.getElementById('prev-operation');
 
-        window.openCalculator = function(index, productName) {
+        window.openCalculator = function (index, productName) {
             window.clearSearch(false);
-            editingProductIndexForCalc = index; 
-            
+            editingProductIndexForCalc = index;
+
             // CARGA INTELIGENTE: Si el historial es '0', empezamos limpio.
             // Si tiene datos (ej: "10 + 10 = 20"), lo cargamos tal cual.
             fullHistory = inventoryData[index].history || '';
             if (fullHistory === '0') fullHistory = '';
-            
+
             // La pantalla principal muestra la cantidad actual
             currentInput = String(inventoryData[index].quantity || '0');
-            
+
             runningTotal = null;
             lastOperator = null;
             shouldResetScreen = false;
 
             document.getElementById('calc-product-name').innerText = productName;
             updateDisplay();
-            
+
             // Mostrar historial recuperado
-            if(document.getElementById('prev-operation')) {
+            if (document.getElementById('prev-operation')) {
                 document.getElementById('prev-operation').textContent = fullHistory;
             }
-            
+
             document.getElementById('calculator-modal').style.display = 'flex';
         }
 
-        window.closeCalculator = function() {
+        window.closeCalculator = function () {
             document.getElementById('calculator-modal').style.display = 'none';
             editingProductIndexForCalc = null;
         }
 
-        window.updateDisplay = function() {
+        window.updateDisplay = function () {
             const display = document.getElementById('display');
-            if(!display) return;
-            
+            if (!display) return;
+
             display.innerText = currentInput;
             if (currentInput.length > 10) {
                 display.style.fontSize = '32px';
@@ -1446,7 +1732,7 @@ const productos = [
             }
         }
 
-        window.appendNumber = function(number) {
+        window.appendNumber = function (number) {
             if (currentInput === '0' || shouldResetScreen) {
                 currentInput = number === '.' ? '0.' : number;
                 shouldResetScreen = false;
@@ -1457,16 +1743,16 @@ const productos = [
             window.updateDisplay();
         }
 
-        window.appendOperator = function(op) {
+        window.appendOperator = function (op) {
             const val = parseFloat(currentInput);
             const prevOpDisplay = document.getElementById('prev-operation');
-            
+
             if (runningTotal === null) {
                 runningTotal = val;
-                
+
                 // LÓGICA CLAVE: APPENDING
                 let text = fullHistory.trim();
-                
+
                 if (text === '') {
                     // Si estaba vacío, empezamos: "10 +"
                     fullHistory = currentInput + ' ' + getOpSymbol(op);
@@ -1476,24 +1762,24 @@ const productos = [
                     fullHistory = text + ' ' + getOpSymbol(op);
                 }
             } else if (!shouldResetScreen) {
-                 // Cadena continua (ej: 10 + 10 + ...)
-                 window.calculate(false);
-                 fullHistory += ' ' + getOpSymbol(op);
+                // Cadena continua (ej: 10 + 10 + ...)
+                window.calculate(false);
+                fullHistory += ' ' + getOpSymbol(op);
             } else {
-                 // Cambio de operador
-                 lastOperator = op;
-                 fullHistory = fullHistory.slice(0, -1) + getOpSymbol(op);
-                 if(prevOpDisplay) prevOpDisplay.textContent = fullHistory;
-                 return;
+                // Cambio de operador
+                lastOperator = op;
+                fullHistory = fullHistory.slice(0, -1) + getOpSymbol(op);
+                if (prevOpDisplay) prevOpDisplay.textContent = fullHistory;
+                return;
             }
 
             lastOperator = op;
-            if(prevOpDisplay) prevOpDisplay.textContent = fullHistory;
+            if (prevOpDisplay) prevOpDisplay.textContent = fullHistory;
             shouldResetScreen = true;
         }
 
-        window.getOpSymbol = function(op) {
-            switch(op) {
+        window.getOpSymbol = function (op) {
+            switch (op) {
                 case '*': return '×';
                 case '/': return '÷';
                 case '-': return '−';
@@ -1502,9 +1788,9 @@ const productos = [
             }
         }
 
-        window.calculate = function(isFinal) {
+        window.calculate = function (isFinal) {
             if (lastOperator === null || (shouldResetScreen && isFinal === false)) return;
-            
+
             const current = parseFloat(currentInput);
             let result;
 
@@ -1512,17 +1798,17 @@ const productos = [
                 case '+': result = runningTotal + current; break;
                 case '-': result = runningTotal - current; break;
                 case '*': result = runningTotal * current; break;
-                case '/': 
+                case '/':
                     if (current === 0) {
                         window.showError("Error");
                         return;
                     }
-                    result = runningTotal / current; 
+                    result = runningTotal / current;
                     break;
                 case '%': result = (runningTotal * current) / 100; break;
                 default: return;
             }
-            
+
             result = Math.round(result * 1000000) / 1000000;
             const prevOpDisplay = document.getElementById('prev-operation');
 
@@ -1531,9 +1817,9 @@ const productos = [
                 // No borramos fullHistory. Lo extendemos.
                 // Ej: "... + 10" se convierte en "... + 10 = 30"
                 fullHistory = fullHistory + ' ' + currentInput + ' = ' + result;
-                
-                if(prevOpDisplay) prevOpDisplay.textContent = fullHistory;
-                
+
+                if (prevOpDisplay) prevOpDisplay.textContent = fullHistory;
+
                 currentInput = result.toString();
                 runningTotal = null;
                 lastOperator = null;
@@ -1544,14 +1830,14 @@ const productos = [
                 runningTotal = result;
                 currentInput = result.toString();
             }
-            
+
             shouldResetScreen = true;
             window.updateDisplay();
         }
 
-        window.specialOp = function(type) {
+        window.specialOp = function (type) {
             let val = parseFloat(currentInput);
-            switch(type) {
+            switch (type) {
                 case '1/x': val = 1 / val; break;
                 case 'x2': val = val * val; break;
                 case 'sqrt': val = Math.sqrt(val); break;
@@ -1561,22 +1847,22 @@ const productos = [
             shouldResetScreen = true;
         }
 
-        window.clearEntry = function() {
+        window.clearEntry = function () {
             currentInput = '0';
             window.updateDisplay();
         }
 
         // BORRAR TODO (C): Este SÍ limpia el historial para empezar de cero.
-        window.allClear = function() {
+        window.allClear = function () {
             currentInput = '0';
             runningTotal = null;
             lastOperator = null;
             fullHistory = ''; // Reinicia la cadena
-            if(document.getElementById('prev-operation')) document.getElementById('prev-operation').textContent = '';
+            if (document.getElementById('prev-operation')) document.getElementById('prev-operation').textContent = '';
             window.updateDisplay();
         }
 
-        window.deleteLast = function() {
+        window.deleteLast = function () {
             if (shouldResetScreen) return;
             if (currentInput.length <= 1) {
                 currentInput = '0';
@@ -1586,25 +1872,25 @@ const productos = [
             window.updateDisplay();
         }
 
-        window.toggleSign = function() {
+        window.toggleSign = function () {
             currentInput = (parseFloat(currentInput) * -1).toString();
             window.updateDisplay();
         }
 
-        window.showError = function(msg) {
+        window.showError = function (msg) {
             const display = document.getElementById('display');
-            if(display) {
+            if (display) {
                 const oldText = display.innerText;
                 display.innerText = msg;
                 setTimeout(() => {
-                     display.innerText = oldText;
-                     window.allClear();
+                    display.innerText = oldText;
+                    window.allClear();
                 }, 1500);
             }
         }
 
         // GUARDAR: Toma lo que hay en pantalla (incluyendo el historial visible)
-        window.saveAndClose = function() {
+        window.saveAndClose = function () {
             if (lastOperator !== null && !shouldResetScreen) {
                 window.calculate(true);
             }
@@ -1615,7 +1901,7 @@ const productos = [
             }
 
             const finalValue = parseFloat(currentInput);
-            
+
             if (finalValue >= 0 && !isNaN(finalValue)) {
                 inventoryData[editingProductIndexForCalc].quantity = finalValue;
                 // Guardamos el texto completo del historial
@@ -1624,14 +1910,14 @@ const productos = [
             } else {
                 inventoryData[editingProductIndexForCalc].quantity = 0;
             }
-            
+
             window.saveInventoryData();
             window.closeCalculator();
         }
 
         // Manejo de teclado
         window.addEventListener('keydown', (e) => {
-            if(document.getElementById('calculator-modal').style.display !== 'flex') return;
+            if (document.getElementById('calculator-modal').style.display !== 'flex') return;
 
             if (e.key >= 0 && e.key <= 9) window.appendNumber(e.key);
             if (e.key === '.' || e.key === ',') window.appendNumber('.');
@@ -1643,19 +1929,19 @@ const productos = [
             if (e.key === 'Backspace') window.deleteLast();
             if (e.key === 'Escape') window.closeCalculator();
         });
-        
+
         // --- MODALES ---
-        window.openResetModal = function() { document.getElementById('reset-modal').style.display = 'flex'; }
-        window.closeResetModal = function() { document.getElementById('reset-modal').style.display = 'none'; }
+        window.openResetModal = function () { document.getElementById('reset-modal').style.display = 'flex'; }
+        window.closeResetModal = function () { document.getElementById('reset-modal').style.display = 'none'; }
 
         // --- EXPORTAR EXCEL (.XLSX) ---
-        window.downloadExcel = function() {
+        window.downloadExcel = function () {
             const r1 = document.getElementById('responsable-1').value.trim();
             const r2 = document.getElementById('responsable-2').value.trim();
             const r3 = document.getElementById('responsable-3').value.trim();
             const r4 = document.getElementById('responsable-4').value.trim();
             const date = document.getElementById('report-date').textContent;
-            
+
             // Construir texto de Equipo 1 (Resp 1 y 2) para el reporte interno (celdas dentro del excel)
             const team1Names = [r1, r2].filter(n => n && n !== "SIN NOMBRE" && n !== "");
             const team1Text = team1Names.length > 0 ? team1Names.join(" / ").toUpperCase() : "SIN ASIGNAR";
@@ -1666,11 +1952,11 @@ const productos = [
             if (!nameForFile || nameForFile === "SIN NOMBRE") {
                 nameForFile = r2;
             }
-            
+
             // Sanitizar nombre para que sea válido en un archivo (quitar caracteres raros)
-            const team1FileSuffix = (nameForFile && nameForFile !== "SIN NOMBRE") 
-                                    ? "_" + nameForFile.toUpperCase().replace(/[^A-Z0-9\-]/g, '_') 
-                                    : "";
+            const team1FileSuffix = (nameForFile && nameForFile !== "SIN NOMBRE")
+                ? "_" + nameForFile.toUpperCase().replace(/[^A-Z0-9\-]/g, '_')
+                : "";
 
             // Construir texto de Equipo 2 (Resp 3 y 4)
             const team2Names = [r3, r4].filter(n => n && n !== "SIN NOMBRE" && n !== "");
@@ -1701,16 +1987,16 @@ const productos = [
             ];
 
             // Variable para calcular el ancho máximo del historial
-            let maxHistoryLen = 15; 
+            let maxHistoryLen = 15;
 
             // 2. Agregar los datos del inventario (FILAS DE PRODUCTOS)
             itemsWithQuantity.forEach(item => {
                 let estadoTexto = "PENDIENTE";
-                if(item.status === 'ok') estadoTexto = "CHEQUEADO";
-                if(item.status === 'error') estadoTexto = "DIFERENCIA";
+                if (item.status === 'ok') estadoTexto = "CHEQUEADO";
+                if (item.status === 'error') estadoTexto = "DIFERENCIA";
 
                 const historyText = item.history || "0";
-                
+
                 if (historyText.length > maxHistoryLen) {
                     maxHistoryLen = historyText.length;
                 }
@@ -1756,23 +2042,23 @@ const productos = [
         }
 
         // --- CAMBIO DE TEMA ---
-        window.toggleTheme = function() {
+        window.toggleTheme = function () {
             const isLight = document.body.classList.toggle('light-theme');
             document.getElementById('moon-icon').classList.toggle('hidden', isLight);
             document.getElementById('sun-icon').classList.toggle('hidden', !isLight);
             localStorage.setItem('theme', isLight ? 'light' : 'dark');
         }
-        
+
         document.addEventListener('DOMContentLoaded', () => {
-             const savedTheme = localStorage.getItem('theme');
-             if (savedTheme === 'light') {
-                 document.body.classList.add('light-theme');
-                 if(document.getElementById('sun-icon')) document.getElementById('sun-icon').classList.remove('hidden');
-                 if(document.getElementById('moon-icon')) document.getElementById('moon-icon').classList.add('hidden');
-             } else {
-                 if(document.getElementById('sun-icon')) document.getElementById('sun-icon').classList.add('hidden');
-                 if(document.getElementById('moon-icon')) document.getElementById('moon-icon').classList.remove('hidden');
-             }
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                if (document.getElementById('sun-icon')) document.getElementById('sun-icon').classList.remove('hidden');
+                if (document.getElementById('moon-icon')) document.getElementById('moon-icon').classList.add('hidden');
+            } else {
+                if (document.getElementById('sun-icon')) document.getElementById('sun-icon').classList.add('hidden');
+                if (document.getElementById('moon-icon')) document.getElementById('moon-icon').classList.remove('hidden');
+            }
         });
 
         // ==========================================
@@ -1784,25 +2070,25 @@ const productos = [
             const overlay = document.getElementById('celebration-overlay');
             const backBtn = document.getElementById('celeb-backButton');
             const colors = ['#FF007F', '#00D4FF', '#FFD700', '#32CD32', '#FF4500', '#9370DB', '#FFFFFF', '#00FFCC', '#FF69B4'];
-            
+
             let canInteract = false;
 
             // --- DEFINIR FUNCIÓN GLOBAL PARA ACTIVAR DESDE AFUERA ---
-            window.triggerCelebration = function() {
+            window.triggerCelebration = function () {
                 // 1. Mostrar Overlay
                 overlay.style.display = 'flex';
-                
+
                 // 2. Ocultar el botón manual
-                if(btn) btn.style.display = 'none';
+                if (btn) btn.style.display = 'none';
 
                 // 3. Vibrar
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 
                 // 4. Iniciar efectos inmediatamente (OPTIMIZADO)
                 requestAnimationFrame(() => {
-                     // Disparo central
+                    // Disparo central
                     initExplosion(window.innerWidth / 2, window.innerHeight / 2);
-                    
+
                     // Disparos aleatorios extra (retrasados ligeramente)
                     setTimeout(() => initExplosion(window.innerWidth * 0.3, window.innerHeight * 0.4), 200);
                     setTimeout(() => initExplosion(window.innerWidth * 0.7, window.innerHeight * 0.4), 400);
@@ -1819,13 +2105,13 @@ const productos = [
             };
 
             // Botón Regresar
-            if(backBtn) {
+            if (backBtn) {
                 backBtn.addEventListener('click', (e) => {
                     e.stopPropagation(); // Evitar que dispare la fiesta
                     overlay.style.display = 'none';
                     // Resetear mensaje y globos para la próxima
-                    if(message) message.classList.remove('show');
-                    document.getElementById('balloons-container').innerHTML = ''; 
+                    if (message) message.classList.remove('show');
+                    document.getElementById('balloons-container').innerHTML = '';
                 });
             }
 
@@ -1838,31 +2124,31 @@ const productos = [
             function createShockwave(x, y) {
                 const fragment = document.createDocumentFragment();
                 // Reducido ligeramente el número de partículas para mejorar rendimiento sin perder efecto
-                const count = 30; 
-                
+                const count = 30;
+
                 for (let i = 0; i < count; i++) {
                     const p = document.createElement('div');
                     p.className = 'particle';
                     p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                     if (Math.random() > 0.5) p.style.borderRadius = '50%';
-                    
+
                     const size = 5 + Math.random() * 12;
                     p.style.width = size + 'px';
                     p.style.height = size + 'px';
                     p.style.left = x + 'px';
                     p.style.top = y + 'px';
-                    
+
                     const angle = Math.random() * Math.PI * 2;
                     const distance = 100 + Math.random() * 300;
-                    
+
                     // USAR VARIABLES CSS para la animación en GPU
                     p.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
                     p.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
                     p.style.setProperty('--r', `${Math.random() * 720}deg`);
-                    
+
                     p.style.animation = `explodeOut ${0.5 + Math.random() * 0.5}s ease-out forwards`;
                     fragment.appendChild(p);
-                    
+
                     // Eliminar automáticamente después de la animación
                     setTimeout(() => p.remove(), 1000);
                 }
@@ -1873,27 +2159,27 @@ const productos = [
                 const fragment = document.createDocumentFragment();
                 // Ajustado cantidad para rendimiento (30 interactivo, 60 automático)
                 const count = canInteract ? 30 : 60;
-                
+
                 for (let i = 0; i < count; i++) {
                     const c = document.createElement('div');
                     c.className = 'confetti';
                     c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    
+
                     const startX = canInteract ? (originX + (Math.random() - 0.5) * 200) : (Math.random() * 100);
                     c.style.left = canInteract ? `${startX}px` : `${startX}vw`;
                     c.style.top = '-20px';
-                    
+
                     const size = 6 + Math.random() * 8;
                     c.style.width = size + 'px';
                     c.style.height = (size * 0.7) + 'px';
-                    
+
                     const duration = 2 + Math.random() * 2;
                     const floorY = window.innerHeight - (Math.random() * 30 + 10);
-                    
+
                     c.style.setProperty('--floor-y', `${floorY}px`);
                     c.style.setProperty('--drift', `${(Math.random() - 0.5) * 100}px`);
                     c.style.animation = `fallToFloor ${duration}s linear forwards`;
-                    
+
                     fragment.appendChild(c);
 
                     // Limpieza y posición final
@@ -1911,37 +2197,37 @@ const productos = [
             // --- FUNCIÓN GLOBOS (OPTIMIZADA CON FRAGMENT) ---
             function createBalloons() {
                 const container = document.getElementById('balloons-container');
-                if(!container) return;
-                container.innerHTML = ''; 
+                if (!container) return;
+                container.innerHTML = '';
 
                 const fragment = document.createDocumentFragment();
-                const balloonCount = 20; 
-                
-                for(let i=0; i<balloonCount; i++) {
+                const balloonCount = 20;
+
+                for (let i = 0; i < balloonCount; i++) {
                     const b = document.createElement('div');
                     b.className = 'balloon';
-                    
+
                     const randomColor = colors[Math.floor(Math.random() * colors.length)];
                     b.style.setProperty('--balloon-color', randomColor);
-                    
+
                     const leftPos = Math.random() * 95;
                     b.style.left = leftPos + '%';
-                    
+
                     const speed = 4 + Math.random() * 4;
                     b.style.animationDuration = speed + 's';
-                    
+
                     const delay = Math.random() * 2;
                     b.style.animationDelay = delay + 's';
-                    
+
                     const finalBottom = 85 + Math.random() * 10;
                     b.style.setProperty('--float-final-y', finalBottom + '%');
-                    
+
                     const drift = (Math.random() - 0.5) * 50;
                     b.style.setProperty('--drift-x', drift + 'px');
 
                     const rot = (Math.random() - 0.5) * 20;
                     b.style.setProperty('--rot', rot + 'deg');
-                    
+
                     b.style.animationName = 'floatUpAndStay';
                     b.style.animationFillMode = 'forwards';
                     b.style.animationTimingFunction = 'ease-out';
@@ -1963,6 +2249,32 @@ const productos = [
                 container.appendChild(fragment);
             }
         }
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cargar datos
+            if (window.loadInventoryDataFromLocal) {
+                window.loadInventoryDataFromLocal();
+            }
+            // Iniciar lógica de celebración
+            if (typeof initCelebrationLogic === 'function') {
+                initCelebrationLogic();
+            }
+            // Renderizar inicial (por seguridad)
+            if (window.renderInventoryTable) {
+                window.renderInventoryTable();
+            }
+            // Actualizar fecha
+            const dateElem = document.getElementById('report-date');
+            if (dateElem) {
+                dateElem.textContent = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+            // Abrir modal de equipos
+            setTimeout(() => {
+                if (window.openTeamModal) window.openTeamModal();
+            }, 300);
+        });
     </script>
 </body>
+
 </html>
